@@ -1,4 +1,4 @@
-from __future__ import annotations  # Postpone annotation evaluation for Python < 3.10 support
+from __future__ import annotations
 
 import sys
 import sqlite3
@@ -10,6 +10,8 @@ import datetime as _dt
 from collections import defaultdict, Counter
 from pathlib import Path
 from typing import Dict, List, Optional
+import concurrent.futures
+import threading
 
 # Stdlib additions
 import argparse
@@ -23,15 +25,17 @@ import csv
 # Cross-platform color support (Windows, Linux, macOS)
 try:
     from colorama import init as colorama_init, Fore, Style
-
-    colorama_init()  # enables ANSI on Windows terminals
-except ImportError:  # graceful degradation – no colors
-
+    colorama_init()
+except ImportError:
     class _Dummy:
         def __getattr__(self, _):
             return ""
-
     Fore = Style = _Dummy()
+
+
+# Thread-safe file writing
+_file_lock = threading.Lock()
+_findings_count = 0
 
 
 def terminate(msg: str) -> None:
@@ -45,12 +49,7 @@ class RunCmdError(RuntimeError):
 
 
 def run(cmd: List[str], cwd: Path | None = None) -> str:
-    """Execute *cmd* and return its *stdout* as *str*.
-
-    If the command exits non-zero, a ``RunCmdError`` is raised so callers can
-    decide whether to abort or ignore.
-    """
-
+    """Execute *cmd* and return its *stdout* as *str*."""
     logging.debug("Running command: %s (cwd=%s)", " ".join(cmd), cwd or ".")
     try:
         env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
@@ -74,20 +73,11 @@ def run(cmd: List[str], cwd: Path | None = None) -> str:
 def scan_with_trufflehog(repo_path: Path, since_commit: str, branch: str) -> List[dict]:
     """Run trufflehog in git mode, returning the parsed JSON findings."""
     try:
-        stdout = run(
-            [
-                "trufflehog",
-                "git",
-                "--branch",
-                branch,
-                "--since-commit",
-                since_commit,
-                "--no-update",
-                "--json",
-                "--only-verified",
-                "file://" + str(repo_path.absolute()),
-            ],
-        )
+        stdout = run([
+            "trufflehog", "git", "--branch", branch, "--since-commit", since_commit,
+            "--no-update", "--json", "--only-verified",
+            "file://" + str(repo_path.absolute()),
+        ])
         findings: List[dict] = []
         for line in stdout.splitlines():
             with suppress(json.JSONDecodeError):
@@ -96,29 +86,19 @@ def scan_with_trufflehog(repo_path: Path, since_commit: str, branch: str) -> Lis
     except RunCmdError as err:
         print(f"[!] trufflehog execution failed: {err} — skipping this repository")
         return []
-        
 
-# Utility: extract year from Unix epoch INT.
-def to_year(date_val) -> str:  # type: ignore[override]
+
+def to_year(date_val) -> str:
     """Return the four-digit year (YYYY) from *date_val* which can be an int (epoch)"""
     return _dt.datetime.fromtimestamp(int(date_val), tz=timezone.utc).strftime("%Y")
 
+
 _SHA_RE = re.compile(r"^[0-9a-f]{7,40}$")
-
-############################################################
-# Phase 1: Gather data from SQLite3 (default) or user-supplied CSV
-############################################################
-
-# Column names expected from SQLite3 / CSV export
-_EXPECTED_FIELDS = {"repo_org","repo_name", "before", "timestamp"}
+_EXPECTED_FIELDS = {"repo_org", "repo_name", "before", "timestamp"}
 
 
 def _validate_row(input_org: str, row: dict, idx: int) -> tuple[str, str, int | str]:
-    """Validate that *row* contains the required columns and return the tuple.
-
-    Raises ``ValueError`` on validation failure so callers can abort early.
-    """
-
+    """Validate that *row* contains the required columns and return the tuple."""
     missing = _EXPECTED_FIELDS - row.keys()
     if missing:
         raise ValueError(f"Row {idx} is missing fields: {', '.join(sorted(missing))}")
@@ -137,7 +117,6 @@ def _validate_row(input_org: str, row: dict, idx: int) -> tuple[str, str, int | 
     if not _SHA_RE.fullmatch(before):
         raise ValueError(f"Row {idx} – 'before' does not look like a commit SHA")
 
-    # BigQuery exports numeric INT64 as str when using CSV, accommodate both.
     try:
         ts_int: int | str = int(ts)
     except Exception as exc:
@@ -162,20 +141,9 @@ def _gather_from_iter(input_org: str, rows: List[dict]) -> Dict[str, List[dict]]
     return repos
 
 
-def gather_commits(
-    input_org: str,
-    events_file: Optional[Path] | None = None,
-    db_file: Optional[Path] | None = None,
-) -> Dict[str, List[dict]]:
-    """Return mapping of repo URL → list[{before, pushed_at}].
-
-    The data can be sourced either from:
-    1. A CSV export (``--events-file``)
-    2. The pre-built SQLite database downloaded via the Google Form (``--db-file``)
-
-    Both sources expose the columns: repo_org, repo_name, before, timestamp.
-    """
-
+def gather_commits(input_org: str, events_file: Optional[Path] | None = None,
+                  db_file: Optional[Path] | None = None) -> Dict[str, List[dict]]:
+    """Return mapping of repo URL → list[{before, pushed_at}]."""
     if events_file is not None:
         if not events_file.exists():
             terminate(f"Events file not found: {events_file}")
@@ -186,10 +154,8 @@ def gather_commits(
                 rows = list(reader)
         except Exception as exc:
             terminate(f"Failed to parse events file {events_file}: {exc}")
-
         return _gather_from_iter(input_org, rows)
 
-    # 2. SQLite path
     if db_file is None:
         terminate("You must supply --db-file or --events-file.")
 
@@ -201,11 +167,7 @@ def gather_commits(
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute(
-                """
-                SELECT repo_org, repo_name, before, timestamp
-                FROM pushes
-                WHERE repo_org = ?
-                """,
+                "SELECT repo_org, repo_name, before, timestamp FROM pushes WHERE repo_org = ?",
                 (input_org,),
             )
             rows = [dict(r) for r in cur.fetchall()]
@@ -213,11 +175,6 @@ def gather_commits(
         terminate(f"Failed querying SQLite DB {db_file}: {exc}")
 
     return _gather_from_iter(input_org, rows)
-
-
-############################################################
-# Phase 2: Reporting
-############################################################
 
 
 def report(input_org: str, repos: Dict[str, List[dict]]) -> None:
@@ -228,14 +185,11 @@ def report(input_org: str, repos: Dict[str, List[dict]]) -> None:
     print(f"{Fore.GREEN}Repos impacted : {repo_count}{Style.RESET_ALL}")
     print(f"{Fore.GREEN}Total commits  : {total_commits}{Style.RESET_ALL}\n")
 
-    # per-repo counts
     for repo_url, commits in repos.items():
         print(f"{Fore.YELLOW}{repo_url}{Style.RESET_ALL}: {len(commits)} commits")
     print()
 
-    # timeseries histogram (yearly) – include empty years
     counter = Counter(to_year(c["date"]) for commits in repos.values() for c in commits)
-
     if counter:
         first_year = int(min(counter))
     else:
@@ -255,13 +209,8 @@ def report(input_org: str, repos: Dict[str, List[dict]]) -> None:
     print("=================================\n")
 
 
-############################################################
-# Phase 3: Secret scanning
-############################################################
-
 def _print_formatted_finding(finding: dict, repo_url: str) -> None:
-    """Pretty-print a single TruffleHog *finding* for humans. Similar to TruffleHog's CLI output.
-    """
+    """Pretty-print a single TruffleHog *finding* for humans."""
     print(f"{Fore.GREEN}")
     print(f"✅ Found verified result 🐷🔑")
     print(f"Detector Type: {finding.get('DetectorName', 'N/A')}")
@@ -277,170 +226,184 @@ def _print_formatted_finding(finding: dict, repo_url: str) -> None:
     print(f"Link: {repo_url}/commit/{finding.get('SourceMetadata', {}).get('Data', {}).get('Git', {}).get('commit')}")
     print(f"Timestamp: {finding.get('SourceMetadata', {}).get('Data', {}).get('Git', {}).get('timestamp')}")
 
-    # Flatten any extra metadata returned by the detector
     extra = finding.get('ExtraData') or {}
     for k, v in extra.items():
         key_str = str(k).replace('_', ' ').title()
         print(f"{key_str}: {v}")
-    print(f"{Style.RESET_ALL}")  # Blank line as separator between findings
+    print(f"{Style.RESET_ALL}")
 
 
-def identify_base_commit(repo_path: Path, since_commit:str) -> str:
-    """Identify the base commit for the given repository and since_commit."""    # fetch the since_commit, since our clone process likely missed it
-    # note: this fetch will have no blobs, but that's fine b/c 
-    # when we invoke trufflehog, it calls git log -p, which will fetch the blobs dynamically
+def identify_base_commit(repo_path: Path, since_commit: str) -> str:
+    """Identify the base commit for the given repository and since_commit."""
     run(["git", "fetch", "origin", since_commit], cwd=repo_path)
-    # get all commits reachable from the since_commit
     output = run(["git", "rev-list", since_commit], cwd=repo_path)
-    # working backwards from the since_commit, we need to find the first commit that exists in any branch
+    
     for commit in output.splitlines():
-        #remove the newline character
         commit = commit.strip('\n')
-        # Check if commit exists in any branch, if it does, we've found the base commit
         if run(["git", "branch", "--contains", commit, "--all"], cwd=repo_path):
             if commit != since_commit:
                 return commit
             try:
-                # if the commit is the same as the since_commit, we need to go back one commit to scan this commit
-                # if there is no commit~1, then since_commit is the base commit and we need "" for trufflehog
                 c = run(["git", "rev-list", commit + "~1", "-n", "1"], cwd=repo_path)
                 return c.strip('\n')
-            except RunCmdError as err: # need to handle 128 git errors
+            except RunCmdError:
                 return ""
         continue
-    # if we get here, then the since_commit is not in any branch
-    # which means it could be a force push of a whole new tree or similar
-    # in this case, we need to scan the entire branch, so we return ""
-    # note: The command below might be useful if we find an edge case 
-    #       not covered by "" in the future.
-    #       c = run(["git", "rev-list", "--max-parents=0", 
-    #           since_commit, "-n", "1"], cwd=repo_path)
-    #       return c.strip('\n')
     return ""
 
 
-def scan_commits(repo_user: str, repos: Dict[str, List[dict]]) -> None:
-    findings_file = Path("verified_secrets.json")
-    findings_count = 0
+def write_finding_to_file(finding: dict, findings_file: Path) -> None:
+    """Thread-safe write of finding to JSON file."""
+    global _findings_count
     
-    # Initialize the JSON file with an empty array
+    with _file_lock:
+        try:
+            with open(findings_file, 'a', encoding='utf-8') as file:
+                if _findings_count > 0:
+                    file.write(',\n')
+                json.dump(finding, file, indent=2, ensure_ascii=False)
+            _findings_count += 1
+            print(f"    {Fore.CYAN}[>] Secret #{_findings_count} written to {findings_file}{Style.RESET_ALL}")
+        except Exception as e:
+            print(f"    {Fore.RED}[✗] Failed to write finding to file: {e}{Style.RESET_ALL}")
+
+
+def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path) -> tuple[str, int, int]:
+    """Scan a single repository for secrets. Returns (repo_url, commits_scanned, findings_count)."""
+    repo_url, commits = repo_data
+    print(f"\n[>] Scanning repo: {repo_url}")
+    
+    commit_counter = 0
+    repo_findings = 0
+    tmp_dir = tempfile.mkdtemp(prefix="gh-repo-")
+    
+    try:
+        tmp_path = Path(tmp_dir)
+        try:
+            run([
+                "git", "clone", "--filter=blob:none", "--no-checkout",
+                repo_url + ".git", "."
+            ], cwd=tmp_path)
+        except RunCmdError as err:
+            print(f"[!] git clone failed: {err} — skipping this repository")
+            return repo_url, 0, 0
+
+        for c in commits:
+            before = c["before"]
+            if not _SHA_RE.fullmatch(before):
+                print(f"  • Commit {before} – invalid SHA, skipping")
+                continue
+                
+            commit_counter += 1
+            print(f"  • Commit {before}")
+            
+            try:
+                since_commit = identify_base_commit(tmp_path, before)
+            except RunCmdError as err:
+                if "fatal: remote error: upload-pack: not our ref" in str(err):
+                    print("    This commit was likely manually removed from the repository network — skipping commit")
+                    continue
+                else:
+                    print(f"    fetch/checkout failed: {err} — skipping entire repository")
+                    break
+
+            findings = scan_with_trufflehog(tmp_path, since_commit=since_commit, branch=before)
+
+            if findings:
+                for f in findings:
+                    f['repository_url'] = repo_url
+                    f['scanned_commit'] = before
+                    f['scan_timestamp'] = _dt.datetime.now().isoformat()
+                    
+                    write_finding_to_file(f, findings_file)
+                    repo_findings += 1
+                    _print_formatted_finding(f, repo_url)
+
+    finally:
+        try:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        except OSError:
+            print(f"    Error cleaning up temporary directory: {tmp_dir}")
+
+    print(f"[✓] {commit_counter} commits scanned in {repo_url}")
+    return repo_url, commit_counter, repo_findings
+
+
+def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int = 4) -> None:
+    """Scan commits in parallel using ThreadPoolExecutor."""
+    global _findings_count
+    _findings_count = 0
+    
+    findings_file = Path("verified_secrets.json")
+    
+    # Initialize the JSON file
     try:
         with open(findings_file, 'w', encoding='utf-8') as f:
             f.write('[\n')
     except Exception as e:
         print(f"{Fore.RED}[✗] Failed to create findings file {findings_file}: {e}{Style.RESET_ALL}")
         return
+
+    print(f"\n{Fore.CYAN}[>] Starting parallel scan with {max_workers} workers{Style.RESET_ALL}")
     
-    for repo_url, commits in repos.items():
-        print(f"\n[>] Scanning repo: {repo_url}")
-
-        commit_counter = 0
-        skipped_repo = False
-
-        tmp_dir = tempfile.mkdtemp(prefix="gh-repo-")
-        try:
-            tmp_path = Path(tmp_dir)
-            try:
-                # Partial clone with no blobs to save space and for speed
-                run(
-                    [
-                        "git",
-                        "clone",
-                        "--filter=blob:none",
-                        "--no-checkout",
-                        repo_url + ".git",
-                        ".",
-                    ],
-                    cwd=tmp_path,
-                )
-            except RunCmdError as err:
-                print(f"[!] git clone failed: {err} — skipping this repository")
-                skipped_repo = True
-                continue
-
-            for c in commits:
-                before = c["before"]
-                if not _SHA_RE.fullmatch(before):
-                    print(f"  • Commit {before} – invalid SHA, skipping")
-                    continue
-                commit_counter += 1
-                print(f"  • Commit {before}")
-                try:
-                    since_commit = identify_base_commit(tmp_path, before)
-                except RunCmdError as err:
-                    # If the commit was logged in GH Archive, but not longer exists in the repo network, then it was likely manually removed it.
-                    # For more details, see: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository#:~:text=You%20cannot%20remove,rotating%20affected%20credentials.
-                    if "fatal: remote error: upload-pack: not our ref" in str(err):
-                        print("    This commit was likely manually removed from the repository network  — skipping commit")
-                        continue
-                    else:
-                        print(f"    fetch/checkout failed: {err} — skipping entire repository")
-                        skipped_repo = True
-                        break  # Break out of the commit loop to skip the entire repository
-
-                # Pass in the since_commit and branch values for trufflehog
-                findings = scan_with_trufflehog(tmp_path, since_commit=since_commit, branch=before)
-                
-                if findings:
-                    for f in findings:
-                        # Add repo_url and commit info to the finding for context
-                        f['repository_url'] = repo_url
-                        f['scanned_commit'] = before
-                        f['scan_timestamp'] = _dt.datetime.now().isoformat()
-                        
-                        # Write finding immediately to file
-                        try:
-                            with open(findings_file, 'a', encoding='utf-8') as file:
-                                if findings_count > 0:
-                                    file.write(',\n')
-                                json.dump(f, file, indent=2, ensure_ascii=False)
-                            findings_count += 1
-                            print(f"    {Fore.CYAN}[>] Secret #{findings_count} written to {findings_file}{Style.RESET_ALL}")
-                        except Exception as e:
-                            print(f"    {Fore.RED}[✗] Failed to write finding to file: {e}{Style.RESET_ALL}")
-                        
-                        _print_formatted_finding(f, repo_url)
-                else:
-                    pass
-
-        finally:
-            # Attempt cleanup but suppress ENOTEMPTY race-condition errors
-            try:
-                shutil.rmtree(tmp_dir, ignore_errors=True)
-            except OSError:
-                print(f"    Error cleaning up temporary directory: {tmp_dir}")
-                pass
-
-        if skipped_repo:
-            print("[!] Repo skipped due to errors")
-        else:
-            print(f"[✓] {commit_counter} commits scanned.")
+    total_repos = len(repos)
+    total_commits_scanned = 0
     
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all repository scan tasks
+        future_to_repo = {
+            executor.submit(scan_single_repo, (repo_url, commits), findings_file): repo_url 
+            for repo_url, commits in repos.items()
+        }
+        
+        # Process completed tasks
+        for future in concurrent.futures.as_completed(future_to_repo):
+            repo_url = future_to_repo[future]
+            try:
+                _, commits_scanned, repo_findings = future.result()
+                total_commits_scanned += commits_scanned
+            except Exception as exc:
+                print(f"{Fore.RED}[✗] Repository {repo_url} generated an exception: {exc}{Style.RESET_ALL}")
+
     # Close the JSON array
     try:
         with open(findings_file, 'a', encoding='utf-8') as f:
             f.write('\n]')
     except Exception as e:
         print(f"{Fore.RED}[✗] Failed to close JSON array in {findings_file}: {e}{Style.RESET_ALL}")
+
+    print(f"\n{Fore.GREEN}[✓] Parallel scan completed{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}[✓] {total_repos} repositories processed{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}[✓] {total_commits_scanned} total commits scanned{Style.RESET_ALL}")
     
-    if findings_count > 0:
-        print(f"\n{Fore.GREEN}[✓] {findings_count} verified secrets saved to {findings_file}{Style.RESET_ALL}")
+    if _findings_count > 0:
+        print(f"{Fore.GREEN}[✓] {_findings_count} verified secrets saved to {findings_file}{Style.RESET_ALL}")
     else:
-        print(f"\n{Fore.YELLOW}[i] No verified secrets found to save{Style.RESET_ALL}")
-        # Remove empty file if no findings
+        print(f"{Fore.YELLOW}[i] No verified secrets found to save{Style.RESET_ALL}")
         try:
             findings_file.unlink()
         except Exception:
             pass
 
 
-############################################################
-# Entry point
-############################################################
+def parse_args() -> argparse.Namespace:
+    """Parse and return CLI arguments."""
+    parser = argparse.ArgumentParser(
+        description="Inspect force-push commit events from public GitHub orgs and optionally scan their git diff patches for secrets.",
+    )
+    parser.add_argument("input_org", help="GitHub username or organization to inspect")
+    parser.add_argument("--scan", action="store_true", help="Run a trufflehog scan on every force-pushed commit")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose / debug logging")
+    parser.add_argument("--events-file", help="Path to a CSV file containing force-push events")
+    parser.add_argument("--db-file", help="Path to the SQLite database containing force-push events")
+    parser.add_argument("--max-workers", type=int, default=12, 
+                       help="Maximum number of parallel workers for scanning (default: 12)")
+    return parser.parse_args()
+
+
 def main() -> None:
     args = parse_args()
 
-    # Configure logging
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(message)s",
@@ -451,46 +414,14 @@ def main() -> None:
 
     repos = gather_commits(args.input_org, events_path, db_path)
     report(args.input_org, repos)
-    
+
     if args.scan:
-        scan_commits(args.input_org, repos)
+        scan_commits(args.input_org, repos, max_workers=args.max_workers)
     else:
         print("[✓] Exiting without scan.")
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse and return CLI arguments."""
-    parser = argparse.ArgumentParser(
-        description="Inspect force-push commit events from public GitHub orgs and optionally scan their git diff patches for secrets.",
-    )
-    parser.add_argument(
-        "input_org",
-        help="GitHub username or organization to inspect",
-    )
-    parser.add_argument(
-        "--scan",
-        action="store_true",
-        help="Run a trufflehog scan on every force-pushed commit",
-    )
-    parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Enable verbose / debug logging",
-    )
-    parser.add_argument(
-        "--events-file",
-        help="Path to a CSV file containing force-push events. 4 columns: repo_org, repo_name, before, timestamp",
-    )
-    parser.add_argument(
-        "--db-file",
-        help="Path to the SQLite database containing force-push events. 4 columns: repo_org, repo_name, before, timestamp",
-    )
-    return parser.parse_args()
-
-
 if __name__ == "__main__":
-    # Ensure required external tools are available early.
     for tool in ("git", "trufflehog"):
         if shutil.which(tool) is None:
             terminate(f"Required tool '{tool}' not found in PATH")
