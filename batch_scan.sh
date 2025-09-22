@@ -45,7 +45,7 @@ if [ -n "$TEST_ORG" ]; then
     ORGS="$TEST_ORG"
     echo "Running scan for single organization: $ORGS"
 else
-    echo "Extracting organizations from database..."
+    echo "Extracting organizations from database..." 
     ORGS=$(python3 <<EOF
 import sqlite3
 db = sqlite3.connect("$DB_FILE")
