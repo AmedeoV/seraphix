@@ -372,9 +372,11 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]]) -> None:
                     # For more details, see: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository#:~:text=You%20cannot%20remove,rotating%20affected%20credentials.
                     if "fatal: remote error: upload-pack: not our ref" in str(err):
                         print("    This commit was likely manually removed from the repository network  — skipping commit")
+                        continue
                     else:
-                        print(f"    fetch/checkout failed: {err} — skipping commit")
-                    continue
+                        print(f"    fetch/checkout failed: {err} — skipping entire repository")
+                        skipped_repo = True
+                        break  # Break out of the commit loop to skip the entire repository
 
                 # Pass in the since_commit and branch values for trufflehog
                 findings = scan_with_trufflehog(tmp_path, since_commit=since_commit, branch=before)
@@ -410,7 +412,7 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]]) -> None:
                 pass
 
         if skipped_repo:
-            print("[!] Repo skipped due to earlier errors")
+            print("[!] Repo skipped due to errors")
         else:
             print(f"[✓] {commit_counter} commits scanned.")
     
