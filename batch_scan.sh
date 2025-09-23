@@ -1,138 +1,103 @@
 #!/bin/bash
-# Batch scanner script to run force_push_scanner.py for all organizations in the database
+# Enhanced batch scanner with parallel organization processing
 
 DB_FILE="force_push_commits.sqlite3"
 PYTHON_SCRIPT="force_push_scanner.py"
 LOG_DIR="scan_logs"
 
-# Parse command line arguments
+# Configuration
+MAX_PARALLEL_ORGS=4  # Number of organizations to scan simultaneously
+WORKERS_PER_ORG=8    # Workers per organization (reduced to balance resources)
 DEBUG=false
 TEST_ORG=""
 
+# Parse arguments (same as before)
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --debug)
-            DEBUG=true
-            shift
-            ;;
-        *)
-            TEST_ORG="$1"
-            shift
-            ;;
+        --debug) DEBUG=true; shift ;;
+        --parallel-orgs) MAX_PARALLEL_ORGS="$2"; shift 2 ;;
+        --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
+        *) TEST_ORG="$1"; shift ;;
     esac
 done
 
-# Check if database file exists
-if [ ! -f "$DB_FILE" ]; then
-    echo "Error: Database file $DB_FILE not found!"
-    exit 1
-fi
+# Function to scan a single organization
+scan_organization() {
+    local org="$1"
+    local org_num="$2"
+    local total="$3"
+    
+    echo "[$org_num/$total] Starting scan for organization: $org"
+    
+    if [ "$DEBUG" = true ]; then
+        LOG_FILE="$LOG_DIR/scan_${org}_$(date +%Y%m%d_%H%M%S).log"
+        python3 "$PYTHON_SCRIPT" --db-file "$DB_FILE" --scan \
+                --max-workers "$WORKERS_PER_ORG" "$org" 2>&1 | tee "$LOG_FILE"
+    else
+        python3 "$PYTHON_SCRIPT" --db-file "$DB_FILE" --scan \
+                --max-workers "$WORKERS_PER_ORG" "$org"
+    fi
+    
+    local exit_code=$?
+    
+    # Handle results
+    if [ $exit_code -eq 0 ]; then
+        if [ -s "verified_secrets_${org}.json" ]; then
+            ORG_DIR="results_$org"
+            mkdir -p "$ORG_DIR"
+            mv "verified_secrets_${org}.json" "$ORG_DIR/"
+            echo "✅ [$org_num/$total] $org completed - secrets found!"
+            return 2  # Success with findings
+        else
+            rm -f "verified_secrets_${org}.json"
+            echo "✅ [$org_num/$total] $org completed - no secrets"
+            return 0  # Success no findings
+        fi
+    else
+        echo "❌ [$org_num/$total] $org failed"
+        return 1  # Failed
+    fi
+}
 
-# Check if Python script exists
-if [ ! -f "$PYTHON_SCRIPT" ]; then
-    echo "Error: Python script $PYTHON_SCRIPT not found!"
-    exit 1
-fi
+# Export function for parallel execution
+export -f scan_organization
+export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG
 
-# Create log directory only if debug is enabled
-if [ "$DEBUG" = true ]; then
-    mkdir -p "$LOG_DIR"
-    echo "Debug mode enabled - logs will be saved to $LOG_DIR"
-fi
-
-# Optional argument: test a single org
+# Get organizations list (same as before)
 if [ -n "$TEST_ORG" ]; then
     ORGS="$TEST_ORG"
-    echo "Running scan for single organization: $ORGS"
 else
-    echo "Extracting organizations from database..."
-    ORGS=$(python3 <<EOF
+    ORGS=$(python3 -c "
 import sqlite3
-db = sqlite3.connect("$DB_FILE")
+db = sqlite3.connect('$DB_FILE')
 cur = db.cursor()
-for row in cur.execute("SELECT DISTINCT repo_org FROM pushes ORDER BY timestamp desc;"):
-    if row[0]:
-        print(row[0])
+for row in cur.execute('SELECT DISTINCT repo_org FROM pushes ORDER BY timestamp desc;'):
+    if row[0]: print(row[0])
 db.close()
-EOF
-)
+")
 fi
 
-if [ -z "$ORGS" ]; then
-    echo "No organizations found in the database!"
-    exit 1
-fi
-
-# Count total organizations
 TOTAL_ORGS=$(echo "$ORGS" | wc -l)
-echo "Found $TOTAL_ORGS organizations to scan:"
-echo "$ORGS"
-echo ""
+echo "Processing $TOTAL_ORGS organizations with max $MAX_PARALLEL_ORGS parallel jobs"
+echo "Using $WORKERS_PER_ORG workers per organization"
 
-# Initialize counters
-CURRENT=1
-SUCCESS_COUNT=0
-FAILED_COUNT=0
-FOUND_COUNT=0
+# Create numbered org list for parallel processing
+echo "$ORGS" | nl -w1 -s: > /tmp/orgs_numbered.txt
 
-# Process each organization
-while IFS= read -r org; do
-    if [ -n "$org" ]; then
-        echo "=========================================="
-        echo "[$CURRENT/$TOTAL_ORGS] Scanning organization: $org"
-        echo "=========================================="
-       
-        # Run the scanner with or without logging based on debug flag
-        if [ "$DEBUG" = true ]; then
-            LOG_FILE="$LOG_DIR/scan_${org}_$(date +%Y%m%d_%H%M%S).log"
-            SCAN_CMD="python3 \"$PYTHON_SCRIPT\" --db-file \"$DB_FILE\" --scan -v \"$org\" 2>&1 | tee \"$LOG_FILE\""
-        else
-            SCAN_CMD="python3 \"$PYTHON_SCRIPT\" --db-file \"$DB_FILE\" --scan -v \"$org\""
-        fi
-        
-        if eval $SCAN_CMD; then
-            echo "✅ Successfully completed scan for $org"
-           
-            # Only create results directory if verified_secrets.json exists and is non-empty
-            if [ -s "verified_secrets.json" ]; then
-                ORG_DIR="results_$org"
-                mkdir -p "$ORG_DIR"
-                mv "verified_secrets.json" "$ORG_DIR/verified_secrets_${org}.json"
-                echo "📁 Secrets found! Results saved to $ORG_DIR/verified_secrets_${org}.json"
-                FOUND_COUNT=$((FOUND_COUNT + 1))
-            else
-                echo "ℹ️ No secrets found for $org"
-                rm -f "verified_secrets.json"
-            fi
-           
-            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-        else
-            if [ "$DEBUG" = true ]; then
-                echo "❌ Failed to scan $org (check $LOG_FILE for details)"
-            else
-                echo "❌ Failed to scan $org"
-            fi
-            FAILED_COUNT=$((FAILED_COUNT + 1))
-        fi
-       
-        echo ""
-        CURRENT=$((CURRENT + 1))
-       
-        # Optional: Add a small delay between scans to be nice to GitHub
-        sleep 2
-    fi
-done <<< "$ORGS"
-
-echo "=========================================="
-echo "BATCH SCAN COMPLETE"
-echo "=========================================="
-echo "Total organizations: $TOTAL_ORGS"
-echo "Successful scans: $SUCCESS_COUNT"
-echo "Failed scans: $FAILED_COUNT"
-echo "Organizations with secrets found: $FOUND_COUNT"
-
-if [ "$DEBUG" = true ]; then
-    echo "Logs saved in: $LOG_DIR"
+# Use GNU parallel or xargs for parallel execution
+if command -v parallel >/dev/null 2>&1; then
+    echo "Using GNU parallel for organization processing"
+    parallel -j "$MAX_PARALLEL_ORGS" --colsep ':' \
+        scan_organization {2} {1} "$TOTAL_ORGS" :::: /tmp/orgs_numbered.txt
+else
+    echo "Using xargs for parallel processing (install GNU parallel for better control)"
+    cat /tmp/orgs_numbered.txt | xargs -n 1 -P "$MAX_PARALLEL_ORGS" -I {} bash -c '
+        IFS=: read num org <<< "{}"
+        scan_organization "$org" "$num" "'"$TOTAL_ORGS"'"
+    '
 fi
 
-echo "Results organized in: results_<org_name> directories (only if secrets were found)"
+# Cleanup
+rm -f /tmp/orgs_numbered.txt
+
+echo "Batch scan completed!"

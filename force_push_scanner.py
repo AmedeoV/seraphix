@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 import concurrent.futures
 import threading
+import time
 
 # Stdlib additions
 import argparse
@@ -62,12 +63,15 @@ def run(cmd: List[str], cwd: Path | None = None) -> str:
             errors="replace",
             check=True,
             env=env,
+            timeout=300,  # 5 minute timeout for git operations
         )
         return proc.stdout
     except subprocess.CalledProcessError as err:
         raise RunCmdError(
             f"Command failed ({err.returncode}): {' '.join(cmd)}\n{err.stderr.strip()}"
         ) from err
+    except subprocess.TimeoutExpired as err:
+        raise RunCmdError(f"Command timed out: {' '.join(cmd)}") from err
 
 
 def scan_with_trufflehog(repo_path: Path, since_commit: str, branch: str) -> List[dict]:
@@ -75,9 +79,9 @@ def scan_with_trufflehog(repo_path: Path, since_commit: str, branch: str) -> Lis
     try:
         stdout = run([
             "trufflehog", "git", "--branch", branch, "--since-commit", since_commit,
-            "--no-update", "--json", "--only-verified",
+            "--no-update", "--json", "--only-verified", "--concurrency", "4",
             "file://" + str(repo_path.absolute()),
-        ])
+            ])
         findings: List[dict] = []
         for line in stdout.splitlines():
             with suppress(json.JSONDecodeError):
@@ -142,7 +146,7 @@ def _gather_from_iter(input_org: str, rows: List[dict]) -> Dict[str, List[dict]]
 
 
 def gather_commits(input_org: str, events_file: Optional[Path] | None = None,
-                  db_file: Optional[Path] | None = None) -> Dict[str, List[dict]]:
+                   db_file: Optional[Path] | None = None) -> Dict[str, List[dict]]:
     """Return mapping of repo URL → list[{before, pushed_at}]."""
     if events_file is not None:
         if not events_file.exists():
@@ -237,7 +241,7 @@ def identify_base_commit(repo_path: Path, since_commit: str) -> str:
     """Identify the base commit for the given repository and since_commit."""
     run(["git", "fetch", "origin", since_commit], cwd=repo_path)
     output = run(["git", "rev-list", since_commit], cwd=repo_path)
-    
+
     for commit in output.splitlines():
         commit = commit.strip('\n')
         if run(["git", "branch", "--contains", commit, "--all"], cwd=repo_path):
@@ -255,7 +259,7 @@ def identify_base_commit(repo_path: Path, since_commit: str) -> str:
 def write_finding_to_file(finding: dict, findings_file: Path) -> None:
     """Thread-safe write of finding to JSON file."""
     global _findings_count
-    
+
     with _file_lock:
         try:
             with open(findings_file, 'a', encoding='utf-8') as file:
@@ -263,7 +267,6 @@ def write_finding_to_file(finding: dict, findings_file: Path) -> None:
                     file.write(',\n')
                 json.dump(finding, file, indent=2, ensure_ascii=False)
             _findings_count += 1
-            print(f"    {Fore.CYAN}[>] Secret #{_findings_count} written to {findings_file}{Style.RESET_ALL}")
         except Exception as e:
             print(f"    {Fore.RED}[✗] Failed to write finding to file: {e}{Style.RESET_ALL}")
 
@@ -271,40 +274,55 @@ def write_finding_to_file(finding: dict, findings_file: Path) -> None:
 def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path) -> tuple[str, int, int]:
     """Scan a single repository for secrets. Returns (repo_url, commits_scanned, findings_count)."""
     repo_url, commits = repo_data
-    print(f"\n[>] Scanning repo: {repo_url}")
-    
+
     commit_counter = 0
     repo_findings = 0
     tmp_dir = tempfile.mkdtemp(prefix="gh-repo-")
-    
+
     try:
         tmp_path = Path(tmp_dir)
+
+        # Git performance optimizations
+        git_config = [
+            ["git", "config", "core.preloadindex", "true"],
+            ["git", "config", "core.fscache", "true"],
+            ["git", "config", "gc.auto", "0"],
+            ["git", "config", "fetch.parallel", "8"],
+        ]
+
         try:
+            # Clone with optimizations
             run([
-                "git", "clone", "--filter=blob:none", "--no-checkout",
+                "git", "clone",
+                "--filter=blob:none",
+                "--no-checkout",
+                "--depth=100",  # Limit depth for faster clones
                 repo_url + ".git", "."
             ], cwd=tmp_path)
+
+            # Apply git optimizations
+            for config_cmd in git_config:
+                try:
+                    run(config_cmd, cwd=tmp_path)
+                except RunCmdError:
+                    pass  # Continue if config fails
+
         except RunCmdError as err:
-            print(f"[!] git clone failed: {err} — skipping this repository")
             return repo_url, 0, 0
 
         for c in commits:
             before = c["before"]
             if not _SHA_RE.fullmatch(before):
-                print(f"  • Commit {before} – invalid SHA, skipping")
                 continue
-                
+
             commit_counter += 1
-            print(f"  • Commit {before}")
-            
+
             try:
                 since_commit = identify_base_commit(tmp_path, before)
             except RunCmdError as err:
                 if "fatal: remote error: upload-pack: not our ref" in str(err):
-                    print("    This commit was likely manually removed from the repository network — skipping commit")
                     continue
                 else:
-                    print(f"    fetch/checkout failed: {err} — skipping entire repository")
                     break
 
             findings = scan_with_trufflehog(tmp_path, since_commit=since_commit, branch=before)
@@ -314,7 +332,7 @@ def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path) -> 
                     f['repository_url'] = repo_url
                     f['scanned_commit'] = before
                     f['scan_timestamp'] = _dt.datetime.now().isoformat()
-                    
+
                     write_finding_to_file(f, findings_file)
                     repo_findings += 1
                     _print_formatted_finding(f, repo_url)
@@ -323,19 +341,19 @@ def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path) -> 
         try:
             shutil.rmtree(tmp_dir, ignore_errors=True)
         except OSError:
-            print(f"    Error cleaning up temporary directory: {tmp_dir}")
+            pass
 
-    print(f"[✓] {commit_counter} commits scanned in {repo_url}")
     return repo_url, commit_counter, repo_findings
 
 
-def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int = 4) -> None:
+def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int = 16) -> None:
     """Scan commits in parallel using ThreadPoolExecutor."""
     global _findings_count
     _findings_count = 0
-    
-    findings_file = Path("verified_secrets.json")
-    
+
+    # Use organization-specific filename to avoid conflicts in parallel batch processing
+    findings_file = Path(f"verified_secrets_{repo_user}.json")
+
     # Initialize the JSON file
     try:
         with open(findings_file, 'w', encoding='utf-8') as f:
@@ -344,24 +362,32 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
         print(f"{Fore.RED}[✗] Failed to create findings file {findings_file}: {e}{Style.RESET_ALL}")
         return
 
-    print(f"\n{Fore.CYAN}[>] Starting parallel scan with {max_workers} workers{Style.RESET_ALL}")
-    
+    start_time = time.time()
+    print(f"\n{Fore.CYAN}[>] Starting scan for {repo_user} with {max_workers} workers{Style.RESET_ALL}")
+
     total_repos = len(repos)
     total_commits_scanned = 0
-    
+    completed_repos = 0
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all repository scan tasks
         future_to_repo = {
-            executor.submit(scan_single_repo, (repo_url, commits), findings_file): repo_url 
+            executor.submit(scan_single_repo, (repo_url, commits), findings_file): repo_url
             for repo_url, commits in repos.items()
         }
-        
+
         # Process completed tasks
         for future in concurrent.futures.as_completed(future_to_repo):
             repo_url = future_to_repo[future]
             try:
                 _, commits_scanned, repo_findings = future.result()
                 total_commits_scanned += commits_scanned
+                completed_repos += 1
+
+                if completed_repos % 10 == 0 or completed_repos == total_repos:
+                    elapsed = time.time() - start_time
+                    print(f"    {Fore.BLUE}[Progress] {completed_repos}/{total_repos} repos completed in {elapsed:.1f}s{Style.RESET_ALL}")
+
             except Exception as exc:
                 print(f"{Fore.RED}[✗] Repository {repo_url} generated an exception: {exc}{Style.RESET_ALL}")
 
@@ -372,14 +398,15 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
     except Exception as e:
         print(f"{Fore.RED}[✗] Failed to close JSON array in {findings_file}: {e}{Style.RESET_ALL}")
 
-    print(f"\n{Fore.GREEN}[✓] Parallel scan completed{Style.RESET_ALL}")
+    elapsed = time.time() - start_time
+    print(f"\n{Fore.GREEN}[✓] Scan for {repo_user} completed in {elapsed:.1f} seconds{Style.RESET_ALL}")
     print(f"{Fore.GREEN}[✓] {total_repos} repositories processed{Style.RESET_ALL}")
     print(f"{Fore.GREEN}[✓] {total_commits_scanned} total commits scanned{Style.RESET_ALL}")
-    
+
     if _findings_count > 0:
         print(f"{Fore.GREEN}[✓] {_findings_count} verified secrets saved to {findings_file}{Style.RESET_ALL}")
     else:
-        print(f"{Fore.YELLOW}[i] No verified secrets found to save{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}[i] No verified secrets found for {repo_user}{Style.RESET_ALL}")
         try:
             findings_file.unlink()
         except Exception:
@@ -396,8 +423,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose / debug logging")
     parser.add_argument("--events-file", help="Path to a CSV file containing force-push events")
     parser.add_argument("--db-file", help="Path to the SQLite database containing force-push events")
-    parser.add_argument("--max-workers", type=int, default=12, 
-                       help="Maximum number of parallel workers for scanning (default: 12)")
+    parser.add_argument("--max-workers", type=int, default=16,
+                        help="Maximum number of parallel workers for scanning (default: 16)")
     return parser.parse_args()
 
 
@@ -405,7 +432,7 @@ def main() -> None:
     args = parse_args()
 
     logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
+        level=logging.DEBUG if args.verbose else logging.WARNING,  # Reduced logging noise
         format="%(message)s",
     )
 
