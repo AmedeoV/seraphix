@@ -4,6 +4,7 @@
 DB_FILE="force_push_commits.sqlite3"
 PYTHON_SCRIPT="force_push_scanner.py"
 LOG_DIR="scan_logs"
+RESULTS_BASE_DIR="leaked_secrets_results"
 
 # Configuration
 MAX_PARALLEL_ORGS=4  # Number of organizations to scan simultaneously
@@ -21,6 +22,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Create base results directory
+mkdir -p "$RESULTS_BASE_DIR"
+
 # Function to scan a single organization
 scan_organization() {
     local org="$1"
@@ -32,24 +36,24 @@ scan_organization() {
     if [ "$DEBUG" = true ]; then
         LOG_FILE="$LOG_DIR/scan_${org}_$(date +%Y%m%d_%H%M%S).log"
         python3 "$PYTHON_SCRIPT" --db-file "$DB_FILE" --scan \
-                --max-workers "$WORKERS_PER_ORG" "$org" 2>&1 | tee "$LOG_FILE"
+                --max-workers "$WORKERS_PER_ORG" --results-dir "$RESULTS_BASE_DIR" "$org" 2>&1 | tee "$LOG_FILE"
     else
         python3 "$PYTHON_SCRIPT" --db-file "$DB_FILE" --scan \
-                --max-workers "$WORKERS_PER_ORG" "$org"
+                --max-workers "$WORKERS_PER_ORG" --results-dir "$RESULTS_BASE_DIR" "$org"
     fi
     
     local exit_code=$?
     
     # Handle results
     if [ $exit_code -eq 0 ]; then
-        if [ -s "verified_secrets_${org}.json" ]; then
-            ORG_DIR="results_$org"
+        if [ -s "$RESULTS_BASE_DIR/verified_secrets_${org}.json" ]; then
+            ORG_DIR="$RESULTS_BASE_DIR/$org"
             mkdir -p "$ORG_DIR"
-            mv "verified_secrets_${org}.json" "$ORG_DIR/"
+            mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
             echo "✅ [$org_num/$total] $org completed - secrets found!"
             return 2  # Success with findings
         else
-            rm -f "verified_secrets_${org}.json"
+            rm -f "$RESULTS_BASE_DIR/verified_secrets_${org}.json"
             echo "✅ [$org_num/$total] $org completed - no secrets"
             return 0  # Success no findings
         fi
@@ -61,7 +65,7 @@ scan_organization() {
 
 # Export function for parallel execution
 export -f scan_organization
-export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG
+export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG RESULTS_BASE_DIR
 
 # Get organizations list (same as before)
 if [ -n "$TEST_ORG" ]; then
@@ -101,3 +105,4 @@ fi
 rm -f /tmp/orgs_numbered.txt
 
 echo "Batch scan completed!"
+echo "Results saved to: $RESULTS_BASE_DIR"

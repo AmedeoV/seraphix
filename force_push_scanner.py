@@ -346,13 +346,17 @@ def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path) -> 
     return repo_url, commit_counter, repo_findings
 
 
-def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int = 16) -> None:
+def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int = 16, results_dir: Path = None) -> None:
     """Scan commits in parallel using ThreadPoolExecutor."""
     global _findings_count
     _findings_count = 0
 
-    # Use organization-specific filename to avoid conflicts in parallel batch processing
-    findings_file = Path(f"verified_secrets_{repo_user}.json")
+    # Use results directory if provided, otherwise current directory
+    if results_dir:
+        results_dir.mkdir(exist_ok=True)
+        findings_file = results_dir / f"verified_secrets_{repo_user}.json"
+    else:
+        findings_file = Path(f"verified_secrets_{repo_user}.json")
 
     # Initialize the JSON file
     try:
@@ -425,6 +429,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--db-file", help="Path to the SQLite database containing force-push events")
     parser.add_argument("--max-workers", type=int, default=16,
                         help="Maximum number of parallel workers for scanning (default: 16)")
+    parser.add_argument("--results-dir", help="Directory to save results in (default: current directory)")
     return parser.parse_args()
 
 
@@ -438,12 +443,13 @@ def main() -> None:
 
     events_path = Path(args.events_file) if args.events_file else None
     db_path = Path(args.db_file) if args.db_file else None
+    results_dir = Path(args.results_dir) if args.results_dir else None
 
     repos = gather_commits(args.input_org, events_path, db_path)
     report(args.input_org, repos)
 
     if args.scan:
-        scan_commits(args.input_org, repos, max_workers=args.max_workers)
+        scan_commits(args.input_org, repos, max_workers=args.max_workers, results_dir=results_dir)
     else:
         print("[✓] Exiting without scan.")
 
