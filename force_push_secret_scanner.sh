@@ -4,13 +4,17 @@
 DB_FILE="force_push_commits.sqlite3"
 PYTHON_SCRIPT="force_push_scanner.py"
 LOG_DIR="scan_logs"
-RESULTS_BASE_DIR="leaked_secrets_results"
+
+# Create timestamped results directory
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+RESULTS_BASE_DIR="leaked_secrets_results/${TIMESTAMP}"
 
 # Configuration
 MAX_PARALLEL_ORGS=4  # Number of organizations to scan simultaneously
 WORKERS_PER_ORG=8    # Workers per organization (reduced to balance resources)
 DEBUG=false
 TEST_ORG=""
+RANDOM_ORDER=false   # Process organizations in random order
 
 # Trap signals to properly handle interruption
 cleanup() {
@@ -50,12 +54,14 @@ while [[ $# -gt 0 ]]; do
         --debug) DEBUG=true; shift ;;
         --parallel-orgs) MAX_PARALLEL_ORGS="$2"; shift 2 ;;
         --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
+        --random) RANDOM_ORDER=true; shift ;;
         *) TEST_ORG="$1"; shift ;;
     esac
 done
 
 # Create base results directory
 mkdir -p "$RESULTS_BASE_DIR"
+echo "Results will be saved to: $RESULTS_BASE_DIR"
 
 # Create log directory if debug mode is enabled
 if [ "$DEBUG" = true ]; then
@@ -115,7 +121,17 @@ export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG RESULTS_BASE_DIR
 if [ -n "$TEST_ORG" ]; then
     ORGS="$TEST_ORG"
 else
-    ORGS=$(python3 -c "
+    if [ "$RANDOM_ORDER" = true ]; then
+        ORGS=$(python3 -c "
+import sqlite3
+db = sqlite3.connect('$DB_FILE')
+cur = db.cursor()
+for row in cur.execute('SELECT DISTINCT repo_org FROM pushes ORDER BY RANDOM();'):
+    if row[0]: print(row[0])
+db.close()
+")
+    else
+        ORGS=$(python3 -c "
 import sqlite3
 db = sqlite3.connect('$DB_FILE')
 cur = db.cursor()
@@ -123,11 +139,13 @@ for row in cur.execute('SELECT DISTINCT repo_org FROM pushes ORDER BY timestamp 
     if row[0]: print(row[0])
 db.close()
 ")
+    fi
 fi
 
 TOTAL_ORGS=$(echo "$ORGS" | wc -l)
 echo "Processing $TOTAL_ORGS organizations with max $MAX_PARALLEL_ORGS parallel jobs"
 echo "Using $WORKERS_PER_ORG workers per organization"
+echo "Results directory: $RESULTS_BASE_DIR"
 echo -e "${YELLOW}Press Ctrl+C to interrupt and cleanup gracefully${NC}"
 
 # Create numbered org list for parallel processing
