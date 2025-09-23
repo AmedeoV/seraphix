@@ -4,3 +4,8 @@
 *.csv
 *.db-shm
 *.db-wal
+
+# Ignore leaked secrets results directory and files
+leaked_secrets_results/
+scan_logs/
+verified_secrets*

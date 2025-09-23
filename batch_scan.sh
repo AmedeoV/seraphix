@@ -25,6 +25,12 @@ done
 # Create base results directory
 mkdir -p "$RESULTS_BASE_DIR"
 
+# Create log directory if debug mode is enabled
+if [ "$DEBUG" = true ]; then
+    mkdir -p "$LOG_DIR"
+    echo "Debug mode enabled - logs will be saved to: $LOG_DIR"
+fi
+
 # Function to scan a single organization
 scan_organization() {
     local org="$1"
@@ -106,3 +112,6 @@ rm -f /tmp/orgs_numbered.txt
 
 echo "Batch scan completed!"
 echo "Results saved to: $RESULTS_BASE_DIR"
+if [ "$DEBUG" = true ]; then
+    echo "Debug logs saved to: $LOG_DIR"
+fi
