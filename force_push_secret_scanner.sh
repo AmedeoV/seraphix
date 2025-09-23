@@ -4,6 +4,11 @@
 DB_FILE="force_push_commits.sqlite3"
 PYTHON_SCRIPT="force_push_scanner.py"
 LOG_DIR="scan_logs"
+NOTIFICATION_SCRIPT="send_notifications.sh"  # Add this line
+
+# Notification configuration
+ENABLE_NOTIFICATIONS=true
+NOTIFICATION_EMAIL=""  # Set your email here
 
 # Create timestamped results directory
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -81,18 +86,25 @@ NC='\033[0m' # No Color
 # Set up signal traps
 trap cleanup SIGINT SIGTERM
 
-# Parse arguments (same as before)
+# Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --debug) DEBUG=true; shift ;;
         --parallel-orgs) MAX_PARALLEL_ORGS="$2"; shift 2 ;;
         --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
         --random) RANDOM_ORDER=true; shift ;;
+        --no-notifications) ENABLE_NOTIFICATIONS=false; shift ;;  # Add this option
+        --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;  # Add this option
         *) TEST_ORG="$1"; shift ;;
     esac
 done
 
 echo "Final configuration: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
+if [ "$ENABLE_NOTIFICATIONS" = true ]; then
+    echo "Notifications enabled - Email: $NOTIFICATION_EMAIL"
+else
+    echo "Notifications disabled"
+fi
 
 # Create base results directory
 mkdir -p "$RESULTS_BASE_DIR"
@@ -135,6 +147,27 @@ scan_organization() {
             ORG_DIR="$RESULTS_BASE_DIR/$org"
             mkdir -p "$ORG_DIR"
             mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
+            
+            # 🚨 SEND NOTIFICATIONS HERE 🚨
+            if [ "$ENABLE_NOTIFICATIONS" = true ] && [ -f "$NOTIFICATION_SCRIPT" ]; then
+                local secrets_file="$ORG_DIR/verified_secrets_${org}.json"
+                local count
+                if command -v jq >/dev/null 2>&1; then
+                    count=$(jq length "$secrets_file" 2>/dev/null || echo "unknown")
+                else
+                    count=$(grep -c "secret_type" "$secrets_file" 2>/dev/null || echo "unknown")
+                fi
+                
+                echo "🚨 [$org_num/$total] Sending security alert for $org ($count secrets found)"
+                
+                # Call notification script in background so it doesn't slow down scanning
+                bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
+                
+                # Store the PID for cleanup if needed
+                local notification_pid=$!
+                echo "📧 [$org_num/$total] Notification sent (PID: $notification_pid)"
+            fi
+            
             echo "✅ [$org_num/$total] $org completed - secrets found!"
             return 2  # Success with findings
         else
@@ -148,11 +181,12 @@ scan_organization() {
     fi
 }
 
-# Export function for parallel execution
+# Export function and variables for parallel execution
 export -f scan_organization
 export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG RESULTS_BASE_DIR
+export ENABLE_NOTIFICATIONS NOTIFICATION_EMAIL NOTIFICATION_SCRIPT  # Add this line
 
-# Get organizations list (same as before)
+# Get organizations list
 if [ -n "$TEST_ORG" ]; then
     ORGS="$TEST_ORG"
 else
@@ -204,6 +238,10 @@ if [ $? -ne 0 ]; then
     echo -e "\n${RED}[!] Processing was interrupted or failed${NC}"
 fi
 
+# Wait for any remaining notification processes to complete
+echo "Waiting for notification emails to complete..."
+wait
+
 # Cleanup
 rm -f /tmp/orgs_numbered.txt
 
@@ -212,3 +250,19 @@ echo "Results saved to: $RESULTS_BASE_DIR"
 if [ "$DEBUG" = true ]; then
     echo "Debug logs saved to: $LOG_DIR"
 fi
+
+# Summary of organizations with secrets found
+echo ""
+echo "=== SCAN SUMMARY ==="
+ORGS_WITH_SECRETS=$(find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f | wc -l)
+if [ $ORGS_WITH_SECRETS -gt 0 ]; then
+    echo -e "${RED}🚨 SECURITY ALERT: $ORGS_WITH_SECRETS organizations have leaked secrets!${NC}"
+    echo "Organizations with secrets:"
+    find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f -exec basename {} \; | sed 's/verified_secrets_\(.*\)\.json/  - \1/' | sort
+    if [ "$ENABLE_NOTIFICATIONS" = true ]; then
+        echo -e "${GREEN}📧 Security notifications sent to: $NOTIFICATION_EMAIL${NC}"
+    fi
+else
+    echo -e "${GREEN}✅ No secrets found in any organization${NC}"
+fi
+echo "===================="
