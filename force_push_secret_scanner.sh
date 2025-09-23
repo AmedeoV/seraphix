@@ -9,12 +9,45 @@ LOG_DIR="scan_logs"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 RESULTS_BASE_DIR="leaked_secrets_results/${TIMESTAMP}"
 
-# Configuration
-MAX_PARALLEL_ORGS=4  # Number of organizations to scan simultaneously
-WORKERS_PER_ORG=8    # Workers per organization (reduced to balance resources)
+# Auto-detect system resources for optimal defaults
+CPU_CORES=$(nproc 2>/dev/null || echo "4")
+MEMORY_GB=$(free -g 2>/dev/null | awk '/^Mem:/{print $2}' || echo "8")
+
+# Calculate optimal defaults based on system resources
+# Conservative approach: use 50% of cores for parallel orgs, leaving room for workers
+AUTO_MAX_PARALLEL_ORGS=$((CPU_CORES / 2))
+if [ $AUTO_MAX_PARALLEL_ORGS -lt 1 ]; then
+    AUTO_MAX_PARALLEL_ORGS=1
+elif [ $AUTO_MAX_PARALLEL_ORGS -gt 8 ]; then
+    AUTO_MAX_PARALLEL_ORGS=8  # Cap at 8 to avoid overwhelming
+fi
+
+# Workers per org based on remaining cores and memory
+# Aim for 2-4 workers per available core, limited by memory
+AUTO_WORKERS_PER_ORG=$((CPU_CORES / AUTO_MAX_PARALLEL_ORGS))
+if [ $AUTO_WORKERS_PER_ORG -lt 2 ]; then
+    AUTO_WORKERS_PER_ORG=2
+elif [ $AUTO_WORKERS_PER_ORG -gt 16 ]; then
+    AUTO_WORKERS_PER_ORG=16  # Cap to prevent memory issues
+fi
+
+# Memory-based adjustment (reduce workers if low memory)
+if [ $MEMORY_GB -lt 4 ]; then
+    AUTO_WORKERS_PER_ORG=$((AUTO_WORKERS_PER_ORG / 2))
+    AUTO_MAX_PARALLEL_ORGS=$((AUTO_MAX_PARALLEL_ORGS / 2))
+    if [ $AUTO_WORKERS_PER_ORG -lt 1 ]; then AUTO_WORKERS_PER_ORG=1; fi
+    if [ $AUTO_MAX_PARALLEL_ORGS -lt 1 ]; then AUTO_MAX_PARALLEL_ORGS=1; fi
+fi
+
+# Configuration with auto-detected defaults
+MAX_PARALLEL_ORGS=$AUTO_MAX_PARALLEL_ORGS
+WORKERS_PER_ORG=$AUTO_WORKERS_PER_ORG
 DEBUG=false
 TEST_ORG=""
 RANDOM_ORDER=false   # Process organizations in random order
+
+echo "System detected: ${CPU_CORES} cores, ${MEMORY_GB}GB RAM"
+echo "Auto-configured: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
 
 # Trap signals to properly handle interruption
 cleanup() {
@@ -58,6 +91,8 @@ while [[ $# -gt 0 ]]; do
         *) TEST_ORG="$1"; shift ;;
     esac
 done
+
+echo "Final configuration: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
 
 # Create base results directory
 mkdir -p "$RESULTS_BASE_DIR"
