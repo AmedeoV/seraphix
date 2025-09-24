@@ -37,9 +37,52 @@ Export the results as a CSV, then run the scanner:
 python force_push_scanner.py <org> --events-file /path/to/force_push_commits.csv --scan
 ```
 
+### Batch Scanner Script
+
+For scanning multiple organizations efficiently, use the included batch scanner:
+
+```bash
+./force_push_secret_scanner.sh
+```
+
+**Key features:**
+- **Parallel processing**: Scans multiple organizations simultaneously with configurable workers
+- **Smart resource management**: Auto-detects system resources and optimizes parallelization
+- **Email notifications**: Optional security alerts when secrets are found
+- **Flexible ordering**: Process organizations randomly (default) or by latest activity
+- **Graceful interruption**: Clean shutdown with Ctrl+C
+- **Comprehensive logging**: Optional debug mode with detailed logs
+
+**Usage examples:**
+```bash
+# Scan all orgs with default settings (random order, no notifications)
+./force_push_secret_scanner.sh
+
+# Scan with email notifications enabled
+./force_push_secret_scanner.sh --email security@company.com
+
+# Process organizations by latest activity instead of random
+./force_push_secret_scanner.sh --order latest
+
+# Scan specific organization with debug logging
+./force_push_secret_scanner.sh myorg --debug
+
+# Custom parallelization settings
+./force_push_secret_scanner.sh --parallel-orgs 4 --workers-per-org 8
+```
+
+**Configuration options:**
+- `--order random|latest`: Organization processing order (default: random)
+- `--email <email>`: Enable email notifications for found secrets
+- `--parallel-orgs <num>`: Max parallel organizations (auto-detected)
+- `--workers-per-org <num>`: Workers per organization (auto-detected)
+- `--debug`: Enable detailed logging
+
 ---
 
-## What the script does
+## What the scripts do
+
+### Main Python Scanner (`force_push_scanner.py`)
 
 * Lists zero-commit **force-push events** for `<org>`.
 * Prints stats for each repo.
@@ -47,6 +90,19 @@ python force_push_scanner.py <org> --events-file /path/to/force_push_commits.csv
   * Identifies the overwritten commits.
   * Runs **TruffleHog** (`--only-verified`) on the overwritten commits.
   * Outputs verified findings with commit link.
+
+### Batch Scanner (`force_push_secret_scanner.sh`)
+
+* **Multi-organization scanning**: Processes all organizations in the database automatically
+* **Intelligent parallelization**: 
+  * Auto-detects system resources (CPU cores, RAM) 
+  * Runs multiple organizations in parallel
+  * Uses multiple workers per organization for faster scanning
+* **Results organization**: Creates timestamped directories with findings sorted by organization
+* **Security notifications**: Sends email alerts when secrets are discovered (optional)
+* **Flexible ordering**: Process organizations randomly (better for security) or by latest activity
+* **Robust error handling**: Timeout protection, graceful interruption, cleanup on exit
+* **Progress tracking**: Real-time status updates and completion summaries
 
 ---
 
