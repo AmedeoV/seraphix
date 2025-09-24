@@ -13,7 +13,6 @@
 # Scanner Options:
 #   --events-file FILE     Path to CSV file containing force-push events
 #   --db-file FILE         Path to SQLite database (overrides default)
-#   --no-scan              Report only, don't scan for secrets
 #   --debug                Enable debug/verbose logging for all operations
 #
 # Other Options:
@@ -26,7 +25,7 @@
 #   ./force_push_secret_scanner.sh                                    # Scan all organizations
 #   ./force_push_secret_scanner.sh microsoft                         # Scan only Microsoft
 #   ./force_push_secret_scanner.sh --parallel-orgs 4 --debug        # 4 parallel with debug
-#   ./force_push_secret_scanner.sh --no-scan --events-file data.csv  # Report-only with CSV
+#   ./force_push_secret_scanner.sh --events-file data.csv          # Use CSV data file
 #
 
 DB_FILE="force_push_commits.sqlite3"
@@ -82,7 +81,6 @@ ORG_ORDER="random"   # Organization processing order: 'random' or 'latest'
 VERBOSE=false
 EVENTS_FILE=""
 CUSTOM_DB_FILE=""  # Custom DB file override
-SCAN_ENABLED=true  # Default to scanning (can be disabled with --no-scan)
 
 echo "System detected: ${CPU_CORES} cores, ${MEMORY_GB}GB RAM"
 echo "Auto-configured: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
@@ -135,7 +133,6 @@ show_help() {
     echo "Scanner Options:"
     echo "  --events-file FILE     Path to CSV file containing force-push events"
     echo "  --db-file FILE         Path to SQLite database (overrides default)"
-    echo "  --no-scan              Report only, don't scan for secrets"
     echo ""
     echo "Other Options:"
     echo "  --help, -h             Show this help message"
@@ -147,7 +144,7 @@ show_help() {
     echo "  $0                                    # Scan all organizations"
     echo "  $0 microsoft                         # Scan only Microsoft organization"
     echo "  $0 --parallel-orgs 4 --debug         # 4 parallel orgs with debug output"
-    echo "  $0 --no-scan --events-file data.csv  # Report only using CSV data"
+    echo "  $0 --events-file data.csv            # Use CSV data file instead of database"
     echo ""
     exit 0
 }
@@ -163,7 +160,6 @@ while [[ $# -gt 0 ]]; do
         --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
         --events-file) EVENTS_FILE="$2"; shift 2 ;;
         --db-file) CUSTOM_DB_FILE="$2"; shift 2 ;;
-        --no-scan) SCAN_ENABLED=false; shift ;;
         *) TEST_ORG="$1"; shift ;;
     esac
 done
@@ -203,7 +199,6 @@ fi
 
 echo "Final configuration: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
 echo "Organization order: $ORG_ORDER"
-echo "Scanning enabled: $SCAN_ENABLED"
 if [ "$DEBUG" = true ]; then
     echo "Debug mode: enabled (includes verbose logging)"
 else
@@ -251,10 +246,7 @@ scan_organization() {
     # Build Python command arguments
     local python_args=()
     python_args+=("$org")
-    
-    if [ "$SCAN_ENABLED" = true ]; then
-        python_args+=("--scan")
-    fi
+    python_args+=("--scan")
     
     if [ "$VERBOSE" = true ]; then
         python_args+=("--verbose")
@@ -286,44 +278,38 @@ scan_organization() {
     
     # Handle results
     if [ $exit_code -eq 0 ]; then
-        if [ "$SCAN_ENABLED" = true ]; then
-            # Scanning mode - check for secrets file
-            if [ -s "$RESULTS_BASE_DIR/verified_secrets_${org}.json" ]; then
-                ORG_DIR="$RESULTS_BASE_DIR/$org"
-                mkdir -p "$ORG_DIR"
-                mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
-                
-                # 🚨 SEND NOTIFICATIONS HERE 🚨
-                if [ -n "$NOTIFICATION_EMAIL" ] && [ -f "$NOTIFICATION_SCRIPT" ]; then
-                    local secrets_file="$ORG_DIR/verified_secrets_${org}.json"
-                    local count
-                    if command -v jq >/dev/null 2>&1; then
-                        count=$(jq length "$secrets_file" 2>/dev/null || echo "unknown")
-                    else
-                        count=$(grep -c "secret_type" "$secrets_file" 2>/dev/null || echo "unknown")
-                    fi
-                    
-                    echo "🚨 [$org_num/$total] Sending security alert for $org ($count secrets found)"
-                    
-                    # Call notification script in background so it doesn't slow down scanning
-                    bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
-                    
-                    # Store the PID for cleanup if needed
-                    local notification_pid=$!
-                    echo "📧 [$org_num/$total] Notification sent (PID: $notification_pid)"
+        # Check for secrets file
+        if [ -s "$RESULTS_BASE_DIR/verified_secrets_${org}.json" ]; then
+            ORG_DIR="$RESULTS_BASE_DIR/$org"
+            mkdir -p "$ORG_DIR"
+            mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
+            
+            # 🚨 SEND NOTIFICATIONS HERE 🚨
+            if [ -n "$NOTIFICATION_EMAIL" ] && [ -f "$NOTIFICATION_SCRIPT" ]; then
+                local secrets_file="$ORG_DIR/verified_secrets_${org}.json"
+                local count
+                if command -v jq >/dev/null 2>&1; then
+                    count=$(jq length "$secrets_file" 2>/dev/null || echo "unknown")
+                else
+                    count=$(grep -c "secret_type" "$secrets_file" 2>/dev/null || echo "unknown")
                 fi
                 
-                echo "✅ [$org_num/$total] $org completed - secrets found!"
-                return 2  # Success with findings
-            else
-                rm -f "$RESULTS_BASE_DIR/verified_secrets_${org}.json"
-                echo "✅ [$org_num/$total] $org completed - no secrets"
-                return 0  # Success no findings
+                echo "🚨 [$org_num/$total] Sending security alert for $org ($count secrets found)"
+                
+                # Call notification script in background so it doesn't slow down scanning
+                bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
+                
+                # Store the PID for cleanup if needed
+                local notification_pid=$!
+                echo "📧 [$org_num/$total] Notification sent (PID: $notification_pid)"
             fi
+            
+            echo "✅ [$org_num/$total] $org completed - secrets found!"
+            return 2  # Success with findings
         else
-            # Report-only mode - always successful
-            echo "✅ [$org_num/$total] $org report completed"
-            return 0  # Success
+            rm -f "$RESULTS_BASE_DIR/verified_secrets_${org}.json"
+            echo "✅ [$org_num/$total] $org completed - no secrets"
+            return 0  # Success no findings
         fi
     else
         echo "❌ [$org_num/$total] $org failed"
@@ -335,7 +321,7 @@ scan_organization() {
 export -f scan_organization
 export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG RESULTS_BASE_DIR
 export NOTIFICATION_EMAIL NOTIFICATION_SCRIPT
-export VERBOSE EVENTS_FILE CUSTOM_DB_FILE SCAN_ENABLED
+export VERBOSE EVENTS_FILE CUSTOM_DB_FILE
 
 # Get organizations list
 if [ -n "$TEST_ORG" ]; then
@@ -363,11 +349,7 @@ db.close()
 fi
 
 TOTAL_ORGS=$(echo "$ORGS" | wc -l)
-if [ "$SCAN_ENABLED" = true ]; then
-    echo "Processing $TOTAL_ORGS organizations with max $MAX_PARALLEL_ORGS parallel jobs (SCANNING MODE)"
-else
-    echo "Processing $TOTAL_ORGS organizations with max $MAX_PARALLEL_ORGS parallel jobs (REPORT-ONLY MODE)"
-fi
+echo "Processing $TOTAL_ORGS organizations with max $MAX_PARALLEL_ORGS parallel jobs"
 echo "Using $WORKERS_PER_ORG workers per organization"
 echo "Results directory: $RESULTS_BASE_DIR"
 echo -e "${YELLOW}Press Ctrl+C to interrupt and cleanup gracefully${NC}"
@@ -408,22 +390,16 @@ fi
 
 # Summary of organizations with secrets found
 echo ""
-if [ "$SCAN_ENABLED" = true ]; then
-    echo "=== SCAN SUMMARY ==="
-    ORGS_WITH_SECRETS=$(find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f | wc -l)
-    if [ $ORGS_WITH_SECRETS -gt 0 ]; then
-        echo -e "${RED}🚨 SECURITY ALERT: $ORGS_WITH_SECRETS organizations have leaked secrets!${NC}"
-        echo "Organizations with secrets:"
-        find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f -exec basename {} \; | sed 's/verified_secrets_\(.*\)\.json/  - \1/' | sort
-        if [ -n "$NOTIFICATION_EMAIL" ]; then
-            echo -e "${GREEN}📧 Security notifications sent to: $NOTIFICATION_EMAIL${NC}"
-        fi
-    else
-        echo -e "${GREEN}✅ No secrets found in any organization${NC}"
+echo "=== SCAN SUMMARY ==="
+ORGS_WITH_SECRETS=$(find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f | wc -l)
+if [ $ORGS_WITH_SECRETS -gt 0 ]; then
+    echo -e "${RED}🚨 SECURITY ALERT: $ORGS_WITH_SECRETS organizations have leaked secrets!${NC}"
+    echo "Organizations with secrets:"
+    find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f -exec basename {} \; | sed 's/verified_secrets_\(.*\)\.json/  - \1/' | sort
+    if [ -n "$NOTIFICATION_EMAIL" ]; then
+        echo -e "${GREEN}📧 Security notifications sent to: $NOTIFICATION_EMAIL${NC}"
     fi
 else
-    echo "=== REPORT SUMMARY ==="
-    echo -e "${GREEN}✅ Report generation completed for all organizations${NC}"
-    echo "Mode: Report-only (no secret scanning performed)"
+    echo -e "${GREEN}✅ No secrets found in any organization${NC}"
 fi
 echo "===================="

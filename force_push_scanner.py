@@ -428,7 +428,7 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
 
 
 def run_scanner(input_org: str, db_file: Optional[Path] = None, events_file: Optional[Path] = None,
-                scan_enabled: bool = True, verbose: bool = False, max_workers: int = 16,
+                verbose: bool = False, max_workers: int = 16,
                 results_dir: Optional[Path] = None) -> None:
     """Main scanner function called by the batch script.
     
@@ -436,7 +436,6 @@ def run_scanner(input_org: str, db_file: Optional[Path] = None, events_file: Opt
         input_org: GitHub username or organization to inspect
         db_file: Path to the SQLite database containing force-push events
         events_file: Path to a CSV file containing force-push events
-        scan_enabled: Whether to run trufflehog scanning (True) or just reporting (False)
         verbose: Enable verbose/debug logging
         max_workers: Maximum number of parallel workers for scanning
         results_dir: Directory to save results in
@@ -451,16 +450,15 @@ def run_scanner(input_org: str, db_file: Optional[Path] = None, events_file: Opt
     repos = gather_commits(input_org, events_file, db_file)
     report(input_org, repos)
     
-    if scan_enabled:
-        scan_commits(input_org, repos, max_workers=max_workers, results_dir=results_dir)
-    else:
-        print("[✓] Exiting without scan.")
+    # Always scan for secrets
+    scan_commits(input_org, repos, max_workers=max_workers, results_dir=results_dir)
 
 
 def main() -> None:
     """Main function - now primarily used as a library by the batch scanner.
     
     Direct command-line usage is deprecated. Use force_push_secret_scanner.sh instead.
+    Note: Scanning is always enabled - this tool always scans for secrets.
     """
     # Simple argument handling for backward compatibility
     if len(sys.argv) < 2:
@@ -472,7 +470,6 @@ def main() -> None:
     input_org = sys.argv[1]
     
     # Check for basic flags
-    scan_enabled = "--scan" in sys.argv
     verbose = "--verbose" in sys.argv or "-v" in sys.argv
     
     # Look for db-file argument
@@ -520,7 +517,6 @@ def main() -> None:
         input_org=input_org,
         db_file=db_file,
         events_file=events_file,
-        scan_enabled=scan_enabled,
         verbose=verbose,
         max_workers=max_workers,
         results_dir=results_dir
