@@ -10,7 +10,7 @@
 #   --email EMAIL          Email address for security notifications
 #   --debug                Enable debug logging for batch operations
 #
-# Python Script Options (passed through):
+# Scanner Options:
 #   --verbose, -v          Enable verbose/debug logging in Python scanner
 #   --events-file FILE     Path to CSV file containing force-push events
 #   --db-file FILE         Path to SQLite database (overrides default)
@@ -78,7 +78,7 @@ DEBUG=false
 TEST_ORG=""
 ORG_ORDER="random"   # Organization processing order: 'random' or 'latest'
 
-# Python script arguments (passed through)
+# Scanner configuration arguments
 VERBOSE=false
 EVENTS_FILE=""
 CUSTOM_DB_FILE=""  # Custom DB file override
@@ -132,8 +132,8 @@ show_help() {
     echo "  --email EMAIL          Email address for security notifications"
     echo "  --debug                Enable debug logging for batch operations"
     echo ""
-    echo "Python Script Options (passed through):"
-    echo "  --verbose, -v          Enable verbose/debug logging in Python scanner"
+    echo "Scanner Options:"
+    echo "  --verbose, -v          Enable verbose/debug logging in scanner"
     echo "  --events-file FILE     Path to CSV file containing force-push events"
     echo "  --db-file FILE         Path to SQLite database (overrides default)"
     echo "  --no-scan              Report only, don't scan for secrets"
@@ -206,7 +206,7 @@ fi
 echo "Final configuration: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
 echo "Organization order: $ORG_ORDER"
 echo "Scanning enabled: $SCAN_ENABLED"
-echo "Python verbose mode: $VERBOSE"
+echo "Verbose mode: $VERBOSE"
 if [ -n "$EVENTS_FILE" ]; then
     echo "Using events file: $EVENTS_FILE"
 fi
@@ -248,7 +248,7 @@ scan_organization() {
     
     # Build Python command arguments
     local python_args=()
-    python_args+=("$db_file_arg" "$db_file_value")
+    python_args+=("$org")
     
     if [ "$SCAN_ENABLED" = true ]; then
         python_args+=("--scan")
@@ -260,11 +260,12 @@ scan_organization() {
     
     if [ -n "$EVENTS_FILE" ]; then
         python_args+=("--events-file" "$EVENTS_FILE")
+    else
+        python_args+=("--db-file" "$db_file_value")
     fi
     
     python_args+=("--max-workers" "$WORKERS_PER_ORG")
     python_args+=("--results-dir" "$RESULTS_BASE_DIR")
-    python_args+=("$org")
     
     if [ "$DEBUG" = true ]; then
         LOG_FILE="$LOG_DIR/scan_${org}_$(date +%Y%m%d_%H%M%S).log"

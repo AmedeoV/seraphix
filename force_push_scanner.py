@@ -1,3 +1,14 @@
+"""
+Force-Push Secret Scanner
+
+This module scans GitHub organizations for leaked secrets in force-pushed commits.
+It is designed to be used primarily as a library by the batch scanner script.
+
+Main function: run_scanner() - called by force_push_secret_scanner.sh
+
+For batch processing and parallel execution, use force_push_secret_scanner.sh instead
+of calling this script directly.
+"""
 from __future__ import annotations
 
 import sys
@@ -15,7 +26,6 @@ import threading
 import time
 
 # Stdlib additions
-import argparse
 import logging
 from contextlib import suppress
 import shutil
@@ -417,47 +427,104 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
             pass
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse and return CLI arguments.
+def run_scanner(input_org: str, db_file: Optional[Path] = None, events_file: Optional[Path] = None,
+                scan_enabled: bool = True, verbose: bool = False, max_workers: int = 16,
+                results_dir: Optional[Path] = None) -> None:
+    """Main scanner function called by the batch script.
     
-    NOTE: This script is typically called through force_push_secret_scanner.sh
-    which provides a more user-friendly interface with batch processing capabilities.
-    Use 'bash force_push_secret_scanner.sh --help' to see all available options.
+    Args:
+        input_org: GitHub username or organization to inspect
+        db_file: Path to the SQLite database containing force-push events
+        events_file: Path to a CSV file containing force-push events
+        scan_enabled: Whether to run trufflehog scanning (True) or just reporting (False)
+        verbose: Enable verbose/debug logging
+        max_workers: Maximum number of parallel workers for scanning
+        results_dir: Directory to save results in
     """
-    parser = argparse.ArgumentParser(
-        description="Inspect force-push commit events from public GitHub orgs and optionally scan their git diff patches for secrets.",
-        epilog="TIP: Use force_push_secret_scanner.sh for batch processing with parallel execution and notifications."
+    # Configure logging
+    logging.basicConfig(
+        level=logging.DEBUG if verbose else logging.WARNING,
+        format="%(message)s",
     )
-    parser.add_argument("input_org", help="GitHub username or organization to inspect")
-    parser.add_argument("--scan", action="store_true", help="Run a trufflehog scan on every force-pushed commit")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose / debug logging")
-    parser.add_argument("--events-file", help="Path to a CSV file containing force-push events")
-    parser.add_argument("--db-file", help="Path to the SQLite database containing force-push events")
-    parser.add_argument("--max-workers", type=int, default=16,
-                        help="Maximum number of parallel workers for scanning (default: 16)")
-    parser.add_argument("--results-dir", help="Directory to save results in (default: current directory)")
-    return parser.parse_args()
+    
+    # Gather commits from data source
+    repos = gather_commits(input_org, events_file, db_file)
+    report(input_org, repos)
+    
+    if scan_enabled:
+        scan_commits(input_org, repos, max_workers=max_workers, results_dir=results_dir)
+    else:
+        print("[✓] Exiting without scan.")
 
 
 def main() -> None:
-    args = parse_args()
-
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.WARNING,  # Reduced logging noise
-        format="%(message)s",
+    """Main function - now primarily used as a library by the batch scanner.
+    
+    Direct command-line usage is deprecated. Use force_push_secret_scanner.sh instead.
+    """
+    # Simple argument handling for backward compatibility
+    if len(sys.argv) < 2:
+        print("ERROR: This script is now designed to be called by force_push_secret_scanner.sh")
+        print("Usage: bash force_push_secret_scanner.sh --help")
+        sys.exit(1)
+    
+    # Extract organization from command line for basic compatibility
+    input_org = sys.argv[1]
+    
+    # Check for basic flags
+    scan_enabled = "--scan" in sys.argv
+    verbose = "--verbose" in sys.argv or "-v" in sys.argv
+    
+    # Look for db-file argument
+    db_file = None
+    if "--db-file" in sys.argv:
+        try:
+            idx = sys.argv.index("--db-file")
+            if idx + 1 < len(sys.argv):
+                db_file = Path(sys.argv[idx + 1])
+        except (ValueError, IndexError):
+            pass
+    
+    # Look for events-file argument
+    events_file = None
+    if "--events-file" in sys.argv:
+        try:
+            idx = sys.argv.index("--events-file")
+            if idx + 1 < len(sys.argv):
+                events_file = Path(sys.argv[idx + 1])
+        except (ValueError, IndexError):
+            pass
+    
+    # Look for max-workers argument
+    max_workers = 16
+    if "--max-workers" in sys.argv:
+        try:
+            idx = sys.argv.index("--max-workers")
+            if idx + 1 < len(sys.argv):
+                max_workers = int(sys.argv[idx + 1])
+        except (ValueError, IndexError):
+            pass
+    
+    # Look for results-dir argument
+    results_dir = None
+    if "--results-dir" in sys.argv:
+        try:
+            idx = sys.argv.index("--results-dir")
+            if idx + 1 < len(sys.argv):
+                results_dir = Path(sys.argv[idx + 1])
+        except (ValueError, IndexError):
+            pass
+    
+    # Run the scanner
+    run_scanner(
+        input_org=input_org,
+        db_file=db_file,
+        events_file=events_file,
+        scan_enabled=scan_enabled,
+        verbose=verbose,
+        max_workers=max_workers,
+        results_dir=results_dir
     )
-
-    events_path = Path(args.events_file) if args.events_file else None
-    db_path = Path(args.db_file) if args.db_file else None
-    results_dir = Path(args.results_dir) if args.results_dir else None
-
-    repos = gather_commits(args.input_org, events_path, db_path)
-    report(args.input_org, repos)
-
-    if args.scan:
-        scan_commits(args.input_org, repos, max_workers=args.max_workers, results_dir=results_dir)
-    else:
-        print("[✓] Exiting without scan.")
 
 
 if __name__ == "__main__":
