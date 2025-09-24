@@ -7,8 +7,7 @@ LOG_DIR="scan_logs"
 NOTIFICATION_SCRIPT="send_notifications.sh"  # Add this line
 
 # Notification configuration
-ENABLE_NOTIFICATIONS=true
-NOTIFICATION_EMAIL=""  # Set your email here
+NOTIFICATION_EMAIL=""  # Set your email here to enable notifications
 
 # Create timestamped results directory
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -49,7 +48,7 @@ MAX_PARALLEL_ORGS=$AUTO_MAX_PARALLEL_ORGS
 WORKERS_PER_ORG=$AUTO_WORKERS_PER_ORG
 DEBUG=false
 TEST_ORG=""
-RANDOM_ORDER=false   # Process organizations in random order
+ORG_ORDER="random"   # Organization processing order: 'random' or 'latest'
 
 echo "System detected: ${CPU_CORES} cores, ${MEMORY_GB}GB RAM"
 echo "Auto-configured: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
@@ -92,15 +91,15 @@ while [[ $# -gt 0 ]]; do
         --debug) DEBUG=true; shift ;;
         --parallel-orgs) MAX_PARALLEL_ORGS="$2"; shift 2 ;;
         --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
-        --random) RANDOM_ORDER=true; shift ;;
-        --no-notifications) ENABLE_NOTIFICATIONS=false; shift ;;  # Add this option
-        --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;  # Add this option
+        --order) ORG_ORDER="$2"; shift 2 ;;
+        --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
         *) TEST_ORG="$1"; shift ;;
     esac
 done
 
 echo "Final configuration: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
-if [ "$ENABLE_NOTIFICATIONS" = true ]; then
+echo "Organization order: $ORG_ORDER"
+if [ -n "$NOTIFICATION_EMAIL" ]; then
     echo "Notifications enabled - Email: $NOTIFICATION_EMAIL"
 else
     echo "Notifications disabled"
@@ -149,7 +148,7 @@ scan_organization() {
             mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
             
             # 🚨 SEND NOTIFICATIONS HERE 🚨
-            if [ "$ENABLE_NOTIFICATIONS" = true ] && [ -f "$NOTIFICATION_SCRIPT" ]; then
+            if [ -n "$NOTIFICATION_EMAIL" ] && [ -f "$NOTIFICATION_SCRIPT" ]; then
                 local secrets_file="$ORG_DIR/verified_secrets_${org}.json"
                 local count
                 if command -v jq >/dev/null 2>&1; then
@@ -184,13 +183,13 @@ scan_organization() {
 # Export function and variables for parallel execution
 export -f scan_organization
 export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG RESULTS_BASE_DIR
-export ENABLE_NOTIFICATIONS NOTIFICATION_EMAIL NOTIFICATION_SCRIPT  # Add this line
+export NOTIFICATION_EMAIL NOTIFICATION_SCRIPT
 
 # Get organizations list
 if [ -n "$TEST_ORG" ]; then
     ORGS="$TEST_ORG"
 else
-    if [ "$RANDOM_ORDER" = true ]; then
+    if [ "$ORG_ORDER" = "random" ]; then
         ORGS=$(python3 -c "
 import sqlite3
 db = sqlite3.connect('$DB_FILE')
@@ -259,7 +258,7 @@ if [ $ORGS_WITH_SECRETS -gt 0 ]; then
     echo -e "${RED}🚨 SECURITY ALERT: $ORGS_WITH_SECRETS organizations have leaked secrets!${NC}"
     echo "Organizations with secrets:"
     find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f -exec basename {} \; | sed 's/verified_secrets_\(.*\)\.json/  - \1/' | sort
-    if [ "$ENABLE_NOTIFICATIONS" = true ]; then
+    if [ -n "$NOTIFICATION_EMAIL" ]; then
         echo -e "${GREEN}📧 Security notifications sent to: $NOTIFICATION_EMAIL${NC}"
     fi
 else
