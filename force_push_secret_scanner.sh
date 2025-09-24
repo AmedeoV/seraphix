@@ -8,13 +8,13 @@
 #   --workers-per-org N    Workers per organization (1-64, default: auto-detected)
 #   --order ORDER          Organization order: 'random' or 'latest' (default: random)
 #   --email EMAIL          Email address for security notifications
-#   --debug                Enable debug logging for batch operations
+#   --debug                Enable debug/verbose logging for all operations
 #
 # Scanner Options:
-#   --verbose, -v          Enable verbose/debug logging in Python scanner
 #   --events-file FILE     Path to CSV file containing force-push events
 #   --db-file FILE         Path to SQLite database (overrides default)
 #   --no-scan              Report only, don't scan for secrets
+#   --debug                Enable debug/verbose logging for all operations
 #
 # Other Options:
 #   --help, -h             Show help message
@@ -25,7 +25,7 @@
 # Examples:
 #   ./force_push_secret_scanner.sh                                    # Scan all organizations
 #   ./force_push_secret_scanner.sh microsoft                         # Scan only Microsoft
-#   ./force_push_secret_scanner.sh --parallel-orgs 4 --verbose       # 4 parallel with verbose
+#   ./force_push_secret_scanner.sh --parallel-orgs 4 --debug        # 4 parallel with debug
 #   ./force_push_secret_scanner.sh --no-scan --events-file data.csv  # Report-only with CSV
 #
 
@@ -130,10 +130,9 @@ show_help() {
     echo "  --workers-per-org N    Workers per organization (default: auto-detected)"
     echo "  --order ORDER          Organization order: 'random' or 'latest' (default: random)"
     echo "  --email EMAIL          Email address for security notifications"
-    echo "  --debug                Enable debug logging for batch operations"
+    echo "  --debug                Enable debug/verbose logging for all operations"
     echo ""
     echo "Scanner Options:"
-    echo "  --verbose, -v          Enable verbose/debug logging in scanner"
     echo "  --events-file FILE     Path to CSV file containing force-push events"
     echo "  --db-file FILE         Path to SQLite database (overrides default)"
     echo "  --no-scan              Report only, don't scan for secrets"
@@ -147,7 +146,7 @@ show_help() {
     echo "Examples:"
     echo "  $0                                    # Scan all organizations"
     echo "  $0 microsoft                         # Scan only Microsoft organization"
-    echo "  $0 --parallel-orgs 4 --verbose       # 4 parallel orgs with verbose output"
+    echo "  $0 --parallel-orgs 4 --debug         # 4 parallel orgs with debug output"
     echo "  $0 --no-scan --events-file data.csv  # Report only using CSV data"
     echo ""
     exit 0
@@ -157,12 +156,11 @@ show_help() {
 while [[ $# -gt 0 ]]; do
     case $1 in
         --help|-h) show_help ;;
-        --debug) DEBUG=true; shift ;;
+        --debug) DEBUG=true; VERBOSE=true; shift ;;
         --parallel-orgs) MAX_PARALLEL_ORGS="$2"; shift 2 ;;
         --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
         --order) ORG_ORDER="$2"; shift 2 ;;
         --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
-        --verbose|-v) VERBOSE=true; shift ;;
         --events-file) EVENTS_FILE="$2"; shift 2 ;;
         --db-file) CUSTOM_DB_FILE="$2"; shift 2 ;;
         --no-scan) SCAN_ENABLED=false; shift ;;
@@ -206,7 +204,11 @@ fi
 echo "Final configuration: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
 echo "Organization order: $ORG_ORDER"
 echo "Scanning enabled: $SCAN_ENABLED"
-echo "Verbose mode: $VERBOSE"
+if [ "$DEBUG" = true ]; then
+    echo "Debug mode: enabled (includes verbose logging)"
+else
+    echo "Debug mode: disabled"
+fi
 if [ -n "$EVENTS_FILE" ]; then
     echo "Using events file: $EVENTS_FILE"
 fi
