@@ -418,9 +418,15 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse and return CLI arguments."""
+    """Parse and return CLI arguments.
+    
+    NOTE: This script is typically called through force_push_secret_scanner.sh
+    which provides a more user-friendly interface with batch processing capabilities.
+    Use 'bash force_push_secret_scanner.sh --help' to see all available options.
+    """
     parser = argparse.ArgumentParser(
         description="Inspect force-push commit events from public GitHub orgs and optionally scan their git diff patches for secrets.",
+        epilog="TIP: Use force_push_secret_scanner.sh for batch processing with parallel execution and notifications."
     )
     parser.add_argument("input_org", help="GitHub username or organization to inspect")
     parser.add_argument("--scan", action="store_true", help="Run a trufflehog scan on every force-pushed commit")
