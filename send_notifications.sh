@@ -51,7 +51,15 @@ send_mailgun_notification() {
     if command -v jq >/dev/null 2>&1; then
         count=$(jq length "$secrets_file" 2>/dev/null || echo "unknown")
     else
-        count=$(grep -c "secret_type" "$secrets_file" 2>/dev/null || echo "unknown")
+        # Multiple fallback methods for counting JSON array elements
+        if command -v grep >/dev/null 2>&1; then
+            count=$(grep -c '"DetectorName"' "$secrets_file" 2>/dev/null || echo "unknown")
+        elif command -v powershell.exe >/dev/null 2>&1; then
+            count=$(powershell.exe -c "try { (Get-Content '$secrets_file' | ConvertFrom-Json).Count } catch { 'unknown' }" 2>/dev/null || echo "unknown")
+        else
+            # Last resort: count opening braces that follow array pattern
+            count=$(awk '/^\s*\{/ {count++} END {print count+0}' "$secrets_file" 2>/dev/null || echo "unknown")
+        fi
     fi
     
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S %Z')
@@ -183,12 +191,20 @@ send_telegram_notification() {
         return 1
     fi
     
-    # Count secrets
+    # Count secrets - fix the counting logic
     local count
     if command -v jq >/dev/null 2>&1; then
         count=$(jq length "$secrets_file" 2>/dev/null || echo "unknown")
     else
-        count=$(grep -c "secret_type" "$secrets_file" 2>/dev/null || echo "unknown")
+        # Multiple fallback methods for counting JSON array elements
+        if command -v grep >/dev/null 2>&1; then
+            count=$(grep -c '"DetectorName"' "$secrets_file" 2>/dev/null || echo "unknown")
+        elif command -v powershell.exe >/dev/null 2>&1; then
+            count=$(powershell.exe -c "try { (Get-Content '$secrets_file' | ConvertFrom-Json).Count } catch { 'unknown' }" 2>/dev/null || echo "unknown")
+        else
+            # Last resort: count opening braces that follow array pattern
+            count=$(awk '/^\s*\{/ {count++} END {print count+0}' "$secrets_file" 2>/dev/null || echo "unknown")
+        fi
     fi
     
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S %Z')
