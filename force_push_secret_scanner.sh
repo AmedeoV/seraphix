@@ -3,7 +3,7 @@
 # Batch Processing Options:
 #   --parallel-orgs N      Maximum parallel organizations (1-32, default: auto-detected)
 #   --workers-per-org N    Workers per organization (1-64, default: auto-detected)
-#   --order ORDER          Organization order: 'random' or 'latest' (default: random)
+#   --order ORDER          Organization order: 'random', 'latest', or 'stars' (default: random)
 #   --email EMAIL          Email address for security notifications
 #   --debug                Enable debug/verbose logging for all operations
 #
@@ -97,7 +97,7 @@ MAX_PARALLEL_ORGS=$AUTO_MAX_PARALLEL_ORGS
 WORKERS_PER_ORG=$AUTO_WORKERS_PER_ORG
 DEBUG=false
 TEST_ORG=""
-ORG_ORDER="random"   # Organization processing order: 'random' or 'latest'
+ORG_ORDER="random"   # Organization processing order: 'random', 'latest', or 'stars'
 RESUME_MODE=false    # Whether to resume from previous scan
 RESTART_MODE=false   # Whether to start over from beginning
 CUSTOM_STATE_FILE="" # Custom state file path
@@ -242,7 +242,7 @@ show_help() {
     echo "Batch Processing Options:"
     echo "  --parallel-orgs N      Maximum parallel organizations (default: auto-detected)"
     echo "  --workers-per-org N    Workers per organization (default: auto-detected)"
-    echo "  --order ORDER          Organization order: 'random' or 'latest' (default: random)"
+    echo "  --order ORDER          Organization order: 'random', 'latest', or 'stars' (default: random)"
     echo "  --email EMAIL          Email address for security notifications"
     echo "  --debug                Enable debug/verbose logging for all operations"
     echo ""
@@ -261,10 +261,16 @@ show_help() {
     echo "Arguments:"
     echo "  ORGANIZATION           Single organization to scan (optional)"
     echo ""
+    echo "Notification Setup:"
+    echo "  Configure email notifications by setting up mailgun_config.sh"
+    echo "  Configure Telegram notifications by setting up telegram_config.sh"
+    echo "  Both notification methods can be used simultaneously"
+    echo ""
     echo "Examples:"
     echo "  $0                                    # Scan all organizations"
     echo "  $0 microsoft                         # Scan only Microsoft organization"
     echo "  $0 --parallel-orgs 4 --debug         # 4 parallel orgs with debug output"
+    echo "  $0 --order stars --parallel-orgs 2   # Scan orgs with most stars first"
     echo "  $0 --events-file data.csv            # Use CSV data file instead of database"
     echo "  $0 --resume                          # Resume from where previous scan stopped"
     echo "  $0 --restart                         # Start over from beginning (clear state)"
@@ -329,8 +335,8 @@ if ! [[ "$WORKERS_PER_ORG" =~ ^[0-9]+$ ]] || [ "$WORKERS_PER_ORG" -lt 1 ] || [ "
     exit 1
 fi
 
-if [ "$ORG_ORDER" != "random" ] && [ "$ORG_ORDER" != "latest" ]; then
-    echo -e "${RED}[!] Error: --order must be 'random' or 'latest'${NC}"
+if [ "$ORG_ORDER" != "random" ] && [ "$ORG_ORDER" != "latest" ] && [ "$ORG_ORDER" != "stars" ]; then
+    echo -e "${RED}[!] Error: --order must be 'random', 'latest', or 'stars'${NC}"
     exit 1
 fi
 
@@ -347,10 +353,26 @@ fi
 if [ -n "$CUSTOM_DB_FILE" ]; then
     echo "Using custom DB file: $CUSTOM_DB_FILE"
 fi
+
+# Display notification configuration
+echo "Notification configuration:"
 if [ -n "$NOTIFICATION_EMAIL" ]; then
-    echo "Notifications enabled - Email: $NOTIFICATION_EMAIL"
+    echo "  📧 Email: $NOTIFICATION_EMAIL (Mailgun)"
 else
-    echo "Notifications disabled"
+    echo "  📧 Email: Not configured"
+fi
+
+# Check Telegram configuration (from environment or config files)
+if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+    echo "  📱 Telegram: Configured (Bot: ${TELEGRAM_BOT_TOKEN:0:10}..., Chat: $TELEGRAM_CHAT_ID)"
+elif [ -f "telegram_config.sh" ]; then
+    echo "  📱 Telegram: Config file found but not loaded (will be loaded by notification script)"
+else
+    echo "  📱 Telegram: Not configured"
+fi
+
+if [ -z "$NOTIFICATION_EMAIL" ] && [ -z "$TELEGRAM_BOT_TOKEN" ] && [ ! -f "telegram_config.sh" ]; then
+    echo "  ⚠️  No notification methods configured - secrets will only be saved to files"
 fi
 
 # Create base results directory
@@ -490,7 +512,7 @@ scan_organization() {
             update_state_with_org "$STATE_FILE" "$org" "secrets_found"
             
             # 🚨 SEND NOTIFICATIONS HERE 🚨
-            if [ -n "$NOTIFICATION_EMAIL" ] && [ -f "$NOTIFICATION_SCRIPT" ]; then
+            if [ -f "$NOTIFICATION_SCRIPT" ]; then
                 local secrets_file="$ORG_DIR/verified_secrets_${org}.json"
                 local count
                 if command -v jq >/dev/null 2>&1; then
@@ -502,11 +524,16 @@ scan_organization() {
                 echo "🚨 [$org_num/$total] Sending security alert for $org ($count secrets found)"
                 
                 # Call notification script in background so it doesn't slow down scanning
-                bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
+                # The script will handle both email and Telegram based on configuration
+                if [ -n "$NOTIFICATION_EMAIL" ]; then
+                    bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
+                else
+                    bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" &
+                fi
                 
                 # Store the PID for cleanup if needed
                 local notification_pid=$!
-                echo "📧 [$org_num/$total] Notification sent (PID: $notification_pid)"
+                echo "📧 [$org_num/$total] Notifications sent (PID: $notification_pid)"
             fi
             
             echo "✅ [$org_num/$total] $org completed - secrets found!"
@@ -546,6 +573,37 @@ db = sqlite3.connect('$DB_FILE')
 cur = db.cursor()
 for row in cur.execute('SELECT DISTINCT repo_org FROM pushes ORDER BY RANDOM();'):
     if row[0]: print(row[0])
+db.close()
+")
+    elif [ "$ORG_ORDER" = "stars" ]; then
+        ALL_ORGS=$(python3 -c "
+import sqlite3
+db = sqlite3.connect('$DB_FILE')
+cur = db.cursor()
+
+# Check if stars column exists
+try:
+    cur.execute('SELECT stars FROM pushes LIMIT 1')
+    has_stars_column = True
+except sqlite3.OperationalError:
+    has_stars_column = False
+
+if has_stars_column:
+    print('Using stars column for ordering organizations by total stars...', file=sys.stderr)
+    for row in cur.execute('''
+        SELECT repo_org, SUM(COALESCE(stars, 0)) as total_stars 
+        FROM pushes 
+        WHERE repo_org IS NOT NULL 
+        GROUP BY repo_org 
+        ORDER BY total_stars DESC, repo_org ASC
+    '''):
+        if row[0]: 
+            print(row[0])
+else:
+    print('Warning: stars column not found, falling back to random order', file=sys.stderr)
+    for row in cur.execute('SELECT DISTINCT repo_org FROM pushes ORDER BY RANDOM();'):
+        if row[0]: print(row[0])
+
 db.close()
 ")
     else
@@ -646,8 +704,36 @@ if [ $ORGS_WITH_SECRETS -gt 0 ]; then
     echo -e "${RED}🚨 SECURITY ALERT: $ORGS_WITH_SECRETS organizations have leaked secrets!${NC}"
     echo "Organizations with secrets:"
     find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f -exec basename {} \; | sed 's/verified_secrets_\(.*\)\.json/  - \1/' | sort
+    
+    # Check which notification methods were used
+    local notifications_sent=""
     if [ -n "$NOTIFICATION_EMAIL" ]; then
-        echo -e "${GREEN}📧 Security notifications sent to: $NOTIFICATION_EMAIL${NC}"
+        notifications_sent="📧 Email ($NOTIFICATION_EMAIL)"
+    fi
+    
+    # Check if Telegram is configured (either via env vars or config file)
+    if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+        if [ -n "$notifications_sent" ]; then
+            notifications_sent="$notifications_sent, 📱 Telegram"
+        else
+            notifications_sent="📱 Telegram"
+        fi
+    elif [ -f "telegram_config.sh" ]; then
+        # Check if telegram_config.sh actually has valid configuration
+        source "telegram_config.sh" 2>/dev/null
+        if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            if [ -n "$notifications_sent" ]; then
+                notifications_sent="$notifications_sent, 📱 Telegram"
+            else
+                notifications_sent="📱 Telegram"
+            fi
+        fi
+    fi
+    
+    if [ -n "$notifications_sent" ]; then
+        echo -e "${GREEN}� Security notifications sent via: $notifications_sent${NC}"
+    else
+        echo -e "${YELLOW}⚠️  No notifications sent - configure email or Telegram for alerts${NC}"
     fi
 else
     echo -e "${GREEN}✅ No secrets found in any organization${NC}"

@@ -5,9 +5,18 @@ if [ -f "mailgun_config.sh" ]; then
     source "mailgun_config.sh"
 fi
 
+# Load Telegram configuration
+if [ -f "telegram_config.sh" ]; then
+    source "telegram_config.sh"
+fi
+
 # Email notification configuration (fallback values)
 DEFAULT_EMAIL="${DEFAULT_EMAIL:-security-team@company.com}"
 EMAIL_FROM="secret-scanner@$(hostname -d 2>/dev/null || echo 'localhost')"
+
+# Telegram notification configuration (from config file or environment)
+TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
+TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 
 # Color codes for console output
 RED='\033[0;31m'
@@ -153,6 +162,95 @@ EOF
     fi
 }
 
+send_telegram_notification() {
+    local org="$1"
+    local secrets_file="$2"
+    
+    # Validate Telegram configuration
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+        echo -e "${RED}Error: Telegram bot token and chat ID must be configured${NC}" >&2
+        return 1
+    fi
+    
+    # Validate inputs
+    if [ -z "$org" ] || [ -z "$secrets_file" ]; then
+        echo -e "${RED}Error: Missing required parameters for Telegram notification${NC}" >&2
+        return 1
+    fi
+    
+    if [ ! -f "$secrets_file" ]; then
+        echo -e "${RED}Error: Secrets file not found: $secrets_file${NC}" >&2
+        return 1
+    fi
+    
+    # Count secrets
+    local count
+    if command -v jq >/dev/null 2>&1; then
+        count=$(jq length "$secrets_file" 2>/dev/null || echo "unknown")
+    else
+        count=$(grep -c "secret_type" "$secrets_file" 2>/dev/null || echo "unknown")
+    fi
+    
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S %Z')
+    local hostname=$(hostname)
+    local scanner_user=$(whoami)
+    local file_size=$(du -h "$secrets_file" | cut -f1)
+    
+    # Create Telegram message with Markdown formatting
+    local message="🚨 *SECURITY ALERT: Leaked Secrets Detected*
+
+📊 *Organization:* \`$org\`
+🔍 *Secrets Found:* *$count*
+⏰ *Detection Time:* $timestamp
+🖥️ *Scanner Host:* \`$hostname\`
+👤 *Scanner User:* \`$scanner_user\`
+📁 *Results File:* \`$secrets_file\`
+💾 *File Size:* $file_size
+
+⚠️ *IMMEDIATE ACTION REQUIRED:*
+• Review the detected secrets immediately
+• Revoke/rotate any exposed credentials  
+• Investigate the source repositories
+• Update security policies if needed
+
+_This is an automated alert from the force push secret scanner._"
+
+    echo -e "${YELLOW}📱 Sending Telegram notification...${NC}"
+    echo -e "${YELLOW}   Bot Token: ${TELEGRAM_BOT_TOKEN:0:10}...${NC}"
+    echo -e "${YELLOW}   Chat ID: $TELEGRAM_CHAT_ID${NC}"
+
+    # Send message via Telegram Bot API
+    local response
+    response=$(curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+        -H "Content-Type: application/json" \
+        -d "{
+            \"chat_id\": \"$TELEGRAM_CHAT_ID\",
+            \"text\": \"$message\",
+            \"parse_mode\": \"Markdown\",
+            \"disable_web_page_preview\": true
+        }")
+    
+    local curl_exit_code=$?
+    
+    if [ $curl_exit_code -eq 0 ]; then
+        # Check if Telegram API returned success
+        if echo "$response" | grep -q '"ok":true'; then
+            local message_id=$(echo "$response" | grep -o '"message_id":[0-9]*' | cut -d':' -f2)
+            echo -e "${GREEN}📲 Telegram notification sent successfully${NC}"
+            echo -e "${GREEN}📧 Message ID: $message_id${NC}"
+            return 0
+        else
+            local error_description=$(echo "$response" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
+            echo -e "${RED}❌ Telegram API error: ${error_description:-$response}${NC}" >&2
+            return 1
+        fi
+    else
+        echo -e "${RED}❌ Failed to send Telegram notification (curl exit code: $curl_exit_code)${NC}" >&2
+        echo -e "${RED}Response: $response${NC}" >&2
+        return 1
+    fi
+}
+
 send_email_notification() {
     local org="$1"
     local secrets_file="$2"
@@ -178,8 +276,42 @@ send_all_notifications() {
     
     echo -e "${YELLOW}📢 Sending security notifications for organization: $org${NC}"
     
-    # Send email notification
-    send_email_notification "$org" "$secrets_file" "$notification_email"
+    local success_count=0
+    local total_count=0
+    
+    # Send email notification if configured
+    if [ -n "$MAILGUN_API_KEY" ] && [ -n "$MAILGUN_DOMAIN" ]; then
+        echo -e "${YELLOW}📧 Attempting email notification...${NC}"
+        ((total_count++))
+        if send_email_notification "$org" "$secrets_file" "$notification_email"; then
+            ((success_count++))
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Email notifications not configured (Mailgun)${NC}"
+    fi
+    
+    # Send Telegram notification if configured
+    if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+        echo -e "${YELLOW}📱 Attempting Telegram notification...${NC}"
+        ((total_count++))
+        if send_telegram_notification "$org" "$secrets_file"; then
+            ((success_count++))
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Telegram notifications not configured${NC}"
+    fi
+    
+    # Summary
+    if [ $total_count -eq 0 ]; then
+        echo -e "${RED}❌ No notification methods configured${NC}" >&2
+        return 1
+    elif [ $success_count -eq $total_count ]; then
+        echo -e "${GREEN}✅ All notifications sent successfully ($success_count/$total_count)${NC}"
+        return 0
+    else
+        echo -e "${YELLOW}⚠️  Partial success: $success_count/$total_count notifications sent${NC}"
+        return 1
+    fi
 }
 
 # Allow script to be sourced or called directly
@@ -190,9 +322,13 @@ if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
         echo "Example: $0 myorg /path/to/secrets.json security@company.com"
         echo ""
         echo "Configuration loaded from mailgun_config.sh:"
-        echo "  Domain: ${MAILGUN_DOMAIN:-'Not configured'}"
-        echo "  From: ${MAILGUN_FROM:-'Not configured'}"
+        echo "  Mailgun Domain: ${MAILGUN_DOMAIN:-'Not configured'}"
+        echo "  Mailgun From: ${MAILGUN_FROM:-'Not configured'}"
         echo "  Default Email: ${DEFAULT_EMAIL:-'Not configured'}"
+        echo ""
+        echo "Configuration loaded from telegram_config.sh:"
+        echo "  Bot Token: ${TELEGRAM_BOT_TOKEN:+Configured}${TELEGRAM_BOT_TOKEN:-'Not configured'}"
+        echo "  Chat ID: ${TELEGRAM_CHAT_ID:-'Not configured'}"
         exit 1
     fi
     
