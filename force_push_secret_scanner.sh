@@ -5,6 +5,7 @@
 #   --workers-per-org N    Workers per organization (1-64, default: auto-detected)
 #   --order ORDER          Organization order: 'random', 'latest', or 'stars' (default: random)
 #   --email EMAIL          Email address for security notifications
+#   --telegramId CHAT_ID   Telegram chat ID for security notifications
 #   --debug                Enable debug/verbose logging for all operations
 #
 # Resume Options:
@@ -56,7 +57,8 @@ NOTIFICATION_SCRIPT="send_notifications.sh"  # Add this line
 STATE_FILE="scan_state.json"  # Default state file for tracking progress
 
 # Notification configuration
-NOTIFICATION_EMAIL=""  # Set your email here to enable notifications
+NOTIFICATION_EMAIL=""  # Email address for notifications (empty = disabled)
+NOTIFICATION_TELEGRAM_CHAT_ID=""  # Telegram chat ID for notifications (empty = disabled)
 
 # Create timestamped results directory
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -244,6 +246,7 @@ show_help() {
     echo "  --workers-per-org N    Workers per organization (default: auto-detected)"
     echo "  --order ORDER          Organization order: 'random', 'latest', or 'stars' (default: random)"
     echo "  --email EMAIL          Email address for security notifications"
+    echo "  --telegramId CHAT_ID   Telegram chat ID for security notifications"
     echo "  --debug                Enable debug/verbose logging for all operations"
     echo ""
     echo "Resume Options:"
@@ -262,18 +265,23 @@ show_help() {
     echo "  ORGANIZATION           Single organization to scan (optional)"
     echo ""
     echo "Notification Setup:"
-    echo "  Configure email notifications by setting up mailgun_config.sh"
-    echo "  Configure Telegram notifications by setting up telegram_config.sh"
+    echo "  Use --email EMAIL to enable email notifications via Mailgun"
+    echo "  Use --telegramId CHAT_ID to enable Telegram notifications"
+    echo "  Configure mailgun_config.sh for email settings"
+    echo "  Configure telegram_config.sh for Telegram bot token"
     echo "  Both notification methods can be used simultaneously"
     echo ""
     echo "Examples:"
-    echo "  $0                                    # Scan all organizations"
-    echo "  $0 microsoft                         # Scan only Microsoft organization"
-    echo "  $0 --parallel-orgs 4 --debug         # 4 parallel orgs with debug output"
-    echo "  $0 --order stars --parallel-orgs 2   # Scan orgs with most stars first"
-    echo "  $0 --events-file data.csv            # Use CSV data file instead of database"
-    echo "  $0 --resume                          # Resume from where previous scan stopped"
-    echo "  $0 --restart                         # Start over from beginning (clear state)"
+    echo "  $0                                          # Scan all organizations (no notifications)"
+    echo "  $0 --email security@company.com             # Scan with email notifications"
+    echo "  $0 --telegramId 123456789                   # Scan with Telegram notifications"
+    echo "  $0 --email sec@co.com --telegramId 123456   # Scan with both notifications"
+    echo "  $0 microsoft                                # Scan only Microsoft organization"
+    echo "  $0 --parallel-orgs 4 --debug                # 4 parallel orgs with debug output"
+    echo "  $0 --order stars --parallel-orgs 2          # Scan orgs with most stars first"
+    echo "  $0 --events-file data.csv                   # Use CSV data file instead of database"
+    echo "  $0 --resume                                 # Resume from where previous scan stopped"
+    echo "  $0 --restart                                # Start over from beginning (clear state)"
     echo ""
     exit 0
 }
@@ -287,6 +295,7 @@ while [[ $# -gt 0 ]]; do
         --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
         --order) ORG_ORDER="$2"; shift 2 ;;
         --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
+        --telegramId) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; shift 2 ;;
         --resume) RESUME_MODE=true; shift ;;
         --restart) RESTART_MODE=true; shift ;;
         --state-file) CUSTOM_STATE_FILE="$2"; shift 2 ;;
@@ -357,22 +366,20 @@ fi
 # Display notification configuration
 echo "Notification configuration:"
 if [ -n "$NOTIFICATION_EMAIL" ]; then
-    echo "  📧 Email: $NOTIFICATION_EMAIL (Mailgun)"
+    echo "  📧 Email: $NOTIFICATION_EMAIL"
 else
-    echo "  📧 Email: Not configured"
+    echo "  📧 Email: Disabled (use --email to enable)"
 fi
 
-# Check Telegram configuration (from environment or config files)
-if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-    echo "  📱 Telegram: Configured (Bot: ${TELEGRAM_BOT_TOKEN:0:10}..., Chat: $TELEGRAM_CHAT_ID)"
-elif [ -f "telegram_config.sh" ]; then
-    echo "  📱 Telegram: Config file found but not loaded (will be loaded by notification script)"
+if [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
+    echo "  📱 Telegram: Chat ID $NOTIFICATION_TELEGRAM_CHAT_ID"
 else
-    echo "  📱 Telegram: Not configured"
+    echo "  📱 Telegram: Disabled (use --telegramId to enable)"
 fi
 
-if [ -z "$NOTIFICATION_EMAIL" ] && [ -z "$TELEGRAM_BOT_TOKEN" ] && [ ! -f "telegram_config.sh" ]; then
-    echo "  ⚠️  No notification methods configured - secrets will only be saved to files"
+if [ -z "$NOTIFICATION_EMAIL" ] && [ -z "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
+    echo "  ⚠️  No notifications enabled - secrets will only be saved to files"
+    echo "     Use --email EMAIL and/or --telegramId CHAT_ID to enable notifications"
 fi
 
 # Create base results directory
@@ -512,7 +519,7 @@ scan_organization() {
             update_state_with_org "$STATE_FILE" "$org" "secrets_found"
             
             # 🚨 SEND NOTIFICATIONS HERE 🚨
-            if [ -f "$NOTIFICATION_SCRIPT" ]; then
+            if [ -f "$NOTIFICATION_SCRIPT" ] && ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]); then
                 local secrets_file="$ORG_DIR/verified_secrets_${org}.json"
                 local count
                 if command -v jq >/dev/null 2>&1; then
@@ -523,8 +530,12 @@ scan_organization() {
                 
                 echo "🚨 [$org_num/$total] Sending security alert for $org ($count secrets found)"
                 
+                # Set environment variables for the notification script
+                if [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
+                    export TELEGRAM_CHAT_ID="$NOTIFICATION_TELEGRAM_CHAT_ID"
+                fi
+                
                 # Call notification script in background so it doesn't slow down scanning
-                # The script will handle both email and Telegram based on configuration
                 if [ -n "$NOTIFICATION_EMAIL" ]; then
                     bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
                 else
@@ -559,7 +570,7 @@ scan_organization() {
 # Export function and variables for parallel execution
 export -f scan_organization update_state_with_org
 export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG RESULTS_BASE_DIR
-export NOTIFICATION_EMAIL NOTIFICATION_SCRIPT STATE_FILE
+export NOTIFICATION_EMAIL NOTIFICATION_TELEGRAM_CHAT_ID NOTIFICATION_SCRIPT STATE_FILE
 export VERBOSE EVENTS_FILE CUSTOM_DB_FILE
 
 # Get organizations list
@@ -711,29 +722,18 @@ if [ $ORGS_WITH_SECRETS -gt 0 ]; then
         notifications_sent="📧 Email ($NOTIFICATION_EMAIL)"
     fi
     
-    # Check if Telegram is configured (either via env vars or config file)
-    if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+    if [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
         if [ -n "$notifications_sent" ]; then
-            notifications_sent="$notifications_sent, 📱 Telegram"
+            notifications_sent="$notifications_sent, 📱 Telegram (Chat: $NOTIFICATION_TELEGRAM_CHAT_ID)"
         else
-            notifications_sent="📱 Telegram"
-        fi
-    elif [ -f "telegram_config.sh" ]; then
-        # Check if telegram_config.sh actually has valid configuration
-        source "telegram_config.sh" 2>/dev/null
-        if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-            if [ -n "$notifications_sent" ]; then
-                notifications_sent="$notifications_sent, 📱 Telegram"
-            else
-                notifications_sent="📱 Telegram"
-            fi
+            notifications_sent="📱 Telegram (Chat: $NOTIFICATION_TELEGRAM_CHAT_ID)"
         fi
     fi
     
     if [ -n "$notifications_sent" ]; then
         echo -e "${GREEN}� Security notifications sent via: $notifications_sent${NC}"
     else
-        echo -e "${YELLOW}⚠️  No notifications sent - configure email or Telegram for alerts${NC}"
+        echo -e "${YELLOW}⚠️  No notifications sent - use --email and/or --telegramId to enable alerts${NC}"
     fi
 else
     echo -e "${GREEN}✅ No secrets found in any organization${NC}"

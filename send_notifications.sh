@@ -145,8 +145,8 @@ EOF
     rm -f "$temp_text" "$temp_html"
     
     if [ $curl_exit_code -eq 0 ]; then
-        # Check if Mailgun API returned success
-        if echo "$response" | grep -q '"message": "Queued"'; then
+        # Check if Mailgun API returned success (both "Queued" and "Queued. Thank you." are success)
+        if echo "$response" | grep -q '"message".*"Queued'; then
             local message_id=$(echo "$response" | grep -o '"id": "[^"]*"' | cut -d'"' -f4)
             echo -e "${GREEN}✉️  Email notification sent via Mailgun to: $notification_email${NC}"
             echo -e "${GREEN}📧 Message ID: $message_id${NC}"
@@ -254,7 +254,13 @@ _This is an automated alert from the force push secret scanner._"
 send_email_notification() {
     local org="$1"
     local secrets_file="$2"
-    local notification_email="${3:-$DEFAULT_EMAIL}"
+    local notification_email="$3"
+    
+    # Don't attempt email if no email address provided
+    if [ -z "$notification_email" ]; then
+        echo -e "${RED}Error: No email address provided for email notification${NC}" >&2
+        return 1
+    fi
     
     # Try Mailgun first if configured, fallback to system mail
     if [ -n "$MAILGUN_API_KEY" ] && [ -n "$MAILGUN_DOMAIN" ]; then
@@ -272,33 +278,33 @@ send_email_notification() {
 send_all_notifications() {
     local org="$1"
     local secrets_file="$2"
-    local notification_email="${3:-$DEFAULT_EMAIL}"
+    local notification_email="$3"  # Remove default value here
     
     echo -e "${YELLOW}📢 Sending security notifications for organization: $org${NC}"
     
     local success_count=0
     local total_count=0
     
-    # Send email notification if configured
-    if [ -n "$MAILGUN_API_KEY" ] && [ -n "$MAILGUN_DOMAIN" ]; then
+    # Send email notification if email address is provided AND Mailgun is configured
+    if [ -n "$notification_email" ] && [ -n "$MAILGUN_API_KEY" ] && [ -n "$MAILGUN_DOMAIN" ]; then
         echo -e "${YELLOW}📧 Attempting email notification...${NC}"
         ((total_count++))
         if send_email_notification "$org" "$secrets_file" "$notification_email"; then
             ((success_count++))
         fi
-    else
-        echo -e "${YELLOW}⚠️  Email notifications not configured (Mailgun)${NC}"
+    elif [ -n "$notification_email" ]; then
+        echo -e "${YELLOW}⚠️  Email requested but Mailgun not configured${NC}"
     fi
     
-    # Send Telegram notification if configured
-    if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+    # Send Telegram notification if chat ID is provided AND bot token is configured
+    if [ -n "$TELEGRAM_CHAT_ID" ] && [ -n "$TELEGRAM_BOT_TOKEN" ]; then
         echo -e "${YELLOW}📱 Attempting Telegram notification...${NC}"
         ((total_count++))
         if send_telegram_notification "$org" "$secrets_file"; then
             ((success_count++))
         fi
-    else
-        echo -e "${YELLOW}⚠️  Telegram notifications not configured${NC}"
+    elif [ -n "$TELEGRAM_CHAT_ID" ]; then
+        echo -e "${YELLOW}⚠️  Telegram requested but bot token not configured${NC}"
     fi
     
     # Summary
