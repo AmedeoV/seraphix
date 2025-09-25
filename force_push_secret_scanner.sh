@@ -1,5 +1,24 @@
-#!/bin/bash
-# Enhanced batch scanner with parallel organization processing
+#!/# Available ARGUMENTS:
+# 
+# Batch Processing Options:
+#   --parallel-orgs N      Maximum parallel organizations (1-32, default: auto-detected)
+#   --workers-per-org N    Workers per organization (1-64, default: auto-detected)
+#   --order ORDER          Organization order: 'random' or 'latest' (default: random)
+#   --email EMAIL          Email address for security notifications
+#   --debug                Enable debug/verbose logging for all operations
+#
+# Resume Options:
+#   --resume               Resume from previous scan (uses existing state file)
+#   --restart              Start over from beginning (clears previous state)
+#   --state-file FILE      Custom state file path (default: scan_state.json)
+#
+# Scanner Options:
+#   --events-file FILE     Path to CSV file containing force-push events
+#   --db-file FILE         Path to SQLite database (overrides default)
+#   --debug                Enable debug/verbose logging for all operations
+#
+# Other Options:
+#   --help, -h             Show help messageced batch scanner with parallel organization processing
 #
 # AVAILABLE ARGUMENTS:
 # 
@@ -26,12 +45,15 @@
 #   ./force_push_secret_scanner.sh microsoft                         # Scan only Microsoft
 #   ./force_push_secret_scanner.sh --parallel-orgs 4 --debug        # 4 parallel with debug
 #   ./force_push_secret_scanner.sh --events-file data.csv          # Use CSV data file
+#   ./force_push_secret_scanner.sh --resume                        # Resume previous scan
+#   ./force_push_secret_scanner.sh --restart                       # Start over from beginning
 #
 
 DB_FILE="force_push_commits.sqlite3"
 PYTHON_SCRIPT="force_push_scanner.py"
 LOG_DIR="scan_logs"
 NOTIFICATION_SCRIPT="send_notifications.sh"  # Add this line
+STATE_FILE="scan_state.json"  # Default state file for tracking progress
 
 # Notification configuration
 NOTIFICATION_EMAIL=""  # Set your email here to enable notifications
@@ -76,6 +98,9 @@ WORKERS_PER_ORG=$AUTO_WORKERS_PER_ORG
 DEBUG=false
 TEST_ORG=""
 ORG_ORDER="random"   # Organization processing order: 'random' or 'latest'
+RESUME_MODE=false    # Whether to resume from previous scan
+RESTART_MODE=false   # Whether to start over from beginning
+CUSTOM_STATE_FILE="" # Custom state file path
 
 # Scanner configuration arguments
 VERBOSE=false
@@ -103,8 +128,11 @@ cleanup() {
     
     # Clean up temp files
     rm -f /tmp/orgs_numbered.txt 2>/dev/null
+    rm -f /tmp/all_orgs.txt /tmp/scanned_orgs.txt 2>/dev/null
     
-    echo "${RED}[!] Cleanup completed. Exiting...${NC}"
+    echo "${RED}[!] Cleanup completed. State preserved in: $STATE_FILE${NC}"
+    echo "${YELLOW}[!] Use --resume to continue where you left off${NC}"
+    echo "${RED}[!] Exiting...${NC}"
     exit 130  # Standard exit code for Ctrl+C
 }
 
@@ -116,6 +144,94 @@ NC='\033[0m' # No Color
 
 # Set up signal traps
 trap cleanup SIGINT SIGTERM
+
+# State management functions
+save_state() {
+    local state_file="$1"
+    local scanned_orgs="$2"
+    local total_orgs="$3"
+    local results_dir="$4"
+    local start_time="$5"
+    
+    cat > "$state_file" << EOF
+{
+  "start_time": "$start_time",
+  "results_dir": "$results_dir",
+  "total_orgs": $total_orgs,
+  "scanned_orgs": [
+$(echo "$scanned_orgs" | sed 's/.*/"&"/' | paste -sd, -)
+  ],
+  "configuration": {
+    "max_parallel_orgs": $MAX_PARALLEL_ORGS,
+    "workers_per_org": $WORKERS_PER_ORG,
+    "org_order": "$ORG_ORDER",
+    "db_file": "$([ -n "$CUSTOM_DB_FILE" ] && echo "$CUSTOM_DB_FILE" || echo "$DB_FILE")",
+    "events_file": "${EVENTS_FILE:-}",
+    "debug": $DEBUG
+  }
+}
+EOF
+}
+
+load_state() {
+    local state_file="$1"
+    
+    if [ ! -f "$state_file" ]; then
+        return 1
+    fi
+    
+    # Use python to parse JSON state file
+    python3 -c "
+import json
+import sys
+
+try:
+    with open('$state_file', 'r') as f:
+        state = json.load(f)
+    
+    print('STATE_START_TIME=' + state['start_time'])
+    print('STATE_RESULTS_DIR=' + state['results_dir'])
+    print('STATE_TOTAL_ORGS=' + str(state['total_orgs']))
+    print('STATE_SCANNED_COUNT=' + str(len(state['scanned_orgs'])))
+    
+    # Export scanned orgs as a simple list
+    for org in state['scanned_orgs']:
+        print('SCANNED:' + org)
+        
+except Exception as e:
+    print('ERROR:Failed to parse state file: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+"
+}
+
+update_state_with_org() {
+    local state_file="$1"
+    local org="$2"
+    local status="$3"  # completed, failed, secrets_found
+    
+    # Add organization to scanned list using Python
+    python3 -c "
+import json
+import sys
+from datetime import datetime
+
+try:
+    with open('$state_file', 'r') as f:
+        state = json.load(f)
+    
+    # Add org to scanned list if not already there
+    if '$org' not in state['scanned_orgs']:
+        state['scanned_orgs'].append('$org')
+        state['last_updated'] = datetime.now().isoformat()
+    
+    with open('$state_file', 'w') as f:
+        json.dump(state, f, indent=2)
+        
+except Exception as e:
+    print('ERROR:Failed to update state file: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+"
+}
 
 # Help function
 show_help() {
@@ -129,6 +245,11 @@ show_help() {
     echo "  --order ORDER          Organization order: 'random' or 'latest' (default: random)"
     echo "  --email EMAIL          Email address for security notifications"
     echo "  --debug                Enable debug/verbose logging for all operations"
+    echo ""
+    echo "Resume Options:"
+    echo "  --resume               Resume from previous scan (uses existing state file)"
+    echo "  --restart              Start over from beginning (clears previous state)"
+    echo "  --state-file FILE      Custom state file path (default: scan_state.json)"
     echo ""
     echo "Scanner Options:"
     echo "  --events-file FILE     Path to CSV file containing force-push events"
@@ -145,6 +266,8 @@ show_help() {
     echo "  $0 microsoft                         # Scan only Microsoft organization"
     echo "  $0 --parallel-orgs 4 --debug         # 4 parallel orgs with debug output"
     echo "  $0 --events-file data.csv            # Use CSV data file instead of database"
+    echo "  $0 --resume                          # Resume from where previous scan stopped"
+    echo "  $0 --restart                         # Start over from beginning (clear state)"
     echo ""
     exit 0
 }
@@ -158,6 +281,9 @@ while [[ $# -gt 0 ]]; do
         --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
         --order) ORG_ORDER="$2"; shift 2 ;;
         --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
+        --resume) RESUME_MODE=true; shift ;;
+        --restart) RESTART_MODE=true; shift ;;
+        --state-file) CUSTOM_STATE_FILE="$2"; shift 2 ;;
         --events-file) EVENTS_FILE="$2"; shift 2 ;;
         --db-file) CUSTOM_DB_FILE="$2"; shift 2 ;;
         *) TEST_ORG="$1"; shift ;;
@@ -169,6 +295,17 @@ if [ -n "$EVENTS_FILE" ] && [ -n "$CUSTOM_DB_FILE" ]; then
     echo -e "${RED}[!] Error: --events-file and --db-file cannot be used together${NC}"
     echo "Use --events-file for CSV data or --db-file for SQLite database, but not both."
     exit 1
+fi
+
+if [ "$RESUME_MODE" = true ] && [ "$RESTART_MODE" = true ]; then
+    echo -e "${RED}[!] Error: --resume and --restart cannot be used together${NC}"
+    echo "Use --resume to continue or --restart to start over, but not both."
+    exit 1
+fi
+
+# Set state file path
+if [ -n "$CUSTOM_STATE_FILE" ]; then
+    STATE_FILE="$CUSTOM_STATE_FILE"
 fi
 
 if [ -n "$EVENTS_FILE" ] && [ ! -f "$EVENTS_FILE" ]; then
@@ -219,6 +356,71 @@ fi
 # Create base results directory
 mkdir -p "$RESULTS_BASE_DIR"
 echo "Results will be saved to: $RESULTS_BASE_DIR"
+
+# Handle state management
+SCANNED_ORGS=""
+SCAN_START_TIME=$(date -Iseconds)
+
+if [ "$RESTART_MODE" = true ]; then
+    echo "🔄 Restart mode: Clearing previous state"
+    rm -f "$STATE_FILE"
+elif [ "$RESUME_MODE" = true ] || [ -f "$STATE_FILE" ]; then
+    if [ -f "$STATE_FILE" ]; then
+        echo "📋 Loading previous scan state from: $STATE_FILE"
+        
+        # Load state and parse it
+        STATE_OUTPUT=$(load_state "$STATE_FILE")
+        if [ $? -eq 0 ]; then
+            # Parse state variables
+            eval "$(echo "$STATE_OUTPUT" | grep -E '^(STATE_|SCANNED:)')"
+            
+            # Extract scanned organizations
+            SCANNED_ORGS=$(echo "$STATE_OUTPUT" | grep '^SCANNED:' | cut -d: -f2-)
+            
+            echo "📊 Previous scan status:"
+            echo "   Start time: $STATE_START_TIME"
+            echo "   Results directory: $STATE_RESULTS_DIR"
+            echo "   Total organizations: $STATE_TOTAL_ORGS"
+            echo "   Previously scanned: $STATE_SCANNED_COUNT organizations"
+            echo ""
+            
+            if [ "$STATE_SCANNED_COUNT" -gt 0 ]; then
+                if [ "$RESUME_MODE" = true ]; then
+                    echo "✅ Resuming from where previous scan stopped"
+                    # Use the previous results directory to maintain continuity
+                    RESULTS_BASE_DIR="$STATE_RESULTS_DIR"
+                    SCAN_START_TIME="$STATE_START_TIME"  # Keep original start time
+                else
+                    echo -e "${YELLOW}⚠️  Found previous scan state. Options:${NC}"
+                    echo "   - Use --resume to continue from where it stopped"
+                    echo "   - Use --restart to start over from beginning"
+                    echo "   - Press Ctrl+C to abort and decide later"
+                    echo ""
+                    read -p "Continue with new scan anyway? (y/N): " -n 1 -r
+                    echo
+                    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                        echo "Aborted. Use --resume or --restart for explicit behavior."
+                        exit 0
+                    fi
+                    # Clear state for new scan
+                    rm -f "$STATE_FILE"
+                    SCANNED_ORGS=""
+                fi
+            else
+                echo "Previous scan had no completed organizations - starting fresh"
+                rm -f "$STATE_FILE"
+                SCANNED_ORGS=""
+            fi
+        else
+            echo "❌ Failed to load state file. Starting fresh scan."
+            rm -f "$STATE_FILE"
+            SCANNED_ORGS=""
+        fi
+    else
+        echo "❌ Resume requested but no state file found: $STATE_FILE"
+        echo "Starting fresh scan instead."
+    fi
+fi
 
 # Create log directory if debug mode is enabled
 if [ "$DEBUG" = true ]; then
@@ -284,6 +486,9 @@ scan_organization() {
             mkdir -p "$ORG_DIR"
             mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
             
+            # Update state file
+            update_state_with_org "$STATE_FILE" "$org" "secrets_found"
+            
             # 🚨 SEND NOTIFICATIONS HERE 🚨
             if [ -n "$NOTIFICATION_EMAIL" ] && [ -f "$NOTIFICATION_SCRIPT" ]; then
                 local secrets_file="$ORG_DIR/verified_secrets_${org}.json"
@@ -308,19 +513,26 @@ scan_organization() {
             return 2  # Success with findings
         else
             rm -f "$RESULTS_BASE_DIR/verified_secrets_${org}.json"
+            
+            # Update state file
+            update_state_with_org "$STATE_FILE" "$org" "completed"
+            
             echo "✅ [$org_num/$total] $org completed - no secrets"
             return 0  # Success no findings
         fi
     else
+        # Update state file even for failed scans to avoid retrying immediately
+        update_state_with_org "$STATE_FILE" "$org" "failed"
+        
         echo "❌ [$org_num/$total] $org failed"
         return 1  # Failed
     fi
 }
 
 # Export function and variables for parallel execution
-export -f scan_organization
+export -f scan_organization update_state_with_org
 export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG RESULTS_BASE_DIR
-export NOTIFICATION_EMAIL NOTIFICATION_SCRIPT
+export NOTIFICATION_EMAIL NOTIFICATION_SCRIPT STATE_FILE
 export VERBOSE EVENTS_FILE CUSTOM_DB_FILE
 
 # Get organizations list
@@ -328,7 +540,7 @@ if [ -n "$TEST_ORG" ]; then
     ORGS="$TEST_ORG"
 else
     if [ "$ORG_ORDER" = "random" ]; then
-        ORGS=$(python3 -c "
+        ALL_ORGS=$(python3 -c "
 import sqlite3
 db = sqlite3.connect('$DB_FILE')
 cur = db.cursor()
@@ -337,7 +549,7 @@ for row in cur.execute('SELECT DISTINCT repo_org FROM pushes ORDER BY RANDOM();'
 db.close()
 ")
     else
-        ORGS=$(python3 -c "
+        ALL_ORGS=$(python3 -c "
 import sqlite3
 db = sqlite3.connect('$DB_FILE')
 cur = db.cursor()
@@ -346,9 +558,47 @@ for row in cur.execute('SELECT DISTINCT repo_org FROM pushes ORDER BY timestamp 
 db.close()
 ")
     fi
+    
+    # Filter out already scanned organizations if resuming
+    if [ -n "$SCANNED_ORGS" ]; then
+        echo "🔍 Filtering out previously scanned organizations..."
+        
+        # Create temporary files for filtering
+        echo "$ALL_ORGS" > /tmp/all_orgs.txt
+        echo "$SCANNED_ORGS" > /tmp/scanned_orgs.txt
+        
+        # Use grep to filter out scanned organizations
+        ORGS=$(grep -vFxf /tmp/scanned_orgs.txt /tmp/all_orgs.txt || echo "")
+        
+        # Cleanup temp files
+        rm -f /tmp/all_orgs.txt /tmp/scanned_orgs.txt
+        
+        TOTAL_ALL_ORGS=$(echo "$ALL_ORGS" | wc -l)
+        TOTAL_REMAINING_ORGS=$(echo "$ORGS" | wc -l)
+        TOTAL_SCANNED=$(echo "$SCANNED_ORGS" | wc -l)
+        
+        echo "📊 Resume statistics:"
+        echo "   Total organizations in database: $TOTAL_ALL_ORGS"
+        echo "   Previously scanned: $TOTAL_SCANNED"
+        echo "   Remaining to scan: $TOTAL_REMAINING_ORGS"
+        
+        if [ -z "$ORGS" ] || [ "$TOTAL_REMAINING_ORGS" -eq 0 ]; then
+            echo "✅ All organizations have been scanned!"
+            echo "Use --restart to scan all organizations again."
+            exit 0
+        fi
+    else
+        ORGS="$ALL_ORGS"
+    fi
 fi
 
 TOTAL_ORGS=$(echo "$ORGS" | wc -l)
+
+# Initialize state file for new scans
+if [ ! -f "$STATE_FILE" ] && [ "$TOTAL_ORGS" -gt 0 ]; then
+    echo "📝 Initializing scan state file: $STATE_FILE"
+    save_state "$STATE_FILE" "" "$TOTAL_ORGS" "$RESULTS_BASE_DIR" "$SCAN_START_TIME"
+fi
 echo "Processing $TOTAL_ORGS organizations with max $MAX_PARALLEL_ORGS parallel jobs"
 echo "Using $WORKERS_PER_ORG workers per organization"
 echo "Results directory: $RESULTS_BASE_DIR"
@@ -402,4 +652,30 @@ if [ $ORGS_WITH_SECRETS -gt 0 ]; then
 else
     echo -e "${GREEN}✅ No secrets found in any organization${NC}"
 fi
+
+# Show scan progress
+if [ -f "$STATE_FILE" ]; then
+    STATE_INFO=$(load_state "$STATE_FILE" 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        CURRENT_SCANNED=$(echo "$STATE_INFO" | grep '^STATE_SCANNED_COUNT=' | cut -d= -f2)
+        STATE_TOTAL=$(echo "$STATE_INFO" | grep '^STATE_TOTAL_ORGS=' | cut -d= -f2)
+        
+        if [ -n "$CURRENT_SCANNED" ] && [ -n "$STATE_TOTAL" ]; then
+            PROGRESS_PERCENT=$((CURRENT_SCANNED * 100 / STATE_TOTAL))
+            echo ""
+            echo "📊 Scan Progress: $CURRENT_SCANNED/$STATE_TOTAL organizations ($PROGRESS_PERCENT%)"
+            
+            if [ $CURRENT_SCANNED -lt $STATE_TOTAL ]; then
+                REMAINING=$((STATE_TOTAL - CURRENT_SCANNED))
+                echo "   $REMAINING organizations remaining"
+                echo -e "${YELLOW}💡 Use './force_push_secret_scanner.sh --resume' to continue${NC}"
+            else
+                echo "🎉 All organizations completed!"
+                echo -e "${GREEN}💡 Use './force_push_secret_scanner.sh --restart' to scan again${NC}"
+            fi
+        fi
+    fi
+fi
+
+echo "State file: $STATE_FILE"
 echo "===================="
