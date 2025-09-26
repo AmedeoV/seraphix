@@ -1,4 +1,5 @@
-#!/# Available ARGUMENTS:
+#!/bin/bash
+# Available ARGUMENTS:
 # 
 # Batch Processing Options:
 #   --parallel-orgs N      Maximum parallel organizations (1-32, default: auto-detected)
@@ -103,6 +104,7 @@ ORG_ORDER="random"   # Organization processing order: 'random', 'latest', or 'st
 RESUME_MODE=false    # Whether to resume from previous scan
 RESTART_MODE=false   # Whether to start over from beginning
 CUSTOM_STATE_FILE="" # Custom state file path
+TELEGRAM_ID_PROVIDED=false  # Track if --telegramId was explicitly provided
 
 # Scanner configuration arguments
 VERBOSE=false
@@ -281,14 +283,16 @@ show_help() {
     echo "Notification Setup:"
     echo "  Use --email EMAIL to enable email notifications via Mailgun"
     echo "  Use --telegramId CHAT_ID to enable Telegram notifications"
+    echo "    (If --telegramId is empty/omitted, falls back to config/telegram_config.sh)"
     echo "  Configure config/mailgun_config.sh for email settings"
     echo "  Configure config/telegram_config.sh for Telegram bot token"
     echo "  Both notification methods can be used simultaneously"
     echo ""
     echo "Examples:"
-    echo "  $0                                          # Scan all organizations (no notifications)"
+    echo "  $0                                          # Scan all organizations (uses config files)"
     echo "  $0 --email security@company.com             # Scan with email notifications"
-    echo "  $0 --telegramId 123456789                   # Scan with Telegram notifications"
+    echo "  $0 --telegramId 123456789                   # Scan with specific Telegram chat ID"
+    echo "  $0 --telegramId \"\"                          # Disable Telegram (override config)"
     echo "  $0 --email sec@co.com --telegramId 123456   # Scan with both notifications"
     echo "  $0 microsoft                                # Scan only Microsoft organization"
     echo "  $0 --parallel-orgs 4 --debug                # 4 parallel orgs with debug output"
@@ -309,7 +313,7 @@ while [[ $# -gt 0 ]]; do
         --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
         --order) ORG_ORDER="$2"; shift 2 ;;
         --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
-        --telegramId) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; shift 2 ;;
+        --telegramId) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; TELEGRAM_ID_PROVIDED=true; shift 2 ;;
         --resume) RESUME_MODE=true; shift ;;
         --restart) RESTART_MODE=true; shift ;;
         --state-file) CUSTOM_STATE_FILE="$2"; shift 2 ;;
@@ -375,6 +379,22 @@ if [ -n "$EVENTS_FILE" ]; then
 fi
 if [ -n "$CUSTOM_DB_FILE" ]; then
     echo "Using custom DB file: $CUSTOM_DB_FILE"
+fi
+
+# Handle Telegram Chat ID fallback: use config file value if --telegramId was not provided
+if [ "$TELEGRAM_ID_PROVIDED" = false ]; then
+    # --telegramId was not provided at all, try to load from config file
+    if [ -f "config/telegram_config.sh" ]; then
+        # Source the config file in a subshell to get the TELEGRAM_CHAT_ID value
+        CONFIG_TELEGRAM_CHAT_ID=$(bash -c 'source config/telegram_config.sh 2>/dev/null && echo "$TELEGRAM_CHAT_ID"')
+        if [ -n "$CONFIG_TELEGRAM_CHAT_ID" ]; then
+            NOTIFICATION_TELEGRAM_CHAT_ID="$CONFIG_TELEGRAM_CHAT_ID"
+            echo "📱 Using Telegram Chat ID from config file: $NOTIFICATION_TELEGRAM_CHAT_ID"
+        fi
+    fi
+elif [ -z "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
+    # --telegramId was provided but empty - this explicitly disables Telegram
+    echo "📱 Telegram notifications explicitly disabled via --telegramId \"\""
 fi
 
 # Display notification configuration

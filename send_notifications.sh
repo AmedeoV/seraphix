@@ -6,6 +6,8 @@ if [ -f "config/mailgun_config.sh" ]; then
 fi
 
 # Load Telegram configuration
+# Save any existing TELEGRAM_CHAT_ID from environment (passed from main script)
+PASSED_TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
 if [ -f "config/telegram_config.sh" ]; then
     source "config/telegram_config.sh"
 fi
@@ -16,7 +18,8 @@ EMAIL_FROM="secret-scanner@$(hostname -d 2>/dev/null || echo 'localhost')"
 
 # Telegram notification configuration (from config file or environment)
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
-TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
+# Prioritize passed TELEGRAM_CHAT_ID (from --telegramId parameter) over config file
+TELEGRAM_CHAT_ID="${PASSED_TELEGRAM_CHAT_ID:-$TELEGRAM_CHAT_ID}"
 
 # Color codes for console output
 RED='\033[0;31m'
