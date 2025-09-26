@@ -10,3 +10,4 @@ leaked_secrets_results/
 scan_logs/
 verified_secrets*
 mailgun_conf*
+telegram_conf*
