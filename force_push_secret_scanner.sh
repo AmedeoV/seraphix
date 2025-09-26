@@ -459,15 +459,34 @@ elif [ "$RESUME_MODE" = true ] || [ -f "$STATE_FILE" ]; then
                     echo "   - Use --restart to start over from beginning"
                     echo "   - Press Ctrl+C to abort and decide later"
                     echo ""
-                    read -p "Continue with new scan anyway? (y/N): " -n 1 -r
-                    echo
-                    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                        echo "Aborted. Use --resume or --restart for explicit behavior."
-                        exit 0
-                    fi
-                    # Clear state for new scan
-                    rm -f "$STATE_FILE"
-                    SCANNED_ORGS=""
+                    while true; do
+                        read -p "What would you like to do? [r]esume, [s]tart over, or [a]bort: " -n 1 -r
+                        echo
+                        case $REPLY in
+                            [Rr])
+                                echo "✅ Resuming from where previous scan stopped"
+                                RESUME_MODE=true
+                                # Use the previous results directory to maintain continuity
+                                RESULTS_BASE_DIR="$STATE_RESULTS_DIR"
+                                SCAN_START_TIME="$STATE_START_TIME"  # Keep original start time
+                                break
+                                ;;
+                            [Ss])
+                                echo "🔄 Starting over from beginning"
+                                # Clear state for new scan
+                                rm -f "$STATE_FILE"
+                                SCANNED_ORGS=""
+                                break
+                                ;;
+                            [Aa])
+                                echo "Aborted. Use --resume or --restart for explicit behavior."
+                                exit 0
+                                ;;
+                            *)
+                                echo "Invalid option. Please enter 'r' for resume, 's' for start over, or 'a' for abort."
+                                ;;
+                        esac
+                    done
                 fi
             else
                 echo "Previous scan had no completed organizations - starting fresh"
