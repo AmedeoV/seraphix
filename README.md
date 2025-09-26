@@ -45,38 +45,71 @@ For scanning multiple organizations efficiently, use the included batch scanner:
 ./force_push_secret_scanner.sh
 ```
 
+**What it does:**
+The `force_push_secret_scanner.sh` is an enterprise-grade orchestration script that automates large-scale secret scanning across GitHub organizations. It intelligently manages the entire scanning pipeline from organization discovery to result delivery.
+
 **Key features:**
 - **Parallel processing**: Scans multiple organizations simultaneously with configurable workers
-- **Smart resource management**: Auto-detects system resources and optimizes parallelization
-- **Email notifications**: Optional security alerts when secrets are found
-- **Flexible ordering**: Process organizations randomly (default) or by latest activity
-- **Graceful interruption**: Clean shutdown with Ctrl+C
-- **Comprehensive logging**: Optional debug mode with detailed logs
+- **Smart resource management**: Auto-detects system resources and optimizes parallelization  
+- **Star-based prioritization**: Queries GitHub API to prioritize high-star organizations first
+- **Resume capability**: Can pause/resume long-running scans with state preservation
+- **Real-time notifications**: Sends immediate Telegram/email alerts when secrets are discovered
+- **Comprehensive logging**: Debug mode with detailed scan logs and performance metrics
+- **Graceful interruption**: Clean shutdown with Ctrl+C and automatic cleanup
+- **Results organization**: Creates timestamped directories with findings sorted by organization
+- **Error resilience**: Timeout protection, retry logic, and failure recovery
+- **Database integration**: Works with SQLite database for offline scanning or BigQuery for live data
+
+**Workflow:**
+1. **Organization Discovery**: Queries the force push database for all available organizations
+2. **Star Count Enrichment**: Fetches GitHub star counts and updates local database (if enabled)
+3. **Intelligent Prioritization**: Orders organizations by stars, latest activity, or randomly
+4. **Parallel Execution**: Launches multiple organization scans with optimal worker allocation
+5. **Secret Detection**: Runs TruffleHog on force-push commits for each organization
+6. **Real-time Alerts**: Immediately notifies security teams when verified secrets are found
+7. **Result Aggregation**: Collects all findings into organized, timestamped result directories
 
 **Usage examples:**
 ```bash
 # Scan all orgs with default settings (random order, no notifications)
 ./force_push_secret_scanner.sh
 
-# Scan with email notifications enabled
-./force_push_secret_scanner.sh --email security@company.com
+# Scan with notifications enabled
+./force_push_secret_scanner.sh --email security@company.com --telegramId 123456789
 
-# Process organizations by latest activity instead of random
-./force_push_secret_scanner.sh --order latest
+# Process organizations by star count (high-impact targets first)
+./force_push_secret_scanner.sh --order stars
 
 # Scan specific organization with debug logging
 ./force_push_secret_scanner.sh myorg --debug
 
-# Custom parallelization settings
-./force_push_secret_scanner.sh --parallel-orgs 4 --workers-per-org 8
+# Custom parallelization and database settings
+./force_push_secret_scanner.sh --parallel-orgs 4 --workers-per-org 8 --db-file /path/to/custom.db
+
+# Resume interrupted scan
+./force_push_secret_scanner.sh --resume
+
+# Start fresh scan (clearing previous state)
+./force_push_secret_scanner.sh --restart
 ```
 
 **Configuration options:**
-- `--order random|latest`: Organization processing order (default: random)
-- `--email <email>`: Enable email notifications for found secrets
-- `--parallel-orgs <num>`: Max parallel organizations (auto-detected)
-- `--workers-per-org <num>`: Workers per organization (auto-detected)
-- `--debug`: Enable detailed logging
+- `--order random|latest|stars`: Organization processing order (default: random)
+- `--email <email>`: Enable email notifications for found secrets  
+- `--telegramId <chat_id>`: Enable Telegram notifications (falls back to config file)
+- `--parallel-orgs <num>`: Max parallel organizations (default: auto-detected)
+- `--workers-per-org <num>`: Workers per organization (default: auto-detected)
+- `--db-file <path>`: Custom SQLite database path
+- `--resume`: Continue from previous scan state
+- `--restart`: Start over from beginning (clears previous state)
+- `--debug`: Enable detailed logging and performance metrics
+
+**Notification Setup:**
+The script supports both email and Telegram notifications for immediate security alerts:
+- Configure email via `config/mailgun_config.sh` 
+- Configure Telegram via `config/telegram_config.sh`
+- Use `--email` and `--telegramId` parameters to override config files
+- Notifications include organization name, secret details, and direct commit links
 
 ---
 
@@ -93,16 +126,43 @@ For scanning multiple organizations efficiently, use the included batch scanner:
 
 ### Batch Scanner (`force_push_secret_scanner.sh`)
 
-* **Multi-organization scanning**: Processes all organizations in the database automatically
+The batch scanner is a comprehensive orchestration tool designed for enterprise-scale secret scanning operations. It automates the entire pipeline from organization discovery to security team notification.
+
+**Core Functionality:**
+* **Multi-organization scanning**: Automatically processes all organizations in the database
+* **GitHub API integration**: Fetches star counts and repository metadata for prioritization
 * **Intelligent parallelization**: 
   * Auto-detects system resources (CPU cores, RAM) 
-  * Runs multiple organizations in parallel
-  * Uses multiple workers per organization for faster scanning
-* **Results organization**: Creates timestamped directories with findings sorted by organization
-* **Security notifications**: Sends email alerts when secrets are discovered (optional)
-* **Flexible ordering**: Process organizations randomly (better for security) or by latest activity
-* **Robust error handling**: Timeout protection, graceful interruption, cleanup on exit
-* **Progress tracking**: Real-time status updates and completion summaries
+  * Optimizes organization and worker allocation for maximum efficiency
+  * Prevents system overload while maximizing throughput
+* **State management**: 
+  * Tracks scan progress with resumable state files
+  * Handles interruptions gracefully with cleanup procedures  
+  * Supports pause/resume for long-running operations
+* **Results organization**: 
+  * Creates timestamped directories with findings sorted by organization
+  * Generates structured JSON output with verified secret details
+  * Maintains scan logs and performance metrics
+* **Real-time security notifications**: 
+  * Sends immediate alerts when secrets are discovered
+  * Supports both email (Mailgun) and Telegram notifications
+  * Includes direct links to commits containing secrets
+* **Flexible processing strategies**:
+  * **Random order**: Better security practice (unpredictable scanning pattern)
+  * **Star-based**: Prioritizes high-impact organizations first  
+  * **Latest activity**: Focuses on recently active organizations
+* **Enterprise features**:
+  * Robust error handling with timeout protection
+  * Comprehensive logging with debug modes
+  * Configuration management via config files
+  * Command-line parameter override capabilities
+
+**Technical Implementation:**
+* Uses background processes with job control for parallel execution
+* Implements proper signal handling for graceful shutdown
+* Maintains scan state in JSON format for persistence
+* Integrates with TruffleHog for verified secret detection
+* Provides real-time progress updates and statistics
 
 ---
 
