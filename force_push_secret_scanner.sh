@@ -400,8 +400,8 @@ elif [ "$RESUME_MODE" = true ] || [ -f "$STATE_FILE" ]; then
         # Load state and parse it
         STATE_OUTPUT=$(load_state "$STATE_FILE")
         if [ $? -eq 0 ]; then
-            # Parse state variables
-            eval "$(echo "$STATE_OUTPUT" | grep -E '^(STATE_|SCANNED:)')"
+            # Parse state variables (only STATE_ prefixed variables)
+            eval "$(echo "$STATE_OUTPUT" | grep -E '^STATE_')"
             
             # Extract scanned organizations
             SCANNED_ORGS=$(echo "$STATE_OUTPUT" | grep '^SCANNED:' | cut -d: -f2-)
@@ -597,31 +597,110 @@ db.close()
     elif [ "$ORG_ORDER" = "stars" ]; then
         ALL_ORGS=$(python3 -c "
 import sqlite3
-db = sqlite3.connect('$DB_FILE')
-cur = db.cursor()
+import sys
+import os
+
+# Check database file
+db_file = '$DB_FILE'
+if not os.path.exists(db_file):
+    print('Error: Database file not found: ' + db_file, file=sys.stderr)
+    sys.exit(1)
+
+# Check file permissions and size
+try:
+    stat = os.stat(db_file)
+    print('Database file size: ' + str(stat.st_size) + ' bytes', file=sys.stderr)
+    if stat.st_size == 0:
+        print('Error: Database file is empty', file=sys.stderr)
+        sys.exit(1)
+except Exception as e:
+    print('Error checking database file: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+
+try:
+    db = sqlite3.connect(db_file)
+    db.execute('PRAGMA journal_mode=WAL')  # Enable WAL mode for better concurrent access
+    db.execute('PRAGMA synchronous=NORMAL')  # Reduce sync for better performance
+    cur = db.cursor()
+    
+    # Test basic connectivity
+    cur.execute('SELECT COUNT(*) FROM pushes')
+    count = cur.fetchone()[0]
+    print('Total records in pushes table: ' + str(count), file=sys.stderr)
+    
+except (sqlite3.OperationalError, sqlite3.Error) as e:
+    print('Error connecting to database: ' + str(e), file=sys.stderr)
+    print('Database may be corrupted, locked, or on a read-only filesystem', file=sys.stderr)
+    sys.exit(1)
 
 # Check if stars column exists
 try:
-    cur.execute('SELECT stars FROM pushes LIMIT 1')
-    has_stars_column = True
-except sqlite3.OperationalError:
+    cur.execute('PRAGMA table_info(pushes)')
+    columns = [row[1] for row in cur.fetchall()]
+    has_stars_column = 'stars' in columns
+    if has_stars_column:
+        # Double-check by trying to access the column
+        cur.execute('SELECT stars FROM pushes LIMIT 1')
+        cur.fetchone()
+except (sqlite3.OperationalError, sqlite3.Error) as e:
+    print('Error checking stars column: ' + str(e), file=sys.stderr)
     has_stars_column = False
 
 if has_stars_column:
-    print('Using stars column for ordering organizations by total stars...', file=sys.stderr)
-    for row in cur.execute('''
-        SELECT repo_org, SUM(COALESCE(stars, 0)) as total_stars 
-        FROM pushes 
-        WHERE repo_org IS NOT NULL 
-        GROUP BY repo_org 
-        ORDER BY total_stars DESC, repo_org ASC
-    '''):
-        if row[0]: 
-            print(row[0])
+    print('Using stars column for ordering organizations by repository stars...', file=sys.stderr)
+    
+    # Since stars are consistent per repo, we can order by stars directly and get distinct orgs
+    # This is much more efficient than GROUP BY with aggregation
+    try:
+        results = []
+        seen_orgs = set()
+        
+        # Execute query with better error handling
+        query = '''
+            SELECT DISTINCT repo_org, stars
+            FROM pushes 
+            WHERE repo_org IS NOT NULL AND repo_org != '' AND stars IS NOT NULL
+            ORDER BY stars DESC, repo_org ASC
+        '''
+        
+        for row in cur.execute(query):
+            org = row[0]
+            stars = row[1]
+            if org and org not in seen_orgs:
+                results.append(org)
+                seen_orgs.add(org)
+                # Limit to prevent excessive processing
+                if len(results) >= 10000:
+                    break
+        
+        # If we got results, use them
+        if results:
+            print('Successfully ordered ' + str(len(results)) + ' organizations by repository stars', file=sys.stderr)
+            for org in results:
+                print(org)
+        else:
+            raise Exception('No results from stars query - no organizations with star data found')
+            
+    except (sqlite3.OperationalError, sqlite3.Error) as e:
+        # Fallback: If the optimized query fails or returns no results, use simple approach
+        print('Stars query failed with database error: ' + str(e), file=sys.stderr)
+        print('Falling back to simple alphabetical order...', file=sys.stderr)
+        try:
+            for row in cur.execute('SELECT DISTINCT repo_org FROM pushes WHERE repo_org IS NOT NULL AND repo_org != \"\" ORDER BY repo_org;'):
+                if row[0]: 
+                    print(row[0])
+        except (sqlite3.OperationalError, sqlite3.Error) as fallback_e:
+            print('Fallback query also failed: ' + str(fallback_e), file=sys.stderr)
+            print('Database may be corrupted or inaccessible', file=sys.stderr)
 else:
-    print('Warning: stars column not found, falling back to random order', file=sys.stderr)
-    for row in cur.execute('SELECT DISTINCT repo_org FROM pushes ORDER BY RANDOM();'):
-        if row[0]: print(row[0])
+    print('Warning: stars column not found in database, falling back to random order', file=sys.stderr)
+    try:
+        for row in cur.execute('SELECT DISTINCT repo_org FROM pushes WHERE repo_org IS NOT NULL AND repo_org != \"\" ORDER BY RANDOM();'):
+            if row[0]: 
+                print(row[0])
+    except (sqlite3.OperationalError, sqlite3.Error) as e:
+        print('Random order query failed: ' + str(e), file=sys.stderr)
+        print('Database may be corrupted or inaccessible', file=sys.stderr)
 
 db.close()
 ")
