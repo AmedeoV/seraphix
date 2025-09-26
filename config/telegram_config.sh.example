@@ -1,0 +1,15 @@
+#!/bin/bash
+# Telegram Bot Configuration Template
+# Copy this file to telegram_config.sh and fill in your values
+
+# Your Telegram Bot Token (get from @BotFather)
+# Format: 123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+export TELEGRAM_BOT_TOKEN=""
+
+# Your Telegram Chat ID (where messages will be sent)
+# Can be a user ID (number) or group chat ID (negative number)
+# To get your chat ID, message your bot and check https://api.telegram.org/bot<TOKEN>/getUpdates
+export TELEGRAM_CHAT_ID=""
+
+# Optional: Custom Telegram API URL (defaults to https://api.telegram.org)
+# export TELEGRAM_API_URL="https://api.telegram.org"

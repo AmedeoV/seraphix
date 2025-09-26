@@ -1,0 +1,18 @@
+#!/bin/bash
+# Mailgun Email Configuration Template
+# Copy this file to mailgun_config.sh and fill in your values
+
+# Your Mailgun domain (e.g., "mg.yourdomain.com")
+export MAILGUN_DOMAIN=""
+
+# Your Mailgun API key (starts with "key-")
+export MAILGUN_API_KEY=""
+
+# From address for emails (e.g., "Security Scanner <security@yourdomain.com>")
+export MAILGUN_FROM=""
+
+# Default recipient email (fallback if no email specified)
+export DEFAULT_EMAIL=""
+
+# Optional: Custom Mailgun API URL (defaults to https://api.mailgun.net/v3)
+# export MAILGUN_API_URL="https://api.eu.mailgun.net/v3"  # For EU region

@@ -9,5 +9,8 @@
 leaked_secrets_results/
 scan_logs/
 verified_secrets*
-mailgun_conf*
-telegram_conf*
+
+# Configuration files (now in config/ directory)
+config/mailgun_config.sh
+config/telegram_config.sh
+# Template files are tracked in git

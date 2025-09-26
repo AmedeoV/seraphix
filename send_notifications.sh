@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Load Mailgun configuration
-if [ -f "mailgun_config.sh" ]; then
-    source "mailgun_config.sh"
+if [ -f "config/mailgun_config.sh" ]; then
+    source "config/mailgun_config.sh"
 fi
 
 # Load Telegram configuration
-if [ -f "telegram_config.sh" ]; then
-    source "telegram_config.sh"
+if [ -f "config/telegram_config.sh" ]; then
+    source "config/telegram_config.sh"
 fi
 
 # Email notification configuration (fallback values)
@@ -343,12 +343,12 @@ if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
         echo "Usage: $0 <organization> <secrets_file> [email]"
         echo "Example: $0 myorg /path/to/secrets.json security@company.com"
         echo ""
-        echo "Configuration loaded from mailgun_config.sh:"
+        echo "Configuration loaded from config/mailgun_config.sh:"
         echo "  Mailgun Domain: ${MAILGUN_DOMAIN:-'Not configured'}"
         echo "  Mailgun From: ${MAILGUN_FROM:-'Not configured'}"
         echo "  Default Email: ${DEFAULT_EMAIL:-'Not configured'}"
         echo ""
-        echo "Configuration loaded from telegram_config.sh:"
+        echo "Configuration loaded from config/telegram_config.sh:"
         echo "  Bot Token: ${TELEGRAM_BOT_TOKEN:+Configured}${TELEGRAM_BOT_TOKEN:-'Not configured'}"
         echo "  Chat ID: ${TELEGRAM_CHAT_ID:-'Not configured'}"
         exit 1
