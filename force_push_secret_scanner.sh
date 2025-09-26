@@ -116,6 +116,9 @@ echo "Auto-configured: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} wo
 cleanup() {
     echo -e "\n\n${RED}[!] Interrupt signal received. Cleaning up...${NC}"
     
+    # Set flag to prevent state updates during cleanup
+    export CLEANUP_MODE=true
+    
     # Kill all background jobs
     jobs -p | xargs -r kill 2>/dev/null
     
@@ -133,6 +136,7 @@ cleanup() {
     rm -f /tmp/all_orgs.txt /tmp/scanned_orgs.txt 2>/dev/null
     
     echo "${RED}[!] Cleanup completed. State preserved in: $STATE_FILE${NC}"
+    echo "${YELLOW}[!] Interrupted organizations will be retried on next run${NC}"
     echo "${YELLOW}[!] Use --resume to continue where you left off${NC}"
     echo "${RED}[!] Exiting...${NC}"
     exit 130  # Standard exit code for Ctrl+C
@@ -211,6 +215,12 @@ update_state_with_org() {
     local org="$2"
     local status="$3"  # completed, failed, secrets_found
     
+    # Skip state updates during cleanup to prevent incomplete scans from being marked as complete
+    if [ "$CLEANUP_MODE" = true ]; then
+        echo "⚠️  Skipping state update for $org due to cleanup mode"
+        return
+    fi
+    
     # Add organization to scanned list using Python
     python3 -c "
 import json
@@ -225,13 +235,17 @@ try:
     if '$org' not in state['scanned_orgs']:
         state['scanned_orgs'].append('$org')
         state['last_updated'] = datetime.now().isoformat()
-    
-    with open('$state_file', 'w') as f:
-        json.dump(state, f, indent=2)
+        
+        with open('$state_file', 'w') as f:
+            json.dump(state, f, indent=2)
+        
+        print('Updated state: added $org as $status')
+    else:
+        print('Organization $org already in state file')
         
 except Exception as e:
     print('ERROR:Failed to update state file: ' + str(e), file=sys.stderr)
-    sys.exit(1)
+    # Don't exit on state file errors during normal operation
 "
 }
 
@@ -515,7 +529,7 @@ scan_organization() {
             mkdir -p "$ORG_DIR"
             mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
             
-            # Update state file
+            # Only update state file after successful completion
             update_state_with_org "$STATE_FILE" "$org" "secrets_found"
             
             # 🚨 SEND NOTIFICATIONS HERE 🚨
@@ -560,17 +574,16 @@ scan_organization() {
         else
             rm -f "$RESULTS_BASE_DIR/verified_secrets_${org}.json"
             
-            # Update state file
+            # Only update state file after successful completion
             update_state_with_org "$STATE_FILE" "$org" "completed"
             
             echo "✅ [$org_num/$total] $org completed - no secrets"
             return 0  # Success no findings
         fi
     else
-        # Update state file even for failed scans to avoid retrying immediately
-        update_state_with_org "$STATE_FILE" "$org" "failed"
-        
-        echo "❌ [$org_num/$total] $org failed"
+        # Don't update state file for failed/interrupted scans
+        # This allows them to be retried on the next run
+        echo "❌ [$org_num/$total] $org failed (exit code: $exit_code) - will retry on next run"
         return 1  # Failed
     fi
 }
