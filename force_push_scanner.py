@@ -47,6 +47,66 @@ except ImportError:
 # Thread-safe file writing
 _file_lock = threading.Lock()
 _findings_count = 0
+_notified_orgs = set()  # Track organizations that have already been notified
+
+def send_immediate_notification(finding: dict, repo_url: str, org: str) -> None:
+    """Send immediate notification when the FIRST secret is found in an organization."""
+    global _notified_orgs
+    
+    try:
+        # Check if we've already notified for this organization
+        with _file_lock:
+            if org in _notified_orgs:
+                return  # Already sent first notification for this org
+            _notified_orgs.add(org)  # Mark as notified
+        
+        # Get notification configuration from environment variables
+        telegram_chat_id = os.environ.get('TELEGRAM_CHAT_ID', '')
+        notification_email = os.environ.get('NOTIFICATION_EMAIL', '')
+        notification_script = os.environ.get('NOTIFICATION_SCRIPT', 'send_notifications.sh')
+        
+        if not telegram_chat_id and not notification_email:
+            return  # No notification methods configured
+        
+        # Create a minimal JSON file for this single finding
+        temp_dir = tempfile.gettempdir()
+        temp_finding_file = os.path.join(temp_dir, f"immediate_secret_{org}_{int(time.time())}.json")
+        
+        # Write the single finding to a temp file
+        with open(temp_finding_file, 'w', encoding='utf-8') as f:
+            json.dump([finding], f, indent=2, ensure_ascii=False)
+        
+        print(f"🚨 FIRST SECRET ALERT: {org} has leaked secrets!")
+        print(f"📱 Sending immediate notification (scan continues, more secrets may follow)...")
+        
+        # Call notification script in background
+        if os.path.exists(notification_script):
+            cmd = ["bash", notification_script, org, temp_finding_file]
+            if notification_email:
+                cmd.append(notification_email)
+            
+            # Run in background (non-blocking)
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # Clean up temp file after a delay (in background)
+        def cleanup_temp_file():
+            time.sleep(30)  # Wait 30 seconds for notification to process
+            try:
+                os.unlink(temp_finding_file)
+            except:
+                pass
+        
+        import threading
+        threading.Thread(target=cleanup_temp_file, daemon=True).start()
+        
+    except Exception as e:
+        print(f"⚠️  Failed to send immediate notification: {e}")
+
+def reset_notification_tracking():
+    """Reset notification tracking for new scans."""
+    global _notified_orgs
+    with _file_lock:
+        _notified_orgs.clear()
 
 
 def terminate(msg: str) -> None:
@@ -281,7 +341,7 @@ def write_finding_to_file(finding: dict, findings_file: Path) -> None:
             print(f"    {Fore.RED}[✗] Failed to write finding to file: {e}{Style.RESET_ALL}")
 
 
-def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path) -> tuple[str, int, int]:
+def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path, org_name: str = None) -> tuple[str, int, int]:
     """Scan a single repository for secrets. Returns (repo_url, commits_scanned, findings_count)."""
     repo_url, commits = repo_data
 
@@ -346,6 +406,10 @@ def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path) -> 
                     write_finding_to_file(f, findings_file)
                     repo_findings += 1
                     _print_formatted_finding(f, repo_url)
+                    
+                    # Send immediate notification
+                    if org_name:
+                        send_immediate_notification(f, repo_url, org_name)
 
     finally:
         try:
@@ -360,6 +424,9 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
     """Scan commits in parallel using ThreadPoolExecutor."""
     global _findings_count
     _findings_count = 0
+    
+    # Reset notification tracking for this new scan
+    reset_notification_tracking()
 
     # Use results directory if provided, otherwise current directory
     if results_dir:
@@ -386,7 +453,7 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all repository scan tasks
         future_to_repo = {
-            executor.submit(scan_single_repo, (repo_url, commits), findings_file): repo_url
+            executor.submit(scan_single_repo, (repo_url, commits), findings_file, repo_user): repo_url
             for repo_url, commits in repos.items()
         }
 

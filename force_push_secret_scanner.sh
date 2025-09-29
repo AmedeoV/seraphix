@@ -17,6 +17,7 @@
 # Scanner Options:
 #   --events-file FILE     Path to CSV file containing force-push events
 #   --db-file FILE         Path to SQLite database (overrides default)
+#   --orgs-file FILE       Path to text file containing organizations to scan (one per line)
 #   --debug                Enable debug/verbose logging for all operations
 #
 # Other Options:
@@ -47,6 +48,7 @@
 #   ./force_push_secret_scanner.sh microsoft                         # Scan only Microsoft
 #   ./force_push_secret_scanner.sh --parallel-orgs 4 --debug        # 4 parallel with debug
 #   ./force_push_secret_scanner.sh --events-file data.csv          # Use CSV data file
+#   ./force_push_secret_scanner.sh --orgs-file bugbounty_orgs.txt  # Scan organizations from text file
 #   ./force_push_secret_scanner.sh --resume                        # Resume previous scan
 #   ./force_push_secret_scanner.sh --restart                       # Start over from beginning
 #
@@ -110,6 +112,7 @@ TELEGRAM_ID_PROVIDED=false  # Track if --telegramId was explicitly provided
 VERBOSE=false
 EVENTS_FILE=""
 CUSTOM_DB_FILE=""  # Custom DB file override
+ORGS_FILE=""       # Text file containing organizations to scan
 
 echo "System detected: ${CPU_CORES} cores, ${MEMORY_GB}GB RAM"
 echo "Auto-configured: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
@@ -273,6 +276,7 @@ show_help() {
     echo "Scanner Options:"
     echo "  --events-file FILE     Path to CSV file containing force-push events"
     echo "  --db-file FILE         Path to SQLite database (overrides default)"
+    echo "  --orgs-file FILE       Path to text file containing organizations to scan (one per line)"
     echo ""
     echo "Other Options:"
     echo "  --help, -h             Show this help message"
@@ -298,6 +302,7 @@ show_help() {
     echo "  $0 --parallel-orgs 4 --debug                # 4 parallel orgs with debug output"
     echo "  $0 --order stars --parallel-orgs 2          # Scan orgs with most stars first"
     echo "  $0 --events-file data.csv                   # Use CSV data file instead of database"
+    echo "  $0 --orgs-file bugbounty_orgs.txt          # Scan organizations from text file"
     echo "  $0 --resume                                 # Resume from where previous scan stopped"
     echo "  $0 --restart                                # Start over from beginning (clear state)"
     echo ""
@@ -319,6 +324,7 @@ while [[ $# -gt 0 ]]; do
         --state-file) CUSTOM_STATE_FILE="$2"; shift 2 ;;
         --events-file) EVENTS_FILE="$2"; shift 2 ;;
         --db-file) CUSTOM_DB_FILE="$2"; shift 2 ;;
+        --orgs-file) ORGS_FILE="$2"; shift 2 ;;
         *) TEST_ORG="$1"; shift ;;
     esac
 done
@@ -327,6 +333,12 @@ done
 if [ -n "$EVENTS_FILE" ] && [ -n "$CUSTOM_DB_FILE" ]; then
     echo -e "${RED}[!] Error: --events-file and --db-file cannot be used together${NC}"
     echo "Use --events-file for CSV data or --db-file for SQLite database, but not both."
+    exit 1
+fi
+
+if [ -n "$ORGS_FILE" ] && [ -n "$TEST_ORG" ]; then
+    echo -e "${RED}[!] Error: --orgs-file and single organization argument cannot be used together${NC}"
+    echo "Use --orgs-file for multiple organizations or specify a single organization, but not both."
     exit 1
 fi
 
@@ -348,6 +360,11 @@ fi
 
 if [ -n "$CUSTOM_DB_FILE" ] && [ ! -f "$CUSTOM_DB_FILE" ]; then
     echo -e "${RED}[!] Error: Database file not found: $CUSTOM_DB_FILE${NC}"
+    exit 1
+fi
+
+if [ -n "$ORGS_FILE" ] && [ ! -f "$ORGS_FILE" ]; then
+    echo -e "${RED}[!] Error: Organizations file not found: $ORGS_FILE${NC}"
     exit 1
 fi
 
@@ -379,6 +396,9 @@ if [ -n "$EVENTS_FILE" ]; then
 fi
 if [ -n "$CUSTOM_DB_FILE" ]; then
     echo "Using custom DB file: $CUSTOM_DB_FILE"
+fi
+if [ -n "$ORGS_FILE" ]; then
+    echo "Using organizations file: $ORGS_FILE"
 fi
 
 # Handle Telegram Chat ID fallback: use config file value if --telegramId was not provided
@@ -518,6 +538,11 @@ scan_organization() {
     
     echo "[$org_num/$total] Starting scan for organization: $org"
     
+    # Set environment variables for immediate notifications in Python
+    export TELEGRAM_CHAT_ID="$NOTIFICATION_TELEGRAM_CHAT_ID"
+    export NOTIFICATION_EMAIL="$NOTIFICATION_EMAIL"
+    export NOTIFICATION_SCRIPT="$NOTIFICATION_SCRIPT"
+    
     # Determine which DB file to use
     local db_file_arg="--db-file"
     local db_file_value
@@ -564,6 +589,62 @@ scan_organization() {
     if [ $exit_code -eq 0 ]; then
         # Check for secrets file
         if [ -s "$RESULTS_BASE_DIR/verified_secrets_${org}.json" ]; then
+            # 🚨 IMMEDIATE NOTIFICATION - SECRETS FOUND! 🚨
+            echo "🚨 [$org_num/$total] SECURITY ALERT: Secrets found in $org!"
+            
+            # Count secrets immediately for notification
+            local secrets_file="$RESULTS_BASE_DIR/verified_secrets_${org}.json"
+            local count
+            if command -v jq >/dev/null 2>&1; then
+                count=$(jq length "$secrets_file" 2>/dev/null || echo "unknown")
+            else
+                # Multiple fallback methods for counting JSON array elements
+                if command -v grep >/dev/null 2>&1; then
+                    count=$(grep -c '"DetectorName"' "$secrets_file" 2>/dev/null || echo "unknown")
+                elif command -v powershell.exe >/dev/null 2>&1; then
+                    count=$(powershell.exe -c "try { (Get-Content '$secrets_file' | ConvertFrom-Json).Count } catch { 'unknown' }" 2>/dev/null || echo "unknown")
+                else
+                    # Last resort: count opening braces that follow array pattern
+                    count=$(awk '/^\s*\{/ {count++} END {print count+0}' "$secrets_file" 2>/dev/null || echo "unknown")
+                fi
+            fi
+            
+            echo "🔑 [$org_num/$total] Found $count verified secrets in $org"
+            
+            # Send notifications immediately (before file organization)
+            if ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]); then
+                echo "� [$org_num/$total] Sending final summary for $org..."
+                
+                # Set environment variables for the notification script
+                if [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
+                    export TELEGRAM_CHAT_ID="$NOTIFICATION_TELEGRAM_CHAT_ID"
+                fi
+                
+                # Send notification immediately in background
+                if [ -f "$NOTIFICATION_SCRIPT" ]; then
+                    # Use external notification script if available
+                    if [ -n "$NOTIFICATION_EMAIL" ]; then
+                        bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
+                    else
+                        bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" &
+                    fi
+                    local notification_pid=$!
+                    echo "📧 [$org_num/$total] Final summary notification sent (PID: $notification_pid)"
+                else
+                    # Fallback: basic notification without external script
+                    echo "⚠️  [$org_num/$total] Notification script not found, but secrets detected!"
+                    if [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
+                        echo "📱 Telegram Chat ID configured: $NOTIFICATION_TELEGRAM_CHAT_ID"
+                    fi
+                    if [ -n "$NOTIFICATION_EMAIL" ]; then
+                        echo "📧 Email configured: $NOTIFICATION_EMAIL"
+                    fi
+                fi
+            else
+                echo "⚠️  [$org_num/$total] No notification methods configured (use --email or --telegramId)"
+            fi
+            
+            # Now organize the file
             ORG_DIR="$RESULTS_BASE_DIR/$org"
             mkdir -p "$ORG_DIR"
             mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
@@ -571,44 +652,7 @@ scan_organization() {
             # Only update state file after successful completion
             update_state_with_org "$STATE_FILE" "$org" "secrets_found"
             
-            # 🚨 SEND NOTIFICATIONS HERE 🚨
-            if [ -f "$NOTIFICATION_SCRIPT" ] && ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]); then
-                local secrets_file="$ORG_DIR/verified_secrets_${org}.json"
-                local count
-                if command -v jq >/dev/null 2>&1; then
-                    count=$(jq length "$secrets_file" 2>/dev/null || echo "unknown")
-                else
-                    # Multiple fallback methods for counting JSON array elements
-                    if command -v grep >/dev/null 2>&1; then
-                        count=$(grep -c '"DetectorName"' "$secrets_file" 2>/dev/null || echo "unknown")
-                    elif command -v powershell.exe >/dev/null 2>&1; then
-                        count=$(powershell.exe -c "try { (Get-Content '$secrets_file' | ConvertFrom-Json).Count } catch { 'unknown' }" 2>/dev/null || echo "unknown")
-                    else
-                        # Last resort: count opening braces that follow array pattern
-                        count=$(awk '/^\s*\{/ {count++} END {print count+0}' "$secrets_file" 2>/dev/null || echo "unknown")
-                    fi
-                fi
-                
-                echo "🚨 [$org_num/$total] Sending security alert for $org ($count secrets found)"
-                
-                # Set environment variables for the notification script
-                if [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
-                    export TELEGRAM_CHAT_ID="$NOTIFICATION_TELEGRAM_CHAT_ID"
-                fi
-                
-                # Call notification script in background so it doesn't slow down scanning
-                if [ -n "$NOTIFICATION_EMAIL" ]; then
-                    bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
-                else
-                    bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" &
-                fi
-                
-                # Store the PID for cleanup if needed
-                local notification_pid=$!
-                echo "📧 [$org_num/$total] Notifications sent (PID: $notification_pid)"
-            fi
-            
-            echo "✅ [$org_num/$total] $org completed - secrets found!"
+            echo "✅ [$org_num/$total] $org completed - secrets found! First alert + final summary sent!"
             return 2  # Success with findings
         else
             rm -f "$RESULTS_BASE_DIR/verified_secrets_${org}.json"
@@ -631,11 +675,98 @@ scan_organization() {
 export -f scan_organization update_state_with_org
 export DB_FILE PYTHON_SCRIPT LOG_DIR DEBUG WORKERS_PER_ORG RESULTS_BASE_DIR
 export NOTIFICATION_EMAIL NOTIFICATION_TELEGRAM_CHAT_ID NOTIFICATION_SCRIPT STATE_FILE
-export VERBOSE EVENTS_FILE CUSTOM_DB_FILE
+export VERBOSE EVENTS_FILE CUSTOM_DB_FILE ORGS_FILE
 
 # Get organizations list
 if [ -n "$TEST_ORG" ]; then
     ORGS="$TEST_ORG"
+elif [ -n "$ORGS_FILE" ]; then
+    # Read organizations from text file
+    echo "📋 Reading organizations from: $ORGS_FILE"
+    FILE_ORGS=$(cat "$ORGS_FILE" | grep -v '^#' | grep -v '^[[:space:]]*$' | sort | uniq)
+    if [ -z "$FILE_ORGS" ]; then
+        echo -e "${RED}[!] Error: No organizations found in file: $ORGS_FILE${NC}"
+        echo "Make sure the file contains organization names (one per line)"
+        exit 1
+    fi
+    ORG_COUNT=$(echo "$FILE_ORGS" | wc -l)
+    echo "📊 Loaded $ORG_COUNT organizations from file"
+    
+    # Validate organizations against database to ensure they have data
+    echo "🔍 Validating organizations against database..."
+    
+    # Determine which DB file to use for validation
+    db_file_for_validation=""
+    if [ -n "$CUSTOM_DB_FILE" ]; then
+        db_file_for_validation="$CUSTOM_DB_FILE"
+    else
+        db_file_for_validation="$DB_FILE"
+    fi
+    
+    # Check which organizations from the file actually exist in the database
+    # Write organizations to temp file to avoid bash variable substitution issues
+    echo "$FILE_ORGS" > /tmp/file_orgs.txt
+    
+    ALL_ORGS=$(python3 -c "
+import sqlite3
+import sys
+
+# Read organizations from temp file
+with open('/tmp/file_orgs.txt', 'r') as f:
+    file_orgs = [line.strip() for line in f if line.strip()]
+
+try:
+    db = sqlite3.connect('$db_file_for_validation')
+    db.execute('PRAGMA journal_mode=WAL')  # Enable WAL mode for better performance
+    db.execute('PRAGMA synchronous=NORMAL')  # Reduce sync for better performance
+    cur = db.cursor()
+    
+    # Use a more efficient query - check each org individually with LIMIT 1
+    valid_orgs = []
+    invalid_orgs = []
+    
+    for org in file_orgs:
+        cur.execute('SELECT repo_org FROM pushes WHERE repo_org = ? LIMIT 1;', (org,))
+        result = cur.fetchone()
+        if result:
+            valid_orgs.append(org)
+        else:
+            invalid_orgs.append(org)
+    
+    # Print valid organizations to stdout
+    for org in valid_orgs:
+        print(org)
+    
+    # Report invalid organizations to stderr
+    if invalid_orgs:
+        print('Warning: The following organizations from file are not found in database:', file=sys.stderr)
+        for org in invalid_orgs:
+            print('  - ' + org, file=sys.stderr)
+        print('', file=sys.stderr)
+    
+    db.close()
+    
+except Exception as e:
+    print('Error validating organizations against database: ' + str(e), file=sys.stderr)
+    # Fallback: use file organizations as-is
+    for org in file_orgs:
+        print(org)
+")
+    
+    # Clean up temp file
+    rm -f /tmp/file_orgs.txt
+    
+    if [ -z "$ALL_ORGS" ]; then
+        echo -e "${RED}[!] Error: None of the organizations in $ORGS_FILE exist in the database${NC}"
+        echo "Make sure the organizations have data in the database and the database path is correct."
+        exit 1
+    fi
+    
+    VALID_COUNT=$(echo "$ALL_ORGS" | wc -l)
+    echo "✅ $VALID_COUNT organizations from file found in database"
+    
+    # Set ORGS to the validated organizations from the file
+    ORGS="$ALL_ORGS"
 else
     if [ "$ORG_ORDER" = "random" ]; then
         ALL_ORGS=$(python3 -c "
@@ -870,7 +1001,8 @@ if [ $ORGS_WITH_SECRETS -gt 0 ]; then
     fi
     
     if [ -n "$notifications_sent" ]; then
-        echo -e "${GREEN}� Security notifications sent via: $notifications_sent${NC}"
+        echo -e "${GREEN}📤 Immediate notifications were sent via: $notifications_sent${NC}"
+        echo "    (Notifications sent as soon as secrets were discovered)"
     else
         echo -e "${YELLOW}⚠️  No notifications sent - use --email and/or --telegramId to enable alerts${NC}"
     fi
