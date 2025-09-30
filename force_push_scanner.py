@@ -503,33 +503,16 @@ def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path, org
                         send_immediate_notification(f, repo_url, org_name)
 
     finally:
-        # Enhanced cleanup with logging
-        cleanup_success = False
-        cleanup_attempts = 0
-        max_attempts = 3
-        
-        while not cleanup_success and cleanup_attempts < max_attempts:
-            cleanup_attempts += 1
-            try:
-                if os.path.exists(tmp_dir):
-                    # On Windows, sometimes files are still locked, so try a few times
-                    shutil.rmtree(tmp_dir, ignore_errors=False)
-                    cleanup_success = True
-                    if logging.getLogger().isEnabledFor(logging.DEBUG):
-                        print(f"🧹 Cleaned up temporary repository: {tmp_dir}")
-                else:
-                    cleanup_success = True  # Directory already gone
-            except OSError as e:
-                if cleanup_attempts < max_attempts:
-                    # Wait a bit and try again (especially useful on Windows)
-                    time.sleep(0.5)
-                    if logging.getLogger().isEnabledFor(logging.DEBUG):
-                        print(f"⚠️  Cleanup attempt {cleanup_attempts} failed for {tmp_dir}: {e}, retrying...")
-                else:
-                    print(f"⚠️  Failed to cleanup temporary repository after {max_attempts} attempts: {tmp_dir} - {e}")
-            except Exception as e:
-                print(f"⚠️  Unexpected error during cleanup of {tmp_dir}: {e}")
-                break
+        # Simple cleanup - don't fail if we can't clean up immediately
+        # Full cleanup will happen at beginning/end of script execution
+        try:
+            if os.path.exists(tmp_dir):
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                if logging.getLogger().isEnabledFor(logging.DEBUG):
+                    print(f"🧹 Cleaned up temporary repository: {tmp_dir}")
+        except Exception:
+            # Ignore cleanup failures - batch cleanup will handle it later
+            pass
 
     return repo_url, commit_counter, repo_findings
 
@@ -549,13 +532,17 @@ def cleanup_temp_directories(prefix: str = "gh-repo-") -> None:
                     if logging.getLogger().isEnabledFor(logging.DEBUG):
                         print(f"🧹 Cleaned up leftover temp directory: {temp_dir}")
                 except Exception as e:
-                    print(f"⚠️  Failed to cleanup leftover temp directory {temp_dir}: {e}")
+                    if logging.getLogger().isEnabledFor(logging.DEBUG):
+                        print(f"⚠️  Failed to cleanup leftover temp directory {temp_dir}: {e}")
     
     except Exception as e:
-        print(f"⚠️  Error during temp directory cleanup: {e}")
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            print(f"⚠️  Error during temp directory cleanup: {e}")
     
-    if cleaned_count > 0:
+    if cleaned_count > 0 and logging.getLogger().isEnabledFor(logging.DEBUG):
         print(f"🧹 Cleaned up {cleaned_count} leftover temporary directories")
+    elif cleaned_count > 0:
+        print(f"🧹 Cleaned up {cleaned_count} temporary directories")
 
 
 def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int = 16, results_dir: Path = None) -> None:
@@ -565,9 +552,6 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
     
     # Reset notification tracking for this new scan
     reset_notification_tracking()
-    
-    # Clean up any leftover temporary directories from previous runs
-    cleanup_temp_directories()
 
     # Use results directory if provided, otherwise current directory
     if results_dir:
@@ -633,9 +617,6 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
             findings_file.unlink()
         except Exception:
             pass
-    
-    # Final cleanup of any remaining temporary directories
-    cleanup_temp_directories()
 
 
 def cleanup_all_temp_directories() -> None:

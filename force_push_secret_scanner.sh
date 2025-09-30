@@ -456,6 +456,10 @@ fi
 mkdir -p "$RESULTS_BASE_DIR"
 echo "Results will be saved to: $RESULTS_BASE_DIR"
 
+# Initial cleanup of temporary directories from previous runs
+echo -e "${CYAN}[🧹] Initial cleanup of temporary directories...${NC}"
+python3 "$PYTHON_SCRIPT" --cleanup 2>/dev/null || echo "Note: Could not clean up temporary directories"
+
 # Handle state management
 SCANNED_ORGS=""
 SCAN_START_TIME=$(date -Iseconds)
@@ -1169,10 +1173,6 @@ if [ -f "$STATE_FILE" ]; then
             else
                 echo "🎉 All organizations completed!"
                 echo -e "${GREEN}💡 Use './force_push_secret_scanner.sh --restart' to scan again${NC}"
-                
-                # Clean up temporary directories after complete scan
-                echo -e "${YELLOW}[🧹] Performing final cleanup...${NC}"
-                python3 "$PYTHON_SCRIPT" --cleanup 2>/dev/null || echo "Note: Could not clean up temporary directories"
             fi
         fi
     fi
@@ -1180,7 +1180,3 @@ fi
 
 echo "State file: $STATE_FILE"
 echo "===================="
-
-# Final cleanup of temporary directories at the end of any scan
-echo -e "${CYAN}[🧹] Final cleanup of temporary directories...${NC}"
-python3 "$PYTHON_SCRIPT" --cleanup 2>/dev/null || true
