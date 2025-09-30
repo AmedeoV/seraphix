@@ -54,6 +54,16 @@ def send_immediate_notification(finding: dict, repo_url: str, org: str) -> None:
     global _notified_orgs
     
     try:
+        # Additional validation - ensure finding has required content
+        if not finding.get('Verified', False):
+            return  # Not a verified finding
+        if not finding.get('DetectorName'):
+            return  # No detector name
+        if not finding.get('Raw') and not finding.get('RawV2'):
+            return  # No actual secret content
+        if not finding.get('SourceMetadata', {}).get('Data', {}).get('Git', {}).get('commit'):
+            return  # No commit information
+            
         # Check if we've already notified for this organization
         with _file_lock:
             if org in _notified_orgs:
@@ -63,12 +73,12 @@ def send_immediate_notification(finding: dict, repo_url: str, org: str) -> None:
         # Get notification configuration from environment variables
         telegram_chat_id = os.environ.get('TELEGRAM_CHAT_ID', '')
         notification_email = os.environ.get('NOTIFICATION_EMAIL', '')
-        notification_script = os.environ.get('NOTIFICATION_SCRIPT', 'send_notifications.sh')
+        notification_script = os.environ.get('NOTIFICATION_SCRIPT', 'send_notifications_enhanced.sh')
         
         if not telegram_chat_id and not notification_email:
             return  # No notification methods configured
         
-        # Create a minimal JSON file for this single finding
+        # Create a minimal JSON file for this single finding with immediate marker
         temp_dir = tempfile.gettempdir()
         temp_finding_file = os.path.join(temp_dir, f"immediate_secret_{org}_{int(time.time())}.json")
         
@@ -79,7 +89,7 @@ def send_immediate_notification(finding: dict, repo_url: str, org: str) -> None:
         print(f"🚨 FIRST SECRET ALERT: {org} has leaked secrets!")
         print(f"📱 Sending immediate notification (scan continues, more secrets may follow)...")
         
-        # Call notification script in background
+        # Call enhanced notification script in background
         if os.path.exists(notification_script):
             cmd = ["bash", notification_script, org, temp_finding_file]
             if notification_email:
@@ -90,7 +100,7 @@ def send_immediate_notification(finding: dict, repo_url: str, org: str) -> None:
         
         # Clean up temp file after a delay (in background)
         def cleanup_temp_file():
-            time.sleep(30)  # Wait 30 seconds for notification to process
+            time.sleep(60)  # Wait 60 seconds for notification to process (longer for file attachment)
             try:
                 os.unlink(temp_finding_file)
             except:
@@ -119,9 +129,9 @@ class RunCmdError(RuntimeError):
     """Raised when an external command returns a non-zero exit status."""
 
 
-def run(cmd: List[str], cwd: Path | None = None) -> str:
+def run(cmd: List[str], cwd: Path | None = None, timeout_seconds: int = 900) -> str:
     """Execute *cmd* and return its *stdout* as *str*."""
-    logging.debug("Running command: %s (cwd=%s)", " ".join(cmd), cwd or ".")
+    logging.debug("Running command: %s (cwd=%s, timeout=%ds)", " ".join(cmd), cwd or ".", timeout_seconds)
     try:
         env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
         proc = subprocess.run(
@@ -133,7 +143,7 @@ def run(cmd: List[str], cwd: Path | None = None) -> str:
             errors="replace",
             check=True,
             env=env,
-            timeout=300,  # 5 minute timeout for git operations
+            timeout=timeout_seconds,
         )
         return proc.stdout
     except subprocess.CalledProcessError as err:
@@ -144,22 +154,103 @@ def run(cmd: List[str], cwd: Path | None = None) -> str:
         raise RunCmdError(f"Command timed out: {' '.join(cmd)}") from err
 
 
-def scan_with_trufflehog(repo_path: Path, since_commit: str, branch: str) -> List[dict]:
-    """Run trufflehog in git mode, returning the parsed JSON findings."""
+def estimate_repo_scan_time(repo_path: Path, commits: List[dict]) -> int:
+    """Estimate appropriate timeout based on repository characteristics."""
+    base_timeout = 900  # 15 minutes baseline
+    
+    # Factor 1: Number of commits to scan
+    commit_count = len(commits)
+    if commit_count > 100:
+        base_timeout *= 2
+    elif commit_count > 50:
+        base_timeout *= 1.5
+    
+    # Factor 2: Repository size (if available)
     try:
-        stdout = run([
-            "trufflehog", "git", "--branch", branch, "--since-commit", since_commit,
-            "--no-update", "--json", "--only-verified", "--concurrency", "4",
-            "file://" + str(repo_path.absolute()),
-            ])
-        findings: List[dict] = []
-        for line in stdout.splitlines():
-            with suppress(json.JSONDecodeError):
-                findings.append(json.loads(line))
-        return findings
-    except RunCmdError as err:
-        print(f"[!] trufflehog execution failed: {err} — skipping this repository")
-        return []
+        repo_size_mb = sum(f.stat().st_size for f in repo_path.rglob('*') if f.is_file()) / (1024 * 1024)
+        if repo_size_mb > 500:  # Large repo
+            base_timeout *= 2
+        elif repo_size_mb > 100:  # Medium repo
+            base_timeout *= 1.5
+    except Exception:
+        pass  # Size estimation failed, use base timeout
+    
+    # Cap at reasonable maximum
+    return min(base_timeout, 3600)  # Max 1 hour
+
+
+def get_trufflehog_config(repo_size_mb: float = 0, commit_count: int = 0) -> List[str]:
+    """Get optimized TruffleHog configuration based on repository characteristics."""
+    base_config = [
+        "trufflehog", "git",
+        "--no-update", "--json", "--only-verified"
+    ]
+    
+    # Adjust concurrency based on repository size and commit count
+    if repo_size_mb > 1000 or commit_count > 200:
+        # Large repositories: reduce concurrency to avoid memory issues
+        concurrency = "2"
+    elif repo_size_mb > 100 or commit_count > 50:
+        # Medium repositories: moderate concurrency
+        concurrency = "4"
+    else:
+        # Small repositories: higher concurrency
+        concurrency = "8"
+    
+    base_config.extend(["--concurrency", concurrency])
+    
+    # Add additional optimizations for large repositories
+    if repo_size_mb > 500:
+        # For very large repos, we could add more specific filters
+        # This is where you could add --include-paths or --exclude-paths if needed
+        pass
+    
+    return base_config
+
+
+def scan_with_trufflehog(repo_path: Path, since_commit: str, branch: str, max_retries: int = 2, commits: List[dict] = None) -> List[dict]:
+    """Run trufflehog in git mode, returning the parsed JSON findings."""
+    # Estimate appropriate timeout
+    estimated_timeout = estimate_repo_scan_time(repo_path, commits or [])
+    timeouts = [estimated_timeout, estimated_timeout * 2, estimated_timeout * 3]
+    
+    # Get repository size for optimization
+    repo_size_mb = 0
+    try:
+        repo_size_mb = sum(f.stat().st_size for f in repo_path.rglob('*') if f.is_file()) / (1024 * 1024)
+    except Exception:
+        pass
+    
+    for attempt in range(max_retries + 1):
+        try:
+            timeout_seconds = timeouts[min(attempt, len(timeouts) - 1)]
+            print(f"[i] Scanning with TruffleHog (attempt {attempt + 1}/{max_retries + 1}, timeout: {timeout_seconds//60}m, size: {repo_size_mb:.1f}MB)")
+            
+            # Use optimized TruffleHog configuration
+            trufflehog_cmd = get_trufflehog_config(repo_size_mb, len(commits or []))
+            trufflehog_cmd.extend(["--branch", branch, "--since-commit", since_commit])
+            trufflehog_cmd.append("file://" + str(repo_path.absolute()))
+            
+            stdout = run(trufflehog_cmd, timeout_seconds=timeout_seconds)
+            
+            findings: List[dict] = []
+            for line in stdout.splitlines():
+                with suppress(json.JSONDecodeError):
+                    data = json.loads(line)
+                    # Only include verified findings with the required fields
+                    if (data.get('Verified', False) and 
+                        data.get('DetectorName') and 
+                        data.get('SourceMetadata')):
+                        findings.append(data)
+            return findings
+            
+        except RunCmdError as err:
+            if "Command timed out" in str(err) and attempt < max_retries:
+                print(f"[!] TruffleHog timed out (attempt {attempt + 1}), retrying with longer timeout...")
+                continue
+            else:
+                print(f"[!] trufflehog execution failed: {err} — skipping this repository")
+                return []
 
 
 def to_year(date_val) -> str:
@@ -395,7 +486,7 @@ def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path, org
                 else:
                     break
 
-            findings = scan_with_trufflehog(tmp_path, since_commit=since_commit, branch=before)
+            findings = scan_with_trufflehog(tmp_path, since_commit=since_commit, branch=before, commits=commits)
 
             if findings:
                 for f in findings:
@@ -412,12 +503,59 @@ def scan_single_repo(repo_data: tuple[str, List[dict]], findings_file: Path, org
                         send_immediate_notification(f, repo_url, org_name)
 
     finally:
-        try:
-            shutil.rmtree(tmp_dir, ignore_errors=True)
-        except OSError:
-            pass
+        # Enhanced cleanup with logging
+        cleanup_success = False
+        cleanup_attempts = 0
+        max_attempts = 3
+        
+        while not cleanup_success and cleanup_attempts < max_attempts:
+            cleanup_attempts += 1
+            try:
+                if os.path.exists(tmp_dir):
+                    # On Windows, sometimes files are still locked, so try a few times
+                    shutil.rmtree(tmp_dir, ignore_errors=False)
+                    cleanup_success = True
+                    if logging.getLogger().isEnabledFor(logging.DEBUG):
+                        print(f"🧹 Cleaned up temporary repository: {tmp_dir}")
+                else:
+                    cleanup_success = True  # Directory already gone
+            except OSError as e:
+                if cleanup_attempts < max_attempts:
+                    # Wait a bit and try again (especially useful on Windows)
+                    time.sleep(0.5)
+                    if logging.getLogger().isEnabledFor(logging.DEBUG):
+                        print(f"⚠️  Cleanup attempt {cleanup_attempts} failed for {tmp_dir}: {e}, retrying...")
+                else:
+                    print(f"⚠️  Failed to cleanup temporary repository after {max_attempts} attempts: {tmp_dir} - {e}")
+            except Exception as e:
+                print(f"⚠️  Unexpected error during cleanup of {tmp_dir}: {e}")
+                break
 
     return repo_url, commit_counter, repo_findings
+
+
+def cleanup_temp_directories(prefix: str = "gh-repo-") -> None:
+    """Clean up any leftover temporary directories from previous scans."""
+    temp_base = Path(tempfile.gettempdir())
+    cleaned_count = 0
+    
+    try:
+        # Find all directories matching our prefix
+        for temp_dir in temp_base.glob(f"{prefix}*"):
+            if temp_dir.is_dir():
+                try:
+                    shutil.rmtree(temp_dir, ignore_errors=True)
+                    cleaned_count += 1
+                    if logging.getLogger().isEnabledFor(logging.DEBUG):
+                        print(f"🧹 Cleaned up leftover temp directory: {temp_dir}")
+                except Exception as e:
+                    print(f"⚠️  Failed to cleanup leftover temp directory {temp_dir}: {e}")
+    
+    except Exception as e:
+        print(f"⚠️  Error during temp directory cleanup: {e}")
+    
+    if cleaned_count > 0:
+        print(f"🧹 Cleaned up {cleaned_count} leftover temporary directories")
 
 
 def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int = 16, results_dir: Path = None) -> None:
@@ -427,6 +565,9 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
     
     # Reset notification tracking for this new scan
     reset_notification_tracking()
+    
+    # Clean up any leftover temporary directories from previous runs
+    cleanup_temp_directories()
 
     # Use results directory if provided, otherwise current directory
     if results_dir:
@@ -492,6 +633,38 @@ def scan_commits(repo_user: str, repos: Dict[str, List[dict]], max_workers: int 
             findings_file.unlink()
         except Exception:
             pass
+    
+    # Final cleanup of any remaining temporary directories
+    cleanup_temp_directories()
+
+
+def cleanup_all_temp_directories() -> None:
+    """Clean up all temporary directories from scanning operations."""
+    print(f"{Fore.CYAN}[🧹] Performing final cleanup of temporary directories...{Style.RESET_ALL}")
+    
+    temp_base = Path(tempfile.gettempdir())
+    prefixes = ["gh-repo-", "immediate_secret_"]
+    total_cleaned = 0
+    
+    for prefix in prefixes:
+        try:
+            for temp_dir in temp_base.glob(f"{prefix}*"):
+                try:
+                    if temp_dir.is_dir():
+                        shutil.rmtree(temp_dir, ignore_errors=True)
+                        total_cleaned += 1
+                    elif temp_dir.is_file() and prefix == "immediate_secret_":
+                        temp_dir.unlink()
+                        total_cleaned += 1
+                except Exception as e:
+                    print(f"⚠️  Failed to cleanup {temp_dir}: {e}")
+        except Exception as e:
+            print(f"⚠️  Error during cleanup of {prefix}* files: {e}")
+    
+    if total_cleaned > 0:
+        print(f"{Fore.GREEN}[✓] Cleaned up {total_cleaned} temporary files/directories{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.CYAN}[i] No temporary files to clean up{Style.RESET_ALL}")
 
 
 def run_scanner(input_org: str, db_file: Optional[Path] = None, events_file: Optional[Path] = None,
@@ -527,10 +700,16 @@ def main() -> None:
     Direct command-line usage is deprecated. Use force_push_secret_scanner.sh instead.
     Note: Scanning is always enabled - this tool always scans for secrets.
     """
+    # Check for cleanup command
+    if len(sys.argv) >= 2 and sys.argv[1] == "--cleanup":
+        cleanup_all_temp_directories()
+        return
+    
     # Simple argument handling for backward compatibility
     if len(sys.argv) < 2:
         print("ERROR: This script is now designed to be called by force_push_secret_scanner.sh")
         print("Usage: bash force_push_secret_scanner.sh --help")
+        print("      python force_push_scanner.py --cleanup  # Clean up temporary files")
         sys.exit(1)
     
     # Extract organization from command line for basic compatibility

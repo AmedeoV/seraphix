@@ -56,7 +56,7 @@
 DB_FILE="force_push_commits.sqlite3"
 PYTHON_SCRIPT="force_push_scanner.py"
 LOG_DIR="scan_logs"
-NOTIFICATION_SCRIPT="send_notifications.sh"  # Add this line
+NOTIFICATION_SCRIPT="send_notifications_enhanced.sh"  # Enhanced notification system
 STATE_FILE="scan_state.json"  # Default state file for tracking progress
 
 # Notification configuration
@@ -140,6 +140,10 @@ cleanup() {
     rm -f /tmp/orgs_numbered.txt 2>/dev/null
     rm -f /tmp/all_orgs.txt /tmp/scanned_orgs.txt 2>/dev/null
     
+    # Clean up temporary repository directories
+    echo "${YELLOW}[🧹] Cleaning up temporary repository directories...${NC}"
+    python3 "$PYTHON_SCRIPT" --cleanup 2>/dev/null || echo "Note: Could not clean up temporary directories"
+    
     echo "${RED}[!] Cleanup completed. State preserved in: $STATE_FILE${NC}"
     echo "${YELLOW}[!] Interrupted organizations will be retried on next run${NC}"
     echo "${YELLOW}[!] Use --resume to continue where you left off${NC}"
@@ -152,6 +156,18 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+# Load timeout configuration if available
+if [ -f "config/timeout_config.sh" ]; then
+    echo "Loading timeout configuration from config/timeout_config.sh"
+    source config/timeout_config.sh
+else
+    # Default timeout values
+    export TRUFFLEHOG_BASE_TIMEOUT=900
+    export TRUFFLEHOG_MAX_TIMEOUT=3600
+    export TRUFFLEHOG_MAX_RETRIES=2
+    export GIT_OPERATION_TIMEOUT=300
+fi
 
 # Set up signal traps
 trap cleanup SIGINT SIGTERM
@@ -611,25 +627,35 @@ scan_organization() {
             
             echo "🔑 [$org_num/$total] Found $count verified secrets in $org"
             
-            # Send notifications immediately (before file organization)
+            # Send completion notifications immediately (before file organization)
             if ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]); then
-                echo "� [$org_num/$total] Sending final summary for $org..."
+                echo "📊 [$org_num/$total] Sending completion summary for $org..."
                 
                 # Set environment variables for the notification script
                 if [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
                     export TELEGRAM_CHAT_ID="$NOTIFICATION_TELEGRAM_CHAT_ID"
                 fi
                 
-                # Send notification immediately in background
-                if [ -f "$NOTIFICATION_SCRIPT" ]; then
-                    # Use external notification script if available
+                # Use enhanced notification script with completion notification
+                ENHANCED_NOTIFICATION_SCRIPT="send_notifications_enhanced.sh"
+                if [ -f "$ENHANCED_NOTIFICATION_SCRIPT" ]; then
+                    # Use enhanced notification script
+                    if [ -n "$NOTIFICATION_EMAIL" ]; then
+                        bash "$ENHANCED_NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
+                    else
+                        bash "$ENHANCED_NOTIFICATION_SCRIPT" "$org" "$secrets_file" &
+                    fi
+                    local notification_pid=$!
+                    echo "📧 [$org_num/$total] Completion notification sent (PID: $notification_pid)"
+                elif [ -f "$NOTIFICATION_SCRIPT" ]; then
+                    # Fallback to original notification script
                     if [ -n "$NOTIFICATION_EMAIL" ]; then
                         bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" "$NOTIFICATION_EMAIL" &
                     else
                         bash "$NOTIFICATION_SCRIPT" "$org" "$secrets_file" &
                     fi
                     local notification_pid=$!
-                    echo "📧 [$org_num/$total] Final summary notification sent (PID: $notification_pid)"
+                    echo "📧 [$org_num/$total] Legacy notification sent (PID: $notification_pid)"
                 else
                     # Fallback: basic notification without external script
                     echo "⚠️  [$org_num/$total] Notification script not found, but secrets detected!"
@@ -683,7 +709,7 @@ if [ -n "$TEST_ORG" ]; then
 elif [ -n "$ORGS_FILE" ]; then
     # Read organizations from text file
     echo "📋 Reading organizations from: $ORGS_FILE"
-    FILE_ORGS=$(cat "$ORGS_FILE" | grep -v '^#' | grep -v '^[[:space:]]*$' | sort | uniq)
+    FILE_ORGS=$(cat "$ORGS_FILE" | grep -v '^#' | grep -v '^[[:space:]]*$' | uniq)
     if [ -z "$FILE_ORGS" ]; then
         echo -e "${RED}[!] Error: No organizations found in file: $ORGS_FILE${NC}"
         echo "Make sure the file contains organization names (one per line)"
@@ -765,8 +791,110 @@ except Exception as e:
     VALID_COUNT=$(echo "$ALL_ORGS" | wc -l)
     echo "✅ $VALID_COUNT organizations from file found in database"
     
-    # Set ORGS to the validated organizations from the file
-    ORGS="$ALL_ORGS"
+    # Apply ordering to file organizations based on --order parameter
+    if [ "$ORG_ORDER" = "random" ]; then
+        echo "🎲 Shuffling organizations randomly..."
+        ORGS=$(echo "$ALL_ORGS" | shuf)
+    elif [ "$ORG_ORDER" = "latest" ]; then
+        echo "⏰ Ordering organizations by latest activity..."
+        # Write organizations to temp file for Python processing
+        echo "$ALL_ORGS" > /tmp/file_orgs_to_order.txt
+        ORGS=$(python3 -c "
+import sqlite3
+import sys
+
+# Read organizations from temp file
+with open('/tmp/file_orgs_to_order.txt', 'r') as f:
+    file_orgs = [line.strip() for line in f if line.strip()]
+
+try:
+    db = sqlite3.connect('$db_file_for_validation')
+    cur = db.cursor()
+    
+    # Order by latest push timestamp
+    ordered_orgs = []
+    for org in file_orgs:
+        cur.execute('SELECT MAX(push_timestamp) FROM pushes WHERE repo_org = ?;', (org,))
+        result = cur.fetchone()
+        latest_time = result[0] if result and result[0] else '1970-01-01'
+        ordered_orgs.append((latest_time, org))
+    
+    # Sort by timestamp descending (latest first)
+    ordered_orgs.sort(reverse=True)
+    
+    # Print organizations in order
+    for timestamp, org in ordered_orgs:
+        print(org)
+    
+    db.close()
+    
+except Exception as e:
+    print('Error ordering organizations by latest activity: ' + str(e), file=sys.stderr)
+    # Fallback: use original order
+    for org in file_orgs:
+        print(org)
+")
+        # Clean up temp file
+        rm -f /tmp/file_orgs_to_order.txt
+    elif [ "$ORG_ORDER" = "stars" ]; then
+        echo "⭐ Ordering organizations by star count..."
+        # Write organizations to temp file for Python processing
+        echo "$ALL_ORGS" > /tmp/file_orgs_to_order.txt
+        ORGS=$(python3 -c "
+import sqlite3
+import sys
+
+# Read organizations from temp file
+with open('/tmp/file_orgs_to_order.txt', 'r') as f:
+    file_orgs = [line.strip() for line in f if line.strip()]
+
+try:
+    db = sqlite3.connect('$db_file_for_validation')
+    cur = db.cursor()
+    
+    # Check if stars column exists
+    cur.execute(\"PRAGMA table_info(pushes)\")
+    columns = [col[1] for col in cur.fetchall()]
+    
+    if 'stars' in columns:
+        # Order by star count
+        ordered_orgs = []
+        for org in file_orgs:
+            cur.execute('SELECT MAX(CAST(stars AS INTEGER)) FROM pushes WHERE repo_org = ? AND stars IS NOT NULL AND stars != \"\";', (org,))
+            result = cur.fetchone()
+            star_count = result[0] if result and result[0] is not None else 0
+            ordered_orgs.append((star_count, org))
+        
+        # Sort by star count descending (most stars first)
+        ordered_orgs.sort(reverse=True)
+        
+        # Print organizations in order
+        for star_count, org in ordered_orgs:
+            print(org)
+    else:
+        print('Warning: stars column not found in database, falling back to random order', file=sys.stderr)
+        # Fallback to shuffled order
+        import random
+        random.shuffle(file_orgs)
+        for org in file_orgs:
+            print(org)
+    
+    db.close()
+    
+except Exception as e:
+    print('Error ordering organizations by stars: ' + str(e), file=sys.stderr)
+    # Fallback: use random order
+    import random
+    random.shuffle(file_orgs)
+    for org in file_orgs:
+        print(org)
+")
+        # Clean up temp file
+        rm -f /tmp/file_orgs_to_order.txt
+    else
+        # Default: keep original order from file
+        ORGS="$ALL_ORGS"
+    fi
 else
     if [ "$ORG_ORDER" = "random" ]; then
         ALL_ORGS=$(python3 -c "
@@ -941,6 +1069,18 @@ fi
 echo "Processing $TOTAL_ORGS organizations with max $MAX_PARALLEL_ORGS parallel jobs"
 echo "Using $WORKERS_PER_ORG workers per organization"
 echo "Results directory: $RESULTS_BASE_DIR"
+
+# Debug: Show first few organizations in processing order
+if [ "$DEBUG" = true ]; then
+    echo "🐛 DEBUG: Organization processing order:"
+    echo "$ORGS" | head -10 | while read -r org; do
+        echo "   - $org"
+    done
+    if [ "$TOTAL_ORGS" -gt 10 ]; then
+        echo "   ... and $((TOTAL_ORGS - 10)) more organizations"
+    fi
+fi
+
 echo -e "${YELLOW}Press Ctrl+C to interrupt and cleanup gracefully${NC}"
 
 # Create numbered org list for parallel processing
@@ -1029,6 +1169,10 @@ if [ -f "$STATE_FILE" ]; then
             else
                 echo "🎉 All organizations completed!"
                 echo -e "${GREEN}💡 Use './force_push_secret_scanner.sh --restart' to scan again${NC}"
+                
+                # Clean up temporary directories after complete scan
+                echo -e "${YELLOW}[🧹] Performing final cleanup...${NC}"
+                python3 "$PYTHON_SCRIPT" --cleanup 2>/dev/null || echo "Note: Could not clean up temporary directories"
             fi
         fi
     fi
@@ -1036,3 +1180,7 @@ fi
 
 echo "State file: $STATE_FILE"
 echo "===================="
+
+# Final cleanup of temporary directories at the end of any scan
+echo -e "${CYAN}[🧹] Final cleanup of temporary directories...${NC}"
+python3 "$PYTHON_SCRIPT" --cleanup 2>/dev/null || true
