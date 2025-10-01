@@ -1,9 +1,7 @@
-<div align="center">
-  <h1>
-    <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" width="60" style="vertical-align: middle; margin-right: 15px;">
-    Seraphix - Secret Scanner
-  </h1>
-</div>
+<h1>
+  <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" width="60" style="vertical-align: middle; margin-right: 15px;">
+  Seraphix - Secret Scanner
+</h1>
 
 <br>
 
