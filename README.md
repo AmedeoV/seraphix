@@ -1,4 +1,4 @@
-<div align="center">
+<div align="center" style="background: url('seraphix-scanner-logo.jpg') no-repeat center/200px; background-color: rgba(255,255,255,0.9); background-blend-mode: lighten; padding: 40px; border-radius: 10px;">
   <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" width="120">
 </div>
 
@@ -14,12 +14,23 @@ This project was created in collaboration with [Sharon Brizinov](https://github.
 
 1. Download the Force Push Commits SQLite DB (`force_push_commits.sqlite3`) via a quick Google Form submission: <https://forms.gle/344GbP6WrJ1fhW2A6>. This lets you search all force push commits for any user/org locally.
 
-2. Install Python deps:
+2. Install dependencies:
 
 ```bash
-pip install -r requirements.txt
+./install_requirements.sh
 ```
-3. Scan an org/user for secrets:
+
+3. **Optional**: Configure timeout settings for optimal scanning performance:
+
+```bash
+# Copy timeout configuration template
+cp config/timeout_config.sh.example config/timeout_config.sh
+
+# Edit configuration (optional - defaults work for most cases)
+nano config/timeout_config.sh
+```
+
+4. Scan an org/user for secrets:
 
 ```bash
 python force_push_scanner.py <org> --db-file /path/to/force_push_commits.sqlite3 --scan
@@ -41,9 +52,53 @@ Export the results as a CSV, then run the scanner:
 python force_push_scanner.py <org> --events-file /path/to/force_push_commits.csv --scan
 ```
 
-### Batch Scanner Script
+## Project Structure
 
-For scanning multiple organizations efficiently, use the included batch scanner:
+This project is organized into three main scanning modules:
+
+### � Force Push Scanner (`force-push-scanner/`)
+Database-driven scanning with resume capabilities and parallel processing.
+```bash
+cd force-push-scanner/
+./force_push_secret_scanner.sh
+```
+
+### 🏢 Organization Scanner (`org-scanner/`)
+Direct GitHub API scanning for entire organizations without database requirements.
+```bash
+cd org-scanner/
+./scan_org.sh microsoft
+```
+
+### 📦 Repository Scanner (`repo-scanner/`)
+Targeted scanning for individual repositories and specific commits.
+```bash
+cd repo-scanner/
+./scan_repo_simple.sh owner/repository
+```
+
+## Results Organization
+
+Each scanner module organizes results in its own local directories:
+
+```
+📁 Project Root
+├── force-push-scanner/
+│   ├── leaked_secrets_results/YYYYMMDD_HHMMSS/  # Database-driven scans
+│   └── scan_logs/                               # Debug logs (when enabled)
+├── org-scanner/
+│   ├── leaked_secrets_results/YYYYMMDD_HHMMSS/  # Organization scans  
+│   └── scan_logs/                               # Debug logs (when --debug)
+└── repo-scanner/
+    ├── leaked_secrets_results/YYYYMMDD_HHMMSS/  # Repository scans
+    └── scan_logs/                               # Debug logs (when --debug)
+```
+
+This structure keeps results and logs organized by scanner type and maintains clear separation between different scan operations.
+
+### Batch Scanner Script (Legacy)
+
+For backward compatibility, the original batch scanner is still available in the root directory:
 
 ```bash
 ./force_push_secret_scanner.sh
