@@ -1,4 +1,4 @@
-<div align="center" style="background: url('seraphix-scanner-logo.jpg') no-repeat center/200px; background-color: rgba(255,255,255,0.9); background-blend-mode: lighten; padding: 40px; border-radius: 10px;">
+<div align="center">
   <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" width="120">
 </div>
 
