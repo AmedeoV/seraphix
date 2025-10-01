@@ -4,11 +4,26 @@
 *.csv
 *.db-shm
 *.db-wal
+*.txt
 
-# Ignore leaked secrets results directory and files
+# Ignore leaked secrets results directory and files (root and module-specific)
 leaked_secrets_results/
+*/leaked_secrets_results/
 scan_logs/
+*/scan_logs/
+logs/
+*/logs/
 verified_secrets*
+
+# Python cache files
+__pycache__/
+*/__pycache__/
+*.pyc
+*.pyo
+
+# Scan state files (runtime state, not needed for script execution)
+scan_state.json
+*/scan_state.json
 
 # Configuration files (now in config/ directory)
 config/mailgun_config.sh

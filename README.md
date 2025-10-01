@@ -77,6 +77,13 @@ cd repo-scanner/
 ./scan_repo_simple.sh owner/repository
 ```
 
+### 🔧 Utilities (`utilities/`)
+Database management and organization discovery tools.
+```bash
+cd utilities/
+python github_star_counter_parallel.py --db-file /path/to/database.sqlite3
+```
+
 ## Results Organization
 
 Each scanner module organizes results in its own local directories:
