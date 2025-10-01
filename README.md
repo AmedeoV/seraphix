@@ -1,9 +1,8 @@
-<h1>
-  <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" width="40" height="40" style="vertical-align: middle; margin-right: 15px;">
-  Seraphix - Secret Scanner
-</h1>
+<div align="center">
+  <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" width="120">
+</div>
 
-<br>
+# Seraphix - Secret Scanner
 
 This tool scans for secrets in dangling (dereferenced) commits on GitHub created by force push events. A [force push](https://git-scm.com/docs/git-push#Documentation/git-push.txt---force) occurs when developers overwrite commit history, which often contains mistakes, like hard-coded credentials. This project relies on archived force push event data in the [GHArchive](https://www.gharchive.org/) to identify the relevant commits. 
 
