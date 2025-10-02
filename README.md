@@ -1,27 +1,5 @@
 <div align="center">
-  <img src="seraphix-scanner-logo.jp### 🔥 Force Push Scanner ([`force-push-scanner/`](force-push-scanner/README.md))
-Database-driven scanning with resume capabilities and parallel processing.
-```bash
-cd force-push-scanner/
-./force_push_secret_scanner.sh
-```
-[📖 View detailed documentation](force-push-scanner/README.md)
-
-### 🏢 Organization Scanner ([`org-scanner/`](org-scanner/README.md))
-Direct GitHub API scanning for entire organizations without database requirements.
-```bash
-cd org-scanner/
-./scan_org.sh microsoft
-```
-[📖 View detailed documentation](org-scanner/README.md)
-
-### 📦 Repository Scanner ([`repo-scanner/`](repo-scanner/README.md))
-Targeted scanning for individual repositories and specific commits.
-```bash
-cd repo-scanner/
-./scan_repo_simple.sh owner/repository
-```
-[📖 View detailed documentation](repo-scanner/README.md)nner Logo" width="120">
+  <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" width="120">
 </div>
 
 # Seraphix - Secret Scanner
@@ -78,26 +56,29 @@ python force_push_scanner.py <org> --events-file /path/to/force_push_commits.csv
 
 This project is organized into three main scanning modules:
 
-### � Force Push Scanner (`force-push-scanner/`)
+### 🔥 Force Push Scanner ([`force-push-scanner/`](force-push-scanner/README.md))
 Database-driven scanning with resume capabilities and parallel processing.
 ```bash
 cd force-push-scanner/
 ./force_push_secret_scanner.sh
 ```
+[📖 View detailed documentation](force-push-scanner/README.md)
 
-### 🏢 Organization Scanner (`org-scanner/`)
+### 🏢 Organization Scanner ([`org-scanner/`](org-scanner/README.md))
 Direct GitHub API scanning for entire organizations without database requirements.
 ```bash
 cd org-scanner/
 ./scan_org.sh microsoft
 ```
+[📖 View detailed documentation](org-scanner/README.md)
 
-### 📦 Repository Scanner (`repo-scanner/`)
+### 📦 Repository Scanner ([`repo-scanner/`](repo-scanner/README.md))
 Targeted scanning for individual repositories and specific commits.
 ```bash
 cd repo-scanner/
 ./scan_repo_simple.sh owner/repository
 ```
+[📖 View detailed documentation](repo-scanner/README.md)
 
 ### 🔧 Utilities (`utilities/`)
 Database management and organization discovery tools.
