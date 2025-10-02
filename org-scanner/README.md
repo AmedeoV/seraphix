@@ -6,10 +6,15 @@ Scan entire GitHub organizations for secrets using TruffleHog. Queries GitHub AP
 
 ## 🚀 Quick Start
 
-```bash
-# Install dependencies (if not already done)
-../install_requirements.sh
+### 1. Install Dependencies (if not already done)
 
+```bash
+../install_requirements.sh
+```
+
+### 2. Run the Scanner
+
+```bash
 # Basic scan
 ./scan_org.sh <organization>
 

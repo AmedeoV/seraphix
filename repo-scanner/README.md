@@ -6,10 +6,15 @@ Scan individual GitHub repositories or specific commits for secrets. Perfect for
 
 ## 🚀 Quick Start
 
-```bash
-# Install dependencies (if not already done)
-../install_requirements.sh
+### 1. Install Dependencies (if not already done)
 
+```bash
+../install_requirements.sh
+```
+
+### 2. Run the Scanner
+
+```bash
 # Basic scan
 ./scan_repo_simple.sh owner/repository
 
