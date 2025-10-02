@@ -29,7 +29,7 @@ LOG_DIR="$SCRIPT_DIR/scan_logs"  # Local debug logs directory
 # Notification configuration
 NOTIFICATION_EMAIL=""  # Email address for notifications (empty = disabled)
 NOTIFICATION_TELEGRAM_CHAT_ID=""  # Telegram chat ID for notifications (empty = disabled)
-NOTIFICATION_SCRIPT="$SCRIPT_DIR/send_notifications_enhanced.sh"  # Enhanced notification system
+NOTIFICATION_SCRIPT="$SCRIPT_DIR/../send_notifications_enhanced.sh"  # Enhanced notification system
 
 # Load timeout configuration if available
 if [ -f "$SCRIPT_DIR/../config/timeout_config.sh" ]; then

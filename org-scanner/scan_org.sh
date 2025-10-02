@@ -51,7 +51,7 @@ fi
 # Notification configuration
 NOTIFICATION_EMAIL=""  # Email address for notifications (empty = disabled)
 NOTIFICATION_TELEGRAM_CHAT_ID=""  # Telegram chat ID for notifications (empty = disabled)
-NOTIFICATION_SCRIPT="send_notifications_enhanced.sh"  # Enhanced notification system
+NOTIFICATION_SCRIPT="$SCRIPT_DIR/../send_notifications_enhanced.sh"  # Enhanced notification system
 
 # System resource detection for dynamic worker management
 detect_system_resources() {
@@ -210,15 +210,18 @@ get_org_repos() {
     log_progress "Fetching repositories for $org..."
     
     local api_url="https://api.github.com/orgs/$org/repos?per_page=100&type=all"
-    local headers=()
     
+    # Perform curl with or without authentication
     if [ -n "$GITHUB_TOKEN" ]; then
-        headers=("-H" "Authorization: token $GITHUB_TOKEN")
-    fi
-    
-    if ! curl -s "${headers[@]}" "$api_url" > "$repos_file"; then
-        log_error "Failed to fetch repositories"
-        return 1
+        if ! curl -s -H "Authorization: token $GITHUB_TOKEN" "$api_url" > "$repos_file"; then
+            log_error "Failed to fetch repositories"
+            return 1
+        fi
+    else
+        if ! curl -s "$api_url" > "$repos_file"; then
+            log_error "Failed to fetch repositories"
+            return 1
+        fi
     fi
     
     if jq -e '.message' "$repos_file" >/dev/null 2>&1; then
@@ -280,7 +283,11 @@ scan_repo() {
     log_debug "[$worker_id] Using adaptive timeout: ${adaptive_timeout}s for $repo_name (${repo_size_mb}MB, $estimated_files files)"
     
     # Scan with retry logic
-    cd "$repo_dir"
+    if ! cd "$repo_dir"; then
+        echo '{"error": "cd_failed"}' > "$output_file"
+        log_error "[$worker_id] Failed to change to repo directory: $repo_name"
+        return 1
+    fi
     local scan_output="$worker_dir/scan.json"
     local max_retries=${TRUFFLEHOG_MAX_RETRIES:-2}
     local scan_success=false
@@ -315,11 +322,11 @@ scan_repo() {
     if [ "$scan_success" = false ]; then
         echo '{"error": "scan_failed", "attempts": '$((max_retries + 1))'}' > "$output_file"
         log_error "[$worker_id] All scan attempts failed for $repo_name"
-        cd - > /dev/null
+        cd - > /dev/null || true
         return 1
     fi
     
-    cd - > /dev/null
+    cd - > /dev/null || true
     
     # Process results
     local findings=0
@@ -346,8 +353,8 @@ scan_repo() {
     if [ "$findings" -gt 0 ]; then
         log_success "[$worker_id] Found $findings secrets in $repo_name"
         
-        # Send immediate notification for first secret found
-        if [ "$findings" -eq 1 ] && ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]); then
+        # Send immediate notification for any secrets found
+        if [ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
             send_immediate_notification "$repo_name" "$output_file" "$worker_id"
         fi
     else
@@ -376,6 +383,8 @@ scan_all_repos() {
         pids+=($!)
     done
     
+    log_progress "Workers started (PIDs: ${pids[*]}). Waiting for completion..."
+    
     # Wait for completion
     for pid in "${pids[@]}"; do
         wait "$pid"
@@ -385,16 +394,33 @@ scan_all_repos() {
 }
 
 worker_process() {
+    # Disable strict error handling in workers to prevent premature exits
+    set +e
+    
     local worker_id="$1"
     local repos_file="$2"
     local job_file="$3"
+    local lock_file="${job_file}.lock"
+    local scanned_count=0
+    
+    log_progress "[$worker_id] Worker started"
     
     while true; do
-        local job_index
+        local job_index=""
+        
+        # Use flock for atomic file operations
+        # Read and delete in one atomic operation using a temp file
         {
-            job_index=$(head -n1 "$job_file" 2>/dev/null) || break
-            sed -i '1d' "$job_file" 2>/dev/null || break
-        }
+            if ! flock -x 200; then
+                log_error "[$worker_id] Failed to acquire lock"
+                return 1
+            fi
+            job_index=$(head -n1 "$job_file" 2>/dev/null)
+            if [ -n "$job_index" ]; then
+                tail -n +2 "$job_file" > "$job_file.tmp" 2>/dev/null
+                mv "$job_file.tmp" "$job_file" 2>/dev/null
+            fi
+        } 200>"$lock_file"
         
         if [ -z "$job_index" ]; then
             break
@@ -408,7 +434,10 @@ worker_process() {
         fi
         
         scan_repo "$repo_info" "$worker_id"
+        ((scanned_count++))
     done
+    
+    log_progress "[$worker_id] Worker completed. Scanned $scanned_count repositories"
 }
 
 generate_summary() {

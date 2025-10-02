@@ -59,7 +59,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DB_FILE="$SCRIPT_DIR/force_push_commits.sqlite3"
 PYTHON_SCRIPT="force_push_scanner.py"  # Just filename, we cd to SCRIPT_DIR before running
 LOG_DIR="$SCRIPT_DIR/scan_logs"
-NOTIFICATION_SCRIPT="$SCRIPT_DIR/send_notifications_enhanced.sh"  # Enhanced notification system
+NOTIFICATION_SCRIPT="$SCRIPT_DIR/../send_notifications_enhanced.sh"  # Enhanced notification system
 STATE_FILE="$SCRIPT_DIR/scan_state.json"  # Default state file for tracking progress
 
 # Notification configuration
@@ -675,7 +675,7 @@ scan_organization() {
                 fi
                 
                 # Use enhanced notification script with completion notification
-                ENHANCED_NOTIFICATION_SCRIPT="send_notifications_enhanced.sh"
+                ENHANCED_NOTIFICATION_SCRIPT="$SCRIPT_DIR/../send_notifications_enhanced.sh"
                 if [ -f "$ENHANCED_NOTIFICATION_SCRIPT" ]; then
                     # Use enhanced notification script
                     if [ -n "$NOTIFICATION_EMAIL" ]; then
