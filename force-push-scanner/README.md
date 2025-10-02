@@ -4,15 +4,29 @@ Database-driven scanner for detecting secrets in force-pushed commits. Uses SQLi
 
 ## Quick Start
 
-```bash
-# Install dependencies first
-../install_requirements.sh
+### 1. Get the Force Push Database
 
+Download the Force Push Commits SQLite DB via Google Form: <https://forms.gle/344GbP6WrJ1fhW2A6>
+
+This database contains force push commits for all GitHub organizations, updated daily at 2 PM EST.
+
+**Alternative:** Use the BigQuery public table if you prefer querying yourself (see main README).
+
+### 2. Install Dependencies
+
+```bash
+# From the force-push-scanner directory
+../install_requirements.sh
+```
+
+### 3. Run the Scanner
+
+```bash
 # Scan all organizations in database
 ./force_push_secret_scanner.sh
 
 # Scan specific organization
-./force_push_secret_scanner.sh microsoft
+./force_push_secret_scanner.sh microsoft --telegram-chat-id 123456789
 
 # Resume previous scan
 ./force_push_secret_scanner.sh --resume

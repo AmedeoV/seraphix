@@ -35,30 +35,31 @@ The force-push scanning technique was inspired by [Sharon Brizinov](https://gith
 
 # 🚀 Quick Start
 
-## 1: Get the Force Push Database
-
-Download the Force Push Commits SQLite DB via Google Form: <https://forms.gle/344GbP6WrJ1fhW2A6>
-
-This database contains force push commits for all GitHub organizations, updated daily.
-
-## 2: Install Dependencies
+## 1: Install Dependencies
 
 ```bash
 ./install_requirements.sh
 ```
 
-## 3: Scan an Organization
+## 2: Choose Your Scanner
 
+**For Force-Push Commits:**
 ```bash
-python force_push_scanner.py <org> --db-file /path/to/force_push_commits.sqlite3 --scan
+# See force-push-scanner/README.md for database setup
+cd force-push-scanner/
+./force_push_secret_scanner.sh --order random
 ```
 
-**Example output:**
+**For Organization Scanning:**
+```bash
+cd org-scanner/
+./scan_org.sh <organization> --telegram-chat-id <your-chat-id>
 ```
-🔍 Scanning organization: trufflesecurity
-✅ Found verified secret in repo: trufflesecurity/test_keys
-🔑 AWS Credential (AKIAYVP4CIPPERUVIFXG)
-📍 Commit: https://github.com/trufflesecurity/test_keys/commit/fbc14303ffbf8fb1c2c1914e8dda7d0121633aca
+
+**For Repository Scanning:**
+```bash
+cd repo-scanner/
+./scan_repo_simple.sh <owner/repository>
 ```
 
 ---
