@@ -1,7 +1,7 @@
 <p align="center">
   <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" height="140" />
   <h2 align="center">Seraphix</h2>
-  <p align="center">Find secrets in force-pushed commits.</p>
+  <p align="center">Comprehensive GitHub secret scanner for security researchers.</p>
 </p>
 
 ---
@@ -17,9 +17,19 @@
 
 # 🔍 What is Seraphix?
 
-Seraphix scans for secrets in **dangling commits** created by force push events on GitHub. When developers use `git push --force`, they often overwrite history containing mistakes like hard-coded credentials. This tool helps security researchers discover these leaked secrets using archived data from [GHArchive](https://www.gharchive.org/).
+Seraphix is a **comprehensive secret scanning toolkit** designed for security researchers and bug bounty hunters. It provides multiple scanning strategies to discover leaked credentials across GitHub:
 
-This project was created in collaboration with [Sharon Brizinov](https://github.com/SharonBrizinov). Read [Sharon's blog post](https://trufflesecurity.com/blog/guest-post-how-i-scanned-all-of-github-s-oops-commits-for-leaked-secrets) to learn how he made $25k in bounties scanning force-push commits!
+## 🎯 Scanning Capabilities
+
+**🔥 Force-Pushed Commits** - Hunt for secrets in dangling commits created by `git push --force` operations. When developers force push, they often overwrite history containing mistakes like hard-coded credentials. Seraphix uses [GHArchive](https://www.gharchive.org/) data to identify these hidden commits.
+
+**🏢 Organization-Wide Scanning** - Scan entire GitHub organizations without requiring a database. Perfect for comprehensive security audits and continuous monitoring of all repositories within an organization.
+
+**📝 Repository & Commit Scanning** - Target specific repositories or individual commits for focused analysis. Ideal for investigating particular codebases or validating security fixes.
+
+## 💰 Proven Results
+
+This project was created in collaboration with [Sharon Brizinov](https://github.com/SharonBrizinov). Read [Sharon's blog post](https://trufflesecurity.com/blog/guest-post-how-i-scanned-all-of-github-s-oops-commits-for-leaked-secrets) to learn how he made **$25k in bounties** using force-push commit scanning!
 
 ---
 
