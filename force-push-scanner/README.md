@@ -14,8 +14,8 @@ Database-driven scanner for detecting secrets in force-pushed commits. Uses SQLi
 # Scan specific organization
 ./force_push_secret_scanner.sh microsoft
 
-# Parallel scanning with resume capability
-./force_push_secret_scanner.sh --parallel-orgs 4 --resume
+# Resume previous scan
+./force_push_secret_scanner.sh --resume
 ```
 
 ## Key Features
@@ -23,15 +23,15 @@ Database-driven scanner for detecting secrets in force-pushed commits. Uses SQLi
 - Resume interrupted scans with state tracking
 - Parallel organization and repository processing
 - Real-time notifications (Email + Telegram)
-- Star-based organization ordering
 - Adaptive timeouts with retry logic
 
 ## Common Options
 | Option | Description |
 |--------|-------------|
-| `--parallel-orgs N` | Scan N organizations in parallel |
 | `--resume` | Resume previous scan from state file |
 | `--restart` | Start fresh (ignore previous state) |
+| `--order` | Order organizations: 'random', 'latest' |
+| `--telegram-chat-id ID` | Telegram chat ID for notifications |
 | `--debug` | Enable verbose logging |
 | `--db-file PATH` | Use custom database file |
 
