@@ -92,41 +92,6 @@ cp config/mailgun_config.sh.example config/mailgun_config.sh
 
 ---
 
-# 🗂️ Alternative: BigQuery
-
-Prefer querying yourself? Use our public BigQuery table:
-
-```sql
-SELECT *
-FROM `external-truffle-security-gha.force_push_commits.pushes`
-WHERE repo_org = '<ORG>';
-```
-
-Export as CSV and scan:
-```bash
-python force_push_scanner.py <org> --events-file /path/to/export.csv --scan
-```
-
----
-
-# 📊 Output Structure
-
-Each scanner organizes results in timestamped directories:
-
-```
-📁 Seraphix/
-├── force-push-scanner/
-│   └── leaked_secrets_results/YYYYMMDD_HHMMSS/
-├── org-scanner/
-│   └── leaked_secrets_results/YYYYMMDD_HHMMSS/
-└── repo-scanner/
-    └── leaked_secrets_results/YYYYMMDD_HHMMSS/
-```
-
-Results are saved as JSON files with verified secret details, commit links, and timestamps.
-
----
-
 # ❓ FAQ
 
 ### What is a Force Push?
