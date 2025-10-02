@@ -31,20 +31,11 @@ NOTIFICATION_EMAIL=""  # Email address for notifications (empty = disabled)
 NOTIFICATION_TELEGRAM_CHAT_ID=""  # Telegram chat ID for notifications (empty = disabled)
 NOTIFICATION_SCRIPT="$SCRIPT_DIR/../send_notifications_enhanced.sh"  # Enhanced notification system
 
-# Load timeout configuration if available
-if [ -f "$SCRIPT_DIR/../config/timeout_config.sh" ]; then
-    source "$SCRIPT_DIR/../config/timeout_config.sh"
-    TIMEOUT=${TRUFFLEHOG_BASE_TIMEOUT:-1200}
-elif [ -f "$SCRIPT_DIR/config/timeout_config.sh" ]; then
-    source "$SCRIPT_DIR/config/timeout_config.sh"
-    TIMEOUT=${TRUFFLEHOG_BASE_TIMEOUT:-1200}
-else
-    # Default timeout values
-    export TRUFFLEHOG_BASE_TIMEOUT=1200
-    export TRUFFLEHOG_MAX_TIMEOUT=3600
-    export TRUFFLEHOG_MAX_RETRIES=2
-    export GIT_OPERATION_TIMEOUT=300
-fi
+# Default timeout values (adaptive timeout used dynamically during scanning)
+export TRUFFLEHOG_BASE_TIMEOUT=1200
+export TRUFFLEHOG_MAX_TIMEOUT=3600
+export TRUFFLEHOG_MAX_RETRIES=2
+export GIT_OPERATION_TIMEOUT=300
 
 log_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"

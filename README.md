@@ -82,15 +82,6 @@ cd repo-scanner/
 
 # ⚙️ Configuration
 
-### Timeout Settings (Optional)
-
-Optimize scanning performance for large repositories:
-
-```bash
-cp config/timeout_config.sh.example config/timeout_config.sh
-nano config/timeout_config.sh
-```
-
 ### Notification Setup
 
 Enable real-time alerts when secrets are found:

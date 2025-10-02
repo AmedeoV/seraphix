@@ -160,17 +160,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Load timeout configuration if available
-if [ -f "config/timeout_config.sh" ]; then
-    echo "Loading timeout configuration from config/timeout_config.sh"
-    source config/timeout_config.sh
-else
-    # Default timeout values
-    export TRUFFLEHOG_BASE_TIMEOUT=900
-    export TRUFFLEHOG_MAX_TIMEOUT=3600
-    export TRUFFLEHOG_MAX_RETRIES=2
-    export GIT_OPERATION_TIMEOUT=300
-fi
+# Default timeout values (adaptive timeout used dynamically during scanning)
+export TRUFFLEHOG_BASE_TIMEOUT=900
+export TRUFFLEHOG_MAX_TIMEOUT=3600
+export TRUFFLEHOG_MAX_RETRIES=2
+export GIT_OPERATION_TIMEOUT=300
 
 # Set up signal traps
 trap cleanup SIGINT SIGTERM

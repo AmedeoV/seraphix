@@ -30,23 +30,11 @@ GITHUB_TOKEN="${GITHUB_TOKEN:-""}"  # Use environment variable if set, empty oth
 EXCLUDE_FORKS=true
 MAX_REPOS=0
 
-# Load timeout configuration if available
-if [ -f "$SCRIPT_DIR/../config/timeout_config.sh" ]; then
-    log_debug "Loading timeout configuration from ../config/timeout_config.sh"
-    source "$SCRIPT_DIR/../config/timeout_config.sh"
-    # Use the loaded timeout values
-    TIMEOUT=${TRUFFLEHOG_BASE_TIMEOUT:-900}
-elif [ -f "$SCRIPT_DIR/config/timeout_config.sh" ]; then
-    log_debug "Loading timeout configuration from config/timeout_config.sh"
-    source "$SCRIPT_DIR/config/timeout_config.sh"
-    TIMEOUT=${TRUFFLEHOG_BASE_TIMEOUT:-900}
-else
-    # Default timeout values
-    export TRUFFLEHOG_BASE_TIMEOUT=900
-    export TRUFFLEHOG_MAX_TIMEOUT=3600
-    export TRUFFLEHOG_MAX_RETRIES=2
-    export GIT_OPERATION_TIMEOUT=300
-fi
+# Default timeout values (adaptive timeout used dynamically during scanning)
+export TRUFFLEHOG_BASE_TIMEOUT=900
+export TRUFFLEHOG_MAX_TIMEOUT=3600
+export TRUFFLEHOG_MAX_RETRIES=2
+export GIT_OPERATION_TIMEOUT=300
 
 # Notification configuration
 NOTIFICATION_EMAIL=""  # Email address for notifications (empty = disabled)
