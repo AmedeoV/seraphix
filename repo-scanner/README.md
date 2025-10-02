@@ -1,38 +1,42 @@
-# Repository Scanner
+# 📝 Repository Scanner
 
-Tools for scanning individual GitHub repositories for secrets and sensitive data.
+Scan individual GitHub repositories or specific commits for secrets. Perfect for targeted analysis—**no database required**.
 
-## Installation
+---
 
-```bash
-# From project root
-./install_requirements.sh
-```
-
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
+# Install dependencies
+../install_requirements.sh
+
 # Basic scan
 ./scan_repo_simple.sh owner/repository
 
 # With notifications
-./scan_repo_simple.sh --email security@company.com --telegram-id 123456789 owner/repo
+./scan_repo_simple.sh owner/repo --telegram-id 123456789 --email security@company.com
 
-# Debug mode
-./scan_repo_simple.sh --debug owner/repository
+# Scan specific commit
+./scan_repo_simple.sh owner/repo --commit abc1234
 ```
 
-## Options
+---
 
-- `--output FILE` - Custom output file
-- `--commit HASH` - Scan specific commit
-- `--timeout N` - Base timeout in seconds
-- `--debug` - Enable debug logging
-- `--email EMAIL` - Email notifications (requires `config/mailgun_config.sh`)
-- `--telegram-id ID` - Telegram notifications (requires `config/telegram_config.sh`)
-- `--no-cleanup` - Keep temporary files
+## ⚙️ Options
 
-## Output
+| Option | Description |
+|--------|-------------|
+| `--output FILE` | Custom output file path |
+| `--commit HASH` | Scan specific commit |
+| `--timeout N` | Base timeout seconds (default: 1200) |
+| `--debug` | Enable verbose logging |
+| `--email EMAIL` | Email for notifications |
+| `--telegram-id ID` | Telegram chat ID for notifications |
+| `--no-cleanup` | Keep temporary files |
 
-Results saved to `leaked_secrets_results/YYYYMMDD_HHMMSS/`
-Debug logs saved to `scan_logs/` (when `--debug` enabled)
+---
+
+## 📂 Output
+
+**Results:** `leaked_secrets_results/YYYYMMDD_HHMMSS/`  
+**Logs:** `scan_logs/` (when `--debug` enabled)

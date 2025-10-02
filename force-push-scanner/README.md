@@ -1,21 +1,20 @@
-# Force Push Scanner
+# 🔥 Force Push Scanner
 
-Database-driven scanner for detecting secrets in force-pushed commits. Uses SQLite to track organizations and repositories with resume capabilities.
+Hunt for secrets in dangling commits created by `git push --force` operations. Uses a pre-built SQLite database of force push events from GHArchive.
 
-## Quick Start
+---
 
-### 1. Get the Force Push Database
+## 🚀 Quick Start
 
-Download the Force Push Commits SQLite DB via Google Form: <https://forms.gle/344GbP6WrJ1fhW2A6>
+### 1. Download the Database
+
+Get the Force Push Commits database via Google Form: **<https://forms.gle/344GbP6WrJ1fhW2A6>**
 
 This database contains force push commits for all GitHub organizations, updated daily at 2 PM EST.
-
-**Alternative:** Use the BigQuery public table if you prefer querying yourself (see main README).
 
 ### 2. Install Dependencies
 
 ```bash
-# From the force-push-scanner directory
 ../install_requirements.sh
 ```
 
@@ -32,27 +31,24 @@ This database contains force push commits for all GitHub organizations, updated 
 ./force_push_secret_scanner.sh --resume
 ```
 
-## Key Features
-- SQLite database for organization/repository management
-- Resume interrupted scans with state tracking
-- Parallel organization and repository processing
-- Real-time notifications (Email + Telegram)
-- Adaptive timeouts with retry logic
+---
 
-## Common Options
+## ⚙️ Options
+
 | Option | Description |
 |--------|-------------|
 | `--resume` | Resume previous scan from state file |
 | `--restart` | Start fresh (ignore previous state) |
-| `--order` | Order organizations: 'random', 'latest' |
+| `--order` | Order organizations: `random`, `latest` |
 | `--telegram-chat-id ID` | Telegram chat ID for notifications |
 | `--debug` | Enable verbose logging |
 | `--db-file PATH` | Use custom database file |
 
-## Database
-- `force_push_commits.sqlite3` - Contains organizations and repositories
-- `scan_state.json` - Tracks scan progress for resume functionality
+---
 
-## Output
-Results: `leaked_secrets_results/TIMESTAMP/ORGANIZATION/verified_secrets_ORG.json`  
-Debug logs: `scan_logs/` (when debug enabled)
+## 📂 Output
+
+**Results:** `leaked_secrets_results/TIMESTAMP/ORGANIZATION/verified_secrets_ORG.json`  
+**Logs:** `scan_logs/` (when `--debug` enabled)
+
+**State File:** `scan_state.json` - Tracks progress for resume functionality
