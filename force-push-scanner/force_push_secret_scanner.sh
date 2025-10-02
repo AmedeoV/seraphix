@@ -12,7 +12,7 @@
 # Resume Options:
 #   --resume               Resume from previous scan (uses existing state file)
 #   --restart              Start over from beginning (clears previous state)
-#   --state-file FILE      Custom state file path (default: scan_state.json)
+#   --state-file FILE      Custom state file path (default: force-push-scanner/scan_state.json)
 #
 # Scanner Options:
 #   --events-file FILE     Path to CSV file containing force-push events
@@ -48,7 +48,7 @@
 #   ./force_push_secret_scanner.sh microsoft                         # Scan only Microsoft
 #   ./force_push_secret_scanner.sh --parallel-orgs 4 --debug        # 4 parallel with debug
 #   ./force_push_secret_scanner.sh --events-file data.csv          # Use CSV data file
-#   ./force_push_secret_scanner.sh --orgs-file bugbounty_orgs.txt  # Scan organizations from text file
+#   ./force_push_secret_scanner.sh --orgs-file force-push-scanner/bugbounty_orgs.txt  # Scan organizations from text file
 #   ./force_push_secret_scanner.sh --resume                        # Resume previous scan
 #   ./force_push_secret_scanner.sh --restart                       # Start over from beginning
 #
@@ -56,11 +56,11 @@
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-DB_FILE="force_push_commits.sqlite3"
-PYTHON_SCRIPT="force_push_scanner.py"
+DB_FILE="$SCRIPT_DIR/force_push_commits.sqlite3"
+PYTHON_SCRIPT="force_push_scanner.py"  # Just filename, we cd to SCRIPT_DIR before running
 LOG_DIR="$SCRIPT_DIR/scan_logs"
-NOTIFICATION_SCRIPT="send_notifications_enhanced.sh"  # Enhanced notification system
-STATE_FILE="scan_state.json"  # Default state file for tracking progress
+NOTIFICATION_SCRIPT="$SCRIPT_DIR/send_notifications_enhanced.sh"  # Enhanced notification system
+STATE_FILE="$SCRIPT_DIR/scan_state.json"  # Default state file for tracking progress
 
 # Notification configuration
 NOTIFICATION_EMAIL=""  # Email address for notifications (empty = disabled)
@@ -228,8 +228,14 @@ try:
     for org in state['scanned_orgs']:
         print('SCANNED:' + org)
         
+except json.JSONDecodeError as e:
+    print(f'ERROR:Invalid JSON in state file: {e}', file=sys.stderr)
+    sys.exit(1)
+except KeyError as e:
+    print(f'ERROR:Missing required field in state file: {e}', file=sys.stderr)
+    sys.exit(1)
 except Exception as e:
-    print('ERROR:Failed to parse state file: ' + str(e), file=sys.stderr)
+    print(f'ERROR:Failed to parse state file: {e}', file=sys.stderr)
     sys.exit(1)
 "
 }
@@ -290,7 +296,7 @@ show_help() {
     echo "Resume Options:"
     echo "  --resume               Resume from previous scan (uses existing state file)"
     echo "  --restart              Start over from beginning (clears previous state)"
-    echo "  --state-file FILE      Custom state file path (default: scan_state.json)"
+    echo "  --state-file FILE      Custom state file path (default: force-push-scanner/scan_state.json)"
     echo ""
     echo "Scanner Options:"
     echo "  --events-file FILE     Path to CSV file containing force-push events"
@@ -321,7 +327,7 @@ show_help() {
     echo "  $0 --parallel-orgs 4 --debug                # 4 parallel orgs with debug output"
     echo "  $0 --order stars --parallel-orgs 2          # Scan orgs with most stars first"
     echo "  $0 --events-file data.csv                   # Use CSV data file instead of database"
-    echo "  $0 --orgs-file bugbounty_orgs.txt          # Scan organizations from text file"
+    echo "  $0 --orgs-file force-push-scanner/bugbounty_orgs.txt  # Scan organizations from text file"
     echo "  $0 --resume                                 # Resume from where previous scan stopped"
     echo "  $0 --restart                                # Start over from beginning (clear state)"
     echo ""
@@ -459,6 +465,26 @@ fi
 mkdir -p "$RESULTS_BASE_DIR"
 echo "Results will be saved to: $RESULTS_BASE_DIR"
 
+# Convert relative paths to absolute paths before changing directory
+if [ -n "$ORGS_FILE" ]; then
+    ORGS_FILE="$(cd "$(dirname "$ORGS_FILE")" && pwd)/$(basename "$ORGS_FILE")"
+fi
+if [ -n "$EVENTS_FILE" ]; then
+    EVENTS_FILE="$(cd "$(dirname "$EVENTS_FILE")" && pwd)/$(basename "$EVENTS_FILE")"
+fi
+if [ -n "$CUSTOM_DB_FILE" ]; then
+    CUSTOM_DB_FILE="$(cd "$(dirname "$CUSTOM_DB_FILE")" && pwd)/$(basename "$CUSTOM_DB_FILE")"
+fi
+if [ -n "$CUSTOM_STATE_FILE" ]; then
+    STATE_FILE="$(cd "$(dirname "$CUSTOM_STATE_FILE")" && pwd)/$(basename "$CUSTOM_STATE_FILE")"
+fi
+
+# Change to script directory so Python can find relative imports and files
+cd "$SCRIPT_DIR" || {
+    echo -e "${RED}[!] Error: Could not change to script directory: $SCRIPT_DIR${NC}"
+    exit 1
+}
+
 # Initial cleanup of temporary directories from previous runs
 echo -e "${CYAN}[🧹] Initial cleanup of temporary directories...${NC}"
 python3 "$PYTHON_SCRIPT" --cleanup 2>/dev/null || echo "Note: Could not clean up temporary directories"
@@ -537,9 +563,14 @@ elif [ "$RESUME_MODE" = true ] || [ -f "$STATE_FILE" ]; then
                 SCANNED_ORGS=""
             fi
         else
-            echo "❌ Failed to load state file. Starting fresh scan."
-            rm -f "$STATE_FILE"
-            SCANNED_ORGS=""
+            echo -e "${RED}❌ Error: Failed to load state file: $STATE_FILE${NC}"
+            echo -e "${RED}   The state file may be corrupted or invalid JSON.${NC}"
+            echo ""
+            echo "Options:"
+            echo "  - Fix the state file manually"
+            echo "  - Use --restart to delete the state file and start over"
+            echo "  - Delete the state file manually: rm $STATE_FILE"
+            exit 1
         fi
     else
         echo "❌ Resume requested but no state file found: $STATE_FILE"
