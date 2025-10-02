@@ -1,43 +1,46 @@
-# Configuration Directory
+# ⚙️ Configuration
 
-This directory contains configuration files for the secret scanner notifications.
+Configuration files for notification services (Telegram & Email).
 
-## Setup Instructions
+---
 
-1. **For Email Notifications (Mailgun):**
-   ```bash
-   cp mailgun_config.sh.example mailgun_config.sh
-   # Edit mailgun_config.sh with your Mailgun credentials
-   ```
+## 🚀 Quick Setup
 
-2. **For Telegram Notifications:**
-   ```bash
-   cp telegram_config.sh.example telegram_config.sh
-   # Edit telegram_config.sh with your Telegram bot credentials
-   ```
+### Telegram Notifications
 
-## Configuration Files
+```bash
+cp telegram_config.sh.example telegram_config.sh
+# Edit telegram_config.sh with your bot token and chat ID
+```
 
-- `mailgun_config.sh` - Mailgun email service configuration (not tracked in git)
-- `telegram_config.sh` - Telegram bot configuration (not tracked in git)
-- `*.example` files - Template configuration files (tracked in git)
+### Email Notifications (Mailgun)
 
-## Getting Credentials
+```bash
+cp mailgun_config.sh.example mailgun_config.sh
+# Edit mailgun_config.sh with your Mailgun credentials
+```
 
-### Mailgun Setup
-1. Create account at https://mailgun.com
-2. Add your domain and verify it
-3. Get your API key from the dashboard
-4. Fill in the mailgun_config.sh file
+---
 
-### Telegram Bot Setup
-1. Message @BotFather on Telegram
+## 🔑 Getting Credentials
+
+### Telegram Bot
+
+1. Message [@BotFather](https://t.me/botfather) on Telegram
 2. Create a new bot with `/newbot`
-3. Get your bot token
+3. Copy your bot token
 4. Send a message to your bot
-5. Visit `https://api.telegram.org/bot<TOKEN>/getUpdates` to get your chat ID
-6. Fill in the telegram_config.sh file
+5. Get your chat ID: `https://api.telegram.org/bot<TOKEN>/getUpdates`
 
-## Security Note
+### Mailgun
 
-The actual configuration files (without .example extension) contain sensitive credentials and are ignored by git. Never commit them to version control.
+1. Create account at [mailgun.com](https://mailgun.com)
+2. Add and verify your domain
+3. Get your API key from the dashboard
+4. Configure sender email and recipients
+
+---
+
+## 🔒 Security Note
+
+Configuration files (without `.example` extension) are **git-ignored** and contain sensitive credentials. Never commit them to version control.
