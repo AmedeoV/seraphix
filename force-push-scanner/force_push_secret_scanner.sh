@@ -1,9 +1,7 @@
 #!/bin/bash
-# Available ARGUMENTS:
+# Enhanced batch scanner with parallel organization processing
 # 
 # Batch Processing Options:
-#   --parallel-orgs N      Maximum parallel organizations (1-32, default: auto-detected)
-#   --workers-per-org N    Workers per organization (1-64, default: auto-detected)
 #   --order ORDER          Organization order: 'random', 'latest', or 'stars' (default: random)
 #   --email EMAIL          Email address for security notifications
 #   --telegram-chat-id ID  Telegram chat ID for security notifications
@@ -18,24 +16,6 @@
 #   --events-file FILE     Path to CSV file containing force-push events
 #   --db-file FILE         Path to SQLite database (overrides default)
 #   --orgs-file FILE       Path to text file containing organizations to scan (one per line)
-#   --debug                Enable debug/verbose logging for all operations
-#
-# Other Options:
-#   --help, -h             Show help messageced batch scanner with parallel organization processing
-#
-# AVAILABLE ARGUMENTS:
-# 
-# Batch Processing Options:
-#   --parallel-orgs N      Maximum parallel organizations (1-32, default: auto-detected)
-#   --workers-per-org N    Workers per organization (1-64, default: auto-detected)
-#   --order ORDER          Organization order: 'random' or 'latest' (default: random)
-#   --email EMAIL          Email address for security notifications
-#   --debug                Enable debug/verbose logging for all operations
-#
-# Scanner Options:
-#   --events-file FILE     Path to CSV file containing force-push events
-#   --db-file FILE         Path to SQLite database (overrides default)
-#   --debug                Enable debug/verbose logging for all operations
 #
 # Other Options:
 #   --help, -h             Show help message
@@ -43,10 +23,13 @@
 # Arguments:
 #   ORGANIZATION           Single organization to scan (optional)
 #
+# Performance:
+#   Parallel workers are automatically detected based on CPU cores and memory
+#
 # Examples:
 #   ./force_push_secret_scanner.sh                                    # Scan all organizations
 #   ./force_push_secret_scanner.sh microsoft                         # Scan only Microsoft
-#   ./force_push_secret_scanner.sh --parallel-orgs 4 --debug        # 4 parallel with debug
+#   ./force_push_secret_scanner.sh --debug                          # Scan with debug output
 #   ./force_push_secret_scanner.sh --events-file data.csv          # Use CSV data file
 #   ./force_push_secret_scanner.sh --orgs-file force-push-scanner/bugbounty_orgs.txt  # Scan organizations from text file
 #   ./force_push_secret_scanner.sh --resume                        # Resume previous scan
@@ -280,8 +263,6 @@ show_help() {
     echo "Usage: $0 [OPTIONS] [ORGANIZATION]"
     echo ""
     echo "Batch Processing Options:"
-    echo "  --parallel-orgs N      Maximum parallel organizations (default: auto-detected)"
-    echo "  --workers-per-org N    Workers per organization (default: auto-detected)"
     echo "  --order ORDER          Organization order: 'random', 'latest', or 'stars' (default: random)"
     echo "  --email EMAIL          Email address for security notifications"
     echo "  --telegram-chat-id ID  Telegram chat ID for security notifications"
@@ -311,6 +292,9 @@ show_help() {
     echo "  Configure config/telegram_config.sh for Telegram bot token"
     echo "  Both notification methods can be used simultaneously"
     echo ""
+    echo "Performance:"
+    echo "  Parallel workers are automatically detected based on CPU cores and memory"
+    echo ""
     echo "Examples:"
     echo "  $0                                          # Scan all organizations (uses config files)"
     echo "  $0 --email security@company.com             # Scan with email notifications"
@@ -318,8 +302,8 @@ show_help() {
     echo "  $0 --telegram-chat-id \"\"                    # Disable Telegram (override config)"
     echo "  $0 --email sec@co.com --telegram-chat-id 123456   # Scan with both notifications"
     echo "  $0 microsoft                                # Scan only Microsoft organization"
-    echo "  $0 --parallel-orgs 4 --debug                # 4 parallel orgs with debug output"
-    echo "  $0 --order stars --parallel-orgs 2          # Scan orgs with most stars first"
+    echo "  $0 --debug                                  # Scan with debug output"
+    echo "  $0 --order stars                            # Scan orgs with most stars first"
     echo "  $0 --events-file data.csv                   # Use CSV data file instead of database"
     echo "  $0 --orgs-file force-push-scanner/bugbounty_orgs.txt  # Scan organizations from text file"
     echo "  $0 --resume                                 # Resume from where previous scan stopped"
@@ -333,8 +317,6 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --help|-h) show_help ;;
         --debug) DEBUG=true; VERBOSE=true; shift ;;
-        --parallel-orgs) MAX_PARALLEL_ORGS="$2"; shift 2 ;;
-        --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
         --order) ORG_ORDER="$2"; shift 2 ;;
         --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
         --telegram-chat-id) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; TELEGRAM_ID_PROVIDED=true; shift 2 ;;
@@ -387,23 +369,13 @@ if [ -n "$ORGS_FILE" ] && [ ! -f "$ORGS_FILE" ]; then
     exit 1
 fi
 
-# Validate numeric arguments
-if ! [[ "$MAX_PARALLEL_ORGS" =~ ^[0-9]+$ ]] || [ "$MAX_PARALLEL_ORGS" -lt 1 ] || [ "$MAX_PARALLEL_ORGS" -gt 32 ]; then
-    echo -e "${RED}[!] Error: --parallel-orgs must be a number between 1 and 32${NC}"
-    exit 1
-fi
-
-if ! [[ "$WORKERS_PER_ORG" =~ ^[0-9]+$ ]] || [ "$WORKERS_PER_ORG" -lt 1 ] || [ "$WORKERS_PER_ORG" -gt 64 ]; then
-    echo -e "${RED}[!] Error: --workers-per-org must be a number between 1 and 64${NC}"
-    exit 1
-fi
-
+# Validate order argument
 if [ "$ORG_ORDER" != "random" ] && [ "$ORG_ORDER" != "latest" ] && [ "$ORG_ORDER" != "stars" ]; then
     echo -e "${RED}[!] Error: --order must be 'random', 'latest', or 'stars'${NC}"
     exit 1
 fi
 
-echo "Final configuration: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org"
+echo "Final configuration: ${MAX_PARALLEL_ORGS} parallel orgs, ${WORKERS_PER_ORG} workers per org (auto-detected)"
 echo "Organization order: $ORG_ORDER"
 if [ "$DEBUG" = true ]; then
     echo "Debug mode: enabled (includes verbose logging)"
