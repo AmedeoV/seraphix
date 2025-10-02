@@ -6,6 +6,9 @@
 
 set -euo pipefail
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -21,19 +24,19 @@ OUTPUT_FILE=""
 TEMP_DIR=""
 COMMIT_HASH=""
 DEBUG=false
-LOG_DIR="scan_logs"  # Local debug logs directory
+LOG_DIR="$SCRIPT_DIR/scan_logs"  # Local debug logs directory
 
 # Notification configuration
 NOTIFICATION_EMAIL=""  # Email address for notifications (empty = disabled)
 NOTIFICATION_TELEGRAM_CHAT_ID=""  # Telegram chat ID for notifications (empty = disabled)
-NOTIFICATION_SCRIPT="send_notifications_enhanced.sh"  # Enhanced notification system
+NOTIFICATION_SCRIPT="$SCRIPT_DIR/send_notifications_enhanced.sh"  # Enhanced notification system
 
 # Load timeout configuration if available
-if [ -f "../config/timeout_config.sh" ]; then
-    source "../config/timeout_config.sh"
+if [ -f "$SCRIPT_DIR/../config/timeout_config.sh" ]; then
+    source "$SCRIPT_DIR/../config/timeout_config.sh"
     TIMEOUT=${TRUFFLEHOG_BASE_TIMEOUT:-1200}
-elif [ -f "config/timeout_config.sh" ]; then
-    source "config/timeout_config.sh"
+elif [ -f "$SCRIPT_DIR/config/timeout_config.sh" ]; then
+    source "$SCRIPT_DIR/config/timeout_config.sh"
     TIMEOUT=${TRUFFLEHOG_BASE_TIMEOUT:-1200}
 else
     # Default timeout values
@@ -84,25 +87,14 @@ send_immediate_notification() {
     if [ "$findings_count" -gt 0 ]; then
         log_debug "Sending immediate notification for $findings_count secret(s) in $repo_name"
         
-        # Prepare notification arguments
-        local notification_args=()
-        
-        if [ -n "$NOTIFICATION_EMAIL" ]; then
-            notification_args+=("--email" "$NOTIFICATION_EMAIL")
-        fi
-        
+        # Set environment variable for telegram if provided
         if [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
-            notification_args+=("--telegram-id" "$NOTIFICATION_TELEGRAM_CHAT_ID")
+            export TELEGRAM_CHAT_ID="$NOTIFICATION_TELEGRAM_CHAT_ID"
         fi
         
-        # Send notification with scan results
-        if [ ${#notification_args[@]} -gt 0 ]; then
-            "./$NOTIFICATION_SCRIPT" "${notification_args[@]}" \
-                --subject "🚨 Secrets Found in Repository: $repo_name" \
-                --message "Repository scan completed. Found $findings_count verified secret(s) in $repo_name" \
-                --results-file "$output_file" \
-                --scan-type "repository"
-        fi
+        # Call notification script with positional arguments
+        # Arguments: <organization> <secrets_file> [email]
+        "$NOTIFICATION_SCRIPT" "$repo_name" "$output_file" "$NOTIFICATION_EMAIL"
     fi
 }
 
@@ -191,6 +183,12 @@ cleanup_on_exit() {
         log_progress "Cleaning up temporary directory..."
         rm -rf "$TEMP_DIR"
     fi
+}
+
+handle_interrupt() {
+    log_warning "Scan interrupted by user (Ctrl+C)"
+    cleanup_on_exit
+    exit 130
 }
 
 validate_repo_name() {
@@ -491,8 +489,8 @@ parse_arguments() {
         local clean_name=$(echo "$REPO_NAME" | tr '/' '_')
         local timestamp=$(date +%Y%m%d_%H%M%S)
         
-        # Create timestamped results directory
-        local results_dir="leaked_secrets_results/${timestamp}"
+        # Create timestamped results directory inside repo-scanner folder
+        local results_dir="$SCRIPT_DIR/leaked_secrets_results/${timestamp}"
         mkdir -p "$results_dir"
         
         OUTPUT_FILE="${results_dir}/simple_scan_${clean_name}_${timestamp}.json"
@@ -515,6 +513,7 @@ main() {
     fi
     
     trap cleanup_on_exit EXIT
+    trap handle_interrupt SIGINT SIGTERM
     
     # Create debug log directory and file if debug mode is enabled
     if [ "$DEBUG" = true ]; then
