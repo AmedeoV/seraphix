@@ -1,19 +1,23 @@
 #!/bin/bash
 
 # Enhanced notification system with support for immediate and completion notifications
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Load configuration
-if [ -f "config/mailgun_config.sh" ]; then
-    source "config/mailgun_config.sh"
+if [ -f "$SCRIPT_DIR/config/mailgun_config.sh" ]; then
+    source "$SCRIPT_DIR/config/mailgun_config.sh"
 fi
 
-if [ -f "config/telegram_config.sh" ]; then
-    source "config/telegram_config.sh"
+if [ -f "$SCRIPT_DIR/config/telegram_config.sh" ]; then
+    source "$SCRIPT_DIR/config/telegram_config.sh"
 fi
 
 # Preserve environment telegram chat ID if passed
 PASSED_TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
-if [ -f "config/telegram_config.sh" ]; then
-    source "config/telegram_config.sh"
+if [ -f "$SCRIPT_DIR/config/telegram_config.sh" ]; then
+    source "$SCRIPT_DIR/config/telegram_config.sh"
 fi
 TELEGRAM_CHAT_ID="${PASSED_TELEGRAM_CHAT_ID:-$TELEGRAM_CHAT_ID}"
 
