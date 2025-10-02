@@ -72,33 +72,6 @@ cd repo-scanner/
 
 ---
 
-# 📦 Scanner Modules
-
-Seraphix includes three powerful scanning modes for different use cases:
-
-## 🔥 [Force Push Scanner](force-push-scanner/README.md)
-Database-driven scanning of force-pushed commits with resume capabilities.
-```bash
-cd force-push-scanner/
-./force_push_secret_scanner.sh --order random --telegram-chat-id 123456789
-```
-
-## 🏢 [Organization Scanner](org-scanner/README.md)
-Direct GitHub API scanning for entire organizations (no database required).
-```bash
-cd org-scanner/
-./scan_org.sh microsoft --max-repos 10 --telegram-chat-id 123456789
-```
-
-## 📝 [Repository Scanner](repo-scanner/README.md)
-Targeted scanning for individual repositories and specific commits.
-```bash
-cd repo-scanner/
-./scan_repo_simple.sh owner/repository
-```
-
----
-
 # ⚙️ Configuration
 
 ### Notification Setup
