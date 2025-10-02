@@ -167,8 +167,8 @@ Examples:
     $0 magicbell-io
     $0 microsoft --max-repos 5 --max-workers 4
     $0 microsoft --github-token ghp_xxx --exclude-forks
-    $0 microsoft --email security@company.com --telegram-id 123456789
-    $0 microsoft --telegram-id 123456789 --debug
+    $0 microsoft --email security@company.com --telegram-chat-id 123456789
+    $0 microsoft --telegram-chat-id 123456789 --debug
 
 Options:
     --max-repos N        Maximum repositories to scan (default: all)
@@ -178,7 +178,7 @@ Options:
     --include-forks      Include forked repositories
     --output-dir DIR     Custom output directory (default: leaked_secrets_results/TIMESTAMP/org_leaked_secrets/scan_ORG_TIMESTAMP)
     --email EMAIL        Email address for security notifications
-    --telegram-id ID     Telegram chat ID for security notifications
+    --telegram-chat-id ID Telegram chat ID for security notifications
     --debug              Debug output
     --help              Show help
 
@@ -190,7 +190,7 @@ System Auto-Detection:
     to determine optimal worker count. Use --max-workers to override.
 
 Notifications:
-    Use --email and/or --telegram-id to receive security notifications when
+    Use --email and/or --telegram-chat-id to receive security notifications when
     secrets are found. Requires proper configuration of notification scripts.
 
 EOF
@@ -561,7 +561,7 @@ parse_args() {
             --include-forks) EXCLUDE_FORKS=false; shift ;;
             --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
             --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
-            --telegram-id) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; shift 2 ;;
+            --telegram-chat-id) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; shift 2 ;;
             --debug) DEBUG=true; shift ;;
             --no-cleanup) CLEANUP=false; shift ;;
             -*) log_error "Unknown option: $1"; exit 1 ;;

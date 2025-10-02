@@ -6,7 +6,7 @@
 #   --workers-per-org N    Workers per organization (1-64, default: auto-detected)
 #   --order ORDER          Organization order: 'random', 'latest', or 'stars' (default: random)
 #   --email EMAIL          Email address for security notifications
-#   --telegramId CHAT_ID   Telegram chat ID for security notifications
+#   --telegram-chat-id ID  Telegram chat ID for security notifications
 #   --debug                Enable debug/verbose logging for all operations
 #
 # Resume Options:
@@ -109,7 +109,7 @@ ORG_ORDER="random"   # Organization processing order: 'random', 'latest', or 'st
 RESUME_MODE=false    # Whether to resume from previous scan
 RESTART_MODE=false   # Whether to start over from beginning
 CUSTOM_STATE_FILE="" # Custom state file path
-TELEGRAM_ID_PROVIDED=false  # Track if --telegramId was explicitly provided
+TELEGRAM_ID_PROVIDED=false  # Track if --telegram-chat-id was explicitly provided
 
 # Scanner configuration arguments
 VERBOSE=false
@@ -290,7 +290,7 @@ show_help() {
     echo "  --workers-per-org N    Workers per organization (default: auto-detected)"
     echo "  --order ORDER          Organization order: 'random', 'latest', or 'stars' (default: random)"
     echo "  --email EMAIL          Email address for security notifications"
-    echo "  --telegramId CHAT_ID   Telegram chat ID for security notifications"
+    echo "  --telegram-chat-id ID  Telegram chat ID for security notifications"
     echo "  --debug                Enable debug/verbose logging for all operations"
     echo ""
     echo "Resume Options:"
@@ -311,8 +311,8 @@ show_help() {
     echo ""
     echo "Notification Setup:"
     echo "  Use --email EMAIL to enable email notifications via Mailgun"
-    echo "  Use --telegramId CHAT_ID to enable Telegram notifications"
-    echo "    (If --telegramId is empty/omitted, falls back to config/telegram_config.sh)"
+    echo "  Use --telegram-chat-id ID to enable Telegram notifications"
+    echo "    (If --telegram-chat-id is empty/omitted, falls back to config/telegram_config.sh)"
     echo "  Configure config/mailgun_config.sh for email settings"
     echo "  Configure config/telegram_config.sh for Telegram bot token"
     echo "  Both notification methods can be used simultaneously"
@@ -320,9 +320,9 @@ show_help() {
     echo "Examples:"
     echo "  $0                                          # Scan all organizations (uses config files)"
     echo "  $0 --email security@company.com             # Scan with email notifications"
-    echo "  $0 --telegramId 123456789                   # Scan with specific Telegram chat ID"
-    echo "  $0 --telegramId \"\"                          # Disable Telegram (override config)"
-    echo "  $0 --email sec@co.com --telegramId 123456   # Scan with both notifications"
+    echo "  $0 --telegram-chat-id 123456789             # Scan with specific Telegram chat ID"
+    echo "  $0 --telegram-chat-id \"\"                    # Disable Telegram (override config)"
+    echo "  $0 --email sec@co.com --telegram-chat-id 123456   # Scan with both notifications"
     echo "  $0 microsoft                                # Scan only Microsoft organization"
     echo "  $0 --parallel-orgs 4 --debug                # 4 parallel orgs with debug output"
     echo "  $0 --order stars --parallel-orgs 2          # Scan orgs with most stars first"
@@ -343,7 +343,7 @@ while [[ $# -gt 0 ]]; do
         --workers-per-org) WORKERS_PER_ORG="$2"; shift 2 ;;
         --order) ORG_ORDER="$2"; shift 2 ;;
         --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
-        --telegramId) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; TELEGRAM_ID_PROVIDED=true; shift 2 ;;
+        --telegram-chat-id) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; TELEGRAM_ID_PROVIDED=true; shift 2 ;;
         --resume) RESUME_MODE=true; shift ;;
         --restart) RESTART_MODE=true; shift ;;
         --state-file) CUSTOM_STATE_FILE="$2"; shift 2 ;;
@@ -426,9 +426,9 @@ if [ -n "$ORGS_FILE" ]; then
     echo "Using organizations file: $ORGS_FILE"
 fi
 
-# Handle Telegram Chat ID fallback: use config file value if --telegramId was not provided
+# Handle Telegram Chat ID fallback: use config file value if --telegram-chat-id was not provided
 if [ "$TELEGRAM_ID_PROVIDED" = false ]; then
-    # --telegramId was not provided at all, try to load from config file
+    # --telegram-chat-id was not provided at all, try to load from config file
     if [ -f "config/telegram_config.sh" ]; then
         # Source the config file in a subshell to get the TELEGRAM_CHAT_ID value
         CONFIG_TELEGRAM_CHAT_ID=$(bash -c 'source config/telegram_config.sh 2>/dev/null && echo "$TELEGRAM_CHAT_ID"')
@@ -438,8 +438,8 @@ if [ "$TELEGRAM_ID_PROVIDED" = false ]; then
         fi
     fi
 elif [ -z "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
-    # --telegramId was provided but empty - this explicitly disables Telegram
-    echo "📱 Telegram notifications explicitly disabled via --telegramId \"\""
+    # --telegram-chat-id was provided but empty - this explicitly disables Telegram
+    echo "📱 Telegram notifications explicitly disabled via --telegram-chat-id \"\""
 fi
 
 # Display notification configuration
@@ -453,12 +453,12 @@ fi
 if [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
     echo "  📱 Telegram: Chat ID $NOTIFICATION_TELEGRAM_CHAT_ID"
 else
-    echo "  📱 Telegram: Disabled (use --telegramId to enable)"
+    echo "  📱 Telegram: Disabled (use --telegram-chat-id to enable)"
 fi
 
 if [ -z "$NOTIFICATION_EMAIL" ] && [ -z "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
     echo "  ⚠️  No notifications enabled - secrets will only be saved to files"
-    echo "     Use --email EMAIL and/or --telegramId CHAT_ID to enable notifications"
+    echo "     Use --email EMAIL and/or --telegram-chat-id CHAT_ID to enable notifications"
 fi
 
 # Create base results directory
@@ -705,7 +705,7 @@ scan_organization() {
                     fi
                 fi
             else
-                echo "⚠️  [$org_num/$total] No notification methods configured (use --email or --telegramId)"
+                echo "⚠️  [$org_num/$total] No notification methods configured (use --email or --telegram-chat-id)"
             fi
             
             # Now organize the file
@@ -1182,7 +1182,7 @@ if [ $ORGS_WITH_SECRETS -gt 0 ]; then
         echo -e "${GREEN}📤 Immediate notifications were sent via: $notifications_sent${NC}"
         echo "    (Notifications sent as soon as secrets were discovered)"
     else
-        echo -e "${YELLOW}⚠️  No notifications sent - use --email and/or --telegramId to enable alerts${NC}"
+        echo -e "${YELLOW}⚠️  No notifications sent - use --email and/or --telegram-chat-id to enable alerts${NC}"
     fi
 else
     echo -e "${GREEN}✅ No secrets found in any organization${NC}"

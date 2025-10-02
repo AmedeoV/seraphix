@@ -162,17 +162,17 @@ Options:
     --timeout SEC        Timeout in seconds (default: 1200)
     --debug              Enable debug output
     --email EMAIL        Email address for security notifications
-    --telegram-id ID     Telegram chat ID for security notifications
+    --telegram-chat-id ID Telegram chat ID for security notifications
     --help               Show this help message
 
 Examples:
     $0 microsoft/AzureDevOpsDemoGenerator
     $0 microsoft/AzureDevOpsDemoGenerator --commit 71ec71f3f2c63c3c88ad6fb4c776f811587aaa01
     $0 magicbell-io/darkmagic --debug
-    $0 myorg/repo --email security@company.com --telegram-id 123456789
+    $0 myorg/repo --email security@company.com --telegram-chat-id 123456789
 
 Notifications:
-    Use --email and/or --telegram-id to receive security notifications when
+    Use --email and/or --telegram-chat-id to receive security notifications when
     secrets are found. Requires proper configuration of notification scripts.
 
 EOF
@@ -456,7 +456,7 @@ parse_arguments() {
                 NOTIFICATION_EMAIL="$2"
                 shift 2
                 ;;
-            --telegram-id)
+            --telegram-chat-id)
                 NOTIFICATION_TELEGRAM_CHAT_ID="$2"
                 shift 2
                 ;;
