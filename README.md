@@ -112,29 +112,6 @@ Daily at 2 PM EST with the previous day's force push events.
 
 ---
 
-# 🛠️ Command-Line Options
-
-### Main Python Scanner
-
-```bash
-python force_push_scanner.py --help
-```
-
-**Common options:**
-- `--db-file` - SQLite database path (recommended)
-- `--events-file` - CSV export from BigQuery
-- `--scan` - Enable TruffleHog secret scanning
-- `--verbose` - Debug logging
-
-### Bash Scanners
-
-See individual scanner README files for detailed options:
-- [Force Push Scanner Options](force-push-scanner/README.md#common-options)
-- [Organization Scanner Options](org-scanner/README.md#options)
-- [Repository Scanner Options](repo-scanner/README.md)
-
----
-
 # 🤝 Contributing
 
 Contributions are welcome! Areas for improvement:
