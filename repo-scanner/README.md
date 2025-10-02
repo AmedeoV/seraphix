@@ -7,7 +7,7 @@ Scan individual GitHub repositories or specific commits for secrets. Perfect for
 ## 🚀 Quick Start
 
 ```bash
-# Install dependencies
+# Install dependencies (if not already done)
 ../install_requirements.sh
 
 # Basic scan

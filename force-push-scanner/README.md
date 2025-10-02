@@ -12,7 +12,7 @@ Get the Force Push Commits database via Google Form: **<https://forms.gle/344GbP
 
 This database contains force push commits for all GitHub organizations, updated daily at 2 PM EST.
 
-### 2. Install Dependencies
+### 2. Install Dependencies (if not already done)
 
 ```bash
 ../install_requirements.sh
