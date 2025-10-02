@@ -29,7 +29,7 @@ Seraphix is a **comprehensive secret scanning toolkit** designed for security re
 
 ## 💰 Proven Results
 
-This project was created in collaboration with [Sharon Brizinov](https://github.com/SharonBrizinov). Read [Sharon's blog post](https://trufflesecurity.com/blog/guest-post-how-i-scanned-all-of-github-s-oops-commits-for-leaked-secrets) to learn how he made **$25k in bounties** using force-push commit scanning!
+The force-push scanning technique was inspired by [Sharon Brizinov](https://github.com/SharonBrizinov)'s research. Read [Sharon's blog post](https://trufflesecurity.com/blog/guest-post-how-i-scanned-all-of-github-s-oops-commits-for-leaked-secrets) to learn how he made **$25k in bounties** using this innovative approach to discover leaked secrets!
 
 ---
 
