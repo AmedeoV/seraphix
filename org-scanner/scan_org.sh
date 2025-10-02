@@ -197,6 +197,20 @@ EOF
 }
 
 cleanup_on_exit() {
+    # Kill all child processes (workers) first
+    if [ -n "${WORKER_PIDS:-}" ]; then
+        log_progress "Stopping workers..."
+        for pid in ${WORKER_PIDS[@]:-}; do
+            kill -TERM "$pid" 2>/dev/null || true
+        done
+        # Wait a bit for graceful shutdown
+        sleep 1
+        # Force kill any remaining
+        for pid in ${WORKER_PIDS[@]:-}; do
+            kill -KILL "$pid" 2>/dev/null || true
+        done
+    fi
+    
     if [ "$CLEANUP" = true ] && [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ]; then
         log_progress "Cleaning up..."
         rm -rf "$TEMP_DIR"
@@ -377,17 +391,17 @@ scan_all_repos() {
     done
     
     # Start workers
-    local pids=()
+    WORKER_PIDS=()
     for ((w=1; w<=MAX_WORKERS; w++)); do
         worker_process "$w" "$repos_file" "$job_file" &
-        pids+=($!)
+        WORKER_PIDS+=($!)
     done
     
-    log_progress "Workers started (PIDs: ${pids[*]}). Waiting for completion..."
+    log_progress "Workers started (PIDs: ${WORKER_PIDS[*]}). Waiting for completion..."
     
     # Wait for completion
-    for pid in "${pids[@]}"; do
-        wait "$pid"
+    for pid in "${WORKER_PIDS[@]}"; do
+        wait "$pid" 2>/dev/null || true
     done
     
     log_success "All workers completed"
@@ -406,6 +420,12 @@ worker_process() {
     log_progress "[$worker_id] Worker started"
     
     while true; do
+        # Check if temp directory still exists (parent might have been interrupted)
+        if [ ! -d "$TEMP_DIR" ]; then
+            log_debug "[$worker_id] Temp directory gone, exiting gracefully"
+            return 0
+        fi
+        
         local job_index=""
         
         # Use flock for atomic file operations
@@ -415,12 +435,18 @@ worker_process() {
                 log_error "[$worker_id] Failed to acquire lock"
                 return 1
             fi
+            
+            # Check if job file still exists
+            if [ ! -f "$job_file" ]; then
+                return 0
+            fi
+            
             job_index=$(head -n1 "$job_file" 2>/dev/null)
             if [ -n "$job_index" ]; then
                 tail -n +2 "$job_file" > "$job_file.tmp" 2>/dev/null
                 mv "$job_file.tmp" "$job_file" 2>/dev/null
             fi
-        } 200>"$lock_file"
+        } 200>"$lock_file" 2>/dev/null || return 0
         
         if [ -z "$job_index" ]; then
             break
@@ -637,7 +663,7 @@ main() {
         fi
     done
     
-    trap cleanup_on_exit EXIT
+    trap cleanup_on_exit EXIT INT TERM
     
     TEMP_DIR=$(mktemp -d -t org_scan.XXXXXX)
     mkdir -p "$OUTPUT_DIR"
