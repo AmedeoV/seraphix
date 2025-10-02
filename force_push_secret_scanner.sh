@@ -53,9 +53,12 @@
 #   ./force_push_secret_scanner.sh --restart                       # Start over from beginning
 #
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 DB_FILE="force_push_commits.sqlite3"
 PYTHON_SCRIPT="force_push_scanner.py"
-LOG_DIR="scan_logs"
+LOG_DIR="$SCRIPT_DIR/scan_logs"
 NOTIFICATION_SCRIPT="send_notifications_enhanced.sh"  # Enhanced notification system
 STATE_FILE="scan_state.json"  # Default state file for tracking progress
 
@@ -65,7 +68,7 @@ NOTIFICATION_TELEGRAM_CHAT_ID=""  # Telegram chat ID for notifications (empty = 
 
 # Create timestamped results directory
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-RESULTS_BASE_DIR="leaked_secrets_results/${TIMESTAMP}"
+RESULTS_BASE_DIR="$SCRIPT_DIR/leaked_secrets_results/${TIMESTAMP}"
 
 # Auto-detect system resources for optimal defaults
 CPU_CORES=$(nproc 2>/dev/null || echo "4")

@@ -6,6 +6,9 @@
 
 set -euo pipefail
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -21,21 +24,21 @@ TIMEOUT=900
 OUTPUT_DIR=""
 TEMP_DIR=""
 DEBUG=false
-LOG_DIR="scan_logs"  # Local debug logs directory
+LOG_DIR="$SCRIPT_DIR/scan_logs"  # Local debug logs directory
 MAX_WORKERS=0  # 0 = auto-detect
 GITHUB_TOKEN="${GITHUB_TOKEN:-""}"  # Use environment variable if set, empty otherwise
 EXCLUDE_FORKS=true
 MAX_REPOS=0
 
 # Load timeout configuration if available
-if [ -f "../config/timeout_config.sh" ]; then
+if [ -f "$SCRIPT_DIR/../config/timeout_config.sh" ]; then
     log_debug "Loading timeout configuration from ../config/timeout_config.sh"
-    source "../config/timeout_config.sh"
+    source "$SCRIPT_DIR/../config/timeout_config.sh"
     # Use the loaded timeout values
     TIMEOUT=${TRUFFLEHOG_BASE_TIMEOUT:-900}
-elif [ -f "config/timeout_config.sh" ]; then
+elif [ -f "$SCRIPT_DIR/config/timeout_config.sh" ]; then
     log_debug "Loading timeout configuration from config/timeout_config.sh"
-    source "config/timeout_config.sh"
+    source "$SCRIPT_DIR/config/timeout_config.sh"
     TIMEOUT=${TRUFFLEHOG_BASE_TIMEOUT:-900}
 else
     # Default timeout values
@@ -580,9 +583,9 @@ parse_args() {
     fi
     
     if [ -z "$OUTPUT_DIR" ]; then
-        # Create timestamped results directory structure
+        # Create timestamped results directory structure inside org-scanner folder
         TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-        OUTPUT_DIR="leaked_secrets_results/${TIMESTAMP}/org_leaked_secrets/scan_${ORG}_${TIMESTAMP}"
+        OUTPUT_DIR="$SCRIPT_DIR/leaked_secrets_results/${TIMESTAMP}/org_leaked_secrets/scan_${ORG}_${TIMESTAMP}"
     fi
 }
 
