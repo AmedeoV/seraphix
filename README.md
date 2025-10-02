@@ -43,23 +43,31 @@ The force-push scanning technique was inspired by [Sharon Brizinov](https://gith
 
 ## 2: Choose Your Scanner
 
-**For Force-Push Commits:**
+### 🔥 [Force Push Scanner](force-push-scanner/README.md) 
+**⚠️ Requires SQLite database download** - See [setup instructions](force-push-scanner/README.md)
+
+Scan force-pushed commits using the GHArchive database.
 ```bash
-# See force-push-scanner/README.md for database setup
 cd force-push-scanner/
-./force_push_secret_scanner.sh --order random
+./force_push_secret_scanner.sh --order random --telegram-chat-id 123456789
 ```
 
-**For Organization Scanning:**
+### 🏢 [Organization Scanner](org-scanner/README.md)
+No database required - uses GitHub API directly.
+
+Scan all repositories in a GitHub organization.
 ```bash
 cd org-scanner/
-./scan_org.sh <organization> --telegram-chat-id <your-chat-id>
+./scan_org.sh microsoft --max-repos 10 --telegram-chat-id 123456789
 ```
 
-**For Repository Scanning:**
+### 📝 [Repository Scanner](repo-scanner/README.md)
+No database required - direct repository scanning.
+
+Scan individual repositories.
 ```bash
 cd repo-scanner/
-./scan_repo_simple.sh <owner/repository>
+./scan_repo_simple.sh owner/repository --telegram-chat-id 123456789
 ```
 
 ---
