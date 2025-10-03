@@ -547,7 +547,7 @@ send_completion_notification() {
     # Create consolidated results file for completion notification
     local completion_file="$OUTPUT_DIR/completion_summary_${ORG}_$(date +%s).json"
     echo "[" > "$completion_file"
-    local first=true
+    local is_first_secret=true
     
     for file in "$OUTPUT_DIR"/*.json; do
         if [ ! -f "$file" ] || [[ "$(basename "$file")" == completion_summary_* ]]; then
@@ -557,19 +557,16 @@ send_completion_notification() {
         # Check if file has secrets
         local count=$(jq length "$file" 2>/dev/null || echo "0")
         if [ "$count" -gt 0 ]; then
-            if [ "$first" = false ]; then
-                echo "," >> "$completion_file"
-            fi
-            first=false
-            
             # Add each secret with organization context
-            jq -c '.[]' "$file" | while read -r secret; do
-                if [ "$first" = false ]; then
-                    echo "," >> "$completion_file"
+            while IFS= read -r secret; do
+                if [ -n "$secret" ]; then
+                    if [ "$is_first_secret" = false ]; then
+                        echo "," >> "$completion_file"
+                    fi
+                    is_first_secret=false
+                    echo "$secret" | jq -c ". + {\"organization\": \"$ORG\"}" >> "$completion_file"
                 fi
-                first=false
-                echo "$secret" | jq ". + {\"organization\": \"$ORG\"}" >> "$completion_file"
-            done
+            done < <(jq -c '.[]' "$file" 2>/dev/null)
         fi
     done
     
