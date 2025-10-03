@@ -33,11 +33,13 @@ Scan individual GitHub repositories or specific commits for secrets. Perfect for
 |--------|-------------|
 | `--output FILE` | Custom output file path |
 | `--commit HASH` | Scan specific commit |
-| `--timeout N` | Base timeout seconds (default: 1200) |
 | `--debug` | Enable verbose logging |
 | `--email EMAIL` | Email for notifications |
 | `--telegram-id ID` | Telegram chat ID for notifications |
 | `--no-cleanup` | Keep temporary files |
+
+**Dynamic Configuration:**
+- Timeout values are automatically calculated based on repository size and complexity
 
 ---
 
