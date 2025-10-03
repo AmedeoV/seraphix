@@ -30,7 +30,8 @@ Fetch organizations that participate in bug bounty programs to prioritize high-v
 python fetch_bugbounty_orgs.py --output bugbounty_orgs.txt
 ```
 
-Generate a list of organizations to pass to scanners:
+Generate a list of organizations to pass to **both scanners**:
+
 ```bash
 # Generate bug bounty organization list
 python fetch_bugbounty_orgs.py --output bugbounty_orgs.txt
@@ -38,7 +39,13 @@ python fetch_bugbounty_orgs.py --output bugbounty_orgs.txt
 # Use with force-push scanner
 cd ../force-push-scanner/
 ./force_push_secret_scanner.sh --orgs-file bugbounty_orgs.txt
+
+# Use with org scanner
+cd ../org-scanner/
+./scan_org.sh --orgs-file bugbounty_orgs.txt
 ```
+
+**File Format:** One organization per line, supports `#` comments
 
 **Credit:** Data sourced from [nikitastupin/orgs-data](https://github.com/nikitastupin/orgs-data) - a curated mapping of bug bounty programs to GitHub organizations.
 

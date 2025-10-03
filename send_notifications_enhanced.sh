@@ -70,7 +70,7 @@ get_first_secret_details() {
     if command -v jq >/dev/null 2>&1; then
         local detector_name=$(jq -r '.[0].DetectorName // "Unknown"' "$secrets_file" 2>/dev/null)
         local commit_hash=$(jq -r '.[0].SourceMetadata.Data.Git.commit // "Unknown"' "$secrets_file" 2>/dev/null)
-        local repo_url=$(jq -r '.[0].repository_url // "Unknown"' "$secrets_file" 2>/dev/null)
+        local repo_url=$(jq -r '.[0].repository_url // .[0].repository_name // "Unknown"' "$secrets_file" 2>/dev/null)
         local file_path=$(jq -r '.[0].SourceMetadata.Data.Git.file // "Unknown"' "$secrets_file" 2>/dev/null)
         
         echo "Type: $detector_name"$'\n'"Commit: $commit_hash"$'\n'"Repository: $repo_url"$'\n'"File: $file_path"

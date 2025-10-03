@@ -29,6 +29,7 @@ MAX_WORKERS=0  # 0 = auto-detect
 GITHUB_TOKEN="${GITHUB_TOKEN:-""}"  # Use environment variable if set, empty otherwise
 EXCLUDE_FORKS=true
 MAX_REPOS=0
+ORGS_FILE=""  # File containing list of organizations to scan
 
 # Default timeout values (adaptive timeout used dynamically during scanning)
 export TRUFFLEHOG_BASE_TIMEOUT=900
@@ -150,6 +151,7 @@ Simple Organization Scanner
 
 Usage:
     $0 <organization> [options]
+    $0 --orgs-file <file> [options]
 
 Examples:
     $0 magicbell-io
@@ -157,8 +159,10 @@ Examples:
     $0 microsoft --github-token ghp_xxx --exclude-forks
     $0 microsoft --email security@company.com --telegram-chat-id 123456789
     $0 microsoft --telegram-chat-id 123456789 --debug
+    $0 --orgs-file bug_bounty_orgs.txt --telegram-chat-id 123456789
 
 Options:
+    --orgs-file FILE     File containing list of organizations (one per line)
     --max-repos N        Maximum repositories to scan (default: all)
     --max-workers N      Parallel workers (default: auto-detect, 0 = auto)
     --timeout SEC        Timeout per repo (default: 900)
@@ -605,6 +609,7 @@ parse_args() {
             --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
             --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
             --telegram-chat-id) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; shift 2 ;;
+            --orgs-file) ORGS_FILE="$2"; shift 2 ;;
             --debug) DEBUG=true; shift ;;
             --no-cleanup) CLEANUP=false; shift ;;
             -*) log_error "Unknown option: $1"; exit 1 ;;
@@ -619,13 +624,27 @@ parse_args() {
         esac
     done
     
-    if [ -z "${ORG:-}" ]; then
-        log_error "Organization name required"
+    # Check for orgs file or single organization
+    if [ -n "$ORGS_FILE" ] && [ -n "${ORG:-}" ]; then
+        log_error "Cannot specify both --orgs-file and organization name"
+        exit 1
+    fi
+    
+    if [ -z "$ORGS_FILE" ] && [ -z "${ORG:-}" ]; then
+        log_error "Organization name or --orgs-file required"
         show_help
         exit 1
     fi
     
-    if [ -z "$OUTPUT_DIR" ]; then
+    # Validate orgs file if specified
+    if [ -n "$ORGS_FILE" ]; then
+        if [ ! -f "$ORGS_FILE" ]; then
+            log_error "Organizations file not found: $ORGS_FILE"
+            exit 1
+        fi
+    fi
+    
+    if [ -z "$OUTPUT_DIR" ] && [ -z "$ORGS_FILE" ]; then
         # Create timestamped results directory structure inside org-scanner folder
         TIMESTAMP=$(date +%Y%m%d_%H%M%S)
         OUTPUT_DIR="$SCRIPT_DIR/leaked_secrets_results/${TIMESTAMP}/org_leaked_secrets/scan_${ORG}_${TIMESTAMP}"
@@ -654,24 +673,95 @@ main() {
     trap cleanup_on_exit EXIT INT TERM
     
     TEMP_DIR=$(mktemp -d -t org_scan.XXXXXX)
-    mkdir -p "$OUTPUT_DIR"
     
-    # Create debug log directory if debug mode is enabled
-    if [ "$DEBUG" = true ]; then
-        mkdir -p "$LOG_DIR"
-        LOG_FILE="$LOG_DIR/org_scan_${ORG}_$(date +%Y%m%d_%H%M%S).log"
-        log_debug "Debug mode enabled - logs will be saved to: $LOG_FILE"
-        # Start logging to file (in addition to console)
-        exec > >(tee -a "$LOG_FILE") 2>&1
+    # If orgs file is provided, loop through organizations
+    if [ -n "$ORGS_FILE" ]; then
+        log_info "Processing organizations from file: $ORGS_FILE"
+        
+        # Create timestamped base directory for this batch run
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        BATCH_OUTPUT_DIR="$SCRIPT_DIR/leaked_secrets_results/${TIMESTAMP}/org_leaked_secrets"
+        
+        # Read organizations from file
+        while IFS= read -r org || [ -n "$org" ]; do
+            # Skip comments and empty lines
+            [[ "$org" =~ ^#.*$ ]] && continue
+            [[ -z "$org" ]] && continue
+            
+            # Trim whitespace
+            org=$(echo "$org" | xargs)
+            
+            log_info "========================================"
+            log_info "Processing organization: $org"
+            log_info "========================================"
+            
+            # Set current organization and output directory
+            ORG="$org"
+            OUTPUT_DIR="$BATCH_OUTPUT_DIR/scan_${ORG}_${TIMESTAMP}"
+            mkdir -p "$OUTPUT_DIR"
+            
+            # Create debug log for this organization if debug mode is enabled
+            if [ "$DEBUG" = true ]; then
+                mkdir -p "$LOG_DIR"
+                LOG_FILE="$LOG_DIR/org_scan_${ORG}_$(date +%Y%m%d_%H%M%S).log"
+                log_debug "Debug mode enabled - logs will be saved to: $LOG_FILE"
+                # Start logging to file (in addition to console)
+                exec > >(tee -a "$LOG_FILE") 2>&1
+            fi
+            
+            log_info "Output directory: $(realpath "$OUTPUT_DIR")"
+            
+            # Reset worker state for this organization
+            WORKER_PIDS=()
+            
+            # Scan this organization (disable exit-on-error for individual org failures)
+            set +e
+            get_org_repos "$ORG"
+            local repos_result=$?
+            if [ $repos_result -eq 0 ]; then
+                scan_all_repos
+                generate_summary
+            else
+                log_error "Failed to fetch repositories for $org, skipping..."
+            fi
+            set -e
+            
+            # Clean up temp files for this organization (but keep TEMP_DIR for next org)
+            if [ -d "$TEMP_DIR" ]; then
+                rm -f "$TEMP_DIR"/*.json "$TEMP_DIR"/*.txt "$TEMP_DIR"/*.lock 2>/dev/null || true
+                rm -rf "$TEMP_DIR"/worker_* 2>/dev/null || true
+            fi
+            
+            log_info "Completed scanning organization: $org"
+            log_info ""
+            
+        done < "$ORGS_FILE"
+        
+        log_info "========================================"
+        log_info "All organizations processed"
+        log_info "Results saved in: $BATCH_OUTPUT_DIR"
+        log_info "========================================"
+    else
+        # Single organization mode
+        mkdir -p "$OUTPUT_DIR"
+        
+        # Create debug log directory if debug mode is enabled
+        if [ "$DEBUG" = true ]; then
+            mkdir -p "$LOG_DIR"
+            LOG_FILE="$LOG_DIR/org_scan_${ORG}_$(date +%Y%m%d_%H%M%S).log"
+            log_debug "Debug mode enabled - logs will be saved to: $LOG_FILE"
+            # Start logging to file (in addition to console)
+            exec > >(tee -a "$LOG_FILE") 2>&1
+        fi
+        
+        log_info "Scanning organization: $ORG"
+        log_info "Output directory: $(realpath "$OUTPUT_DIR")"
+        log_info "Results will be saved in: leaked_secrets_results structure"
+        
+        get_org_repos "$ORG"
+        scan_all_repos
+        generate_summary
     fi
-    
-    log_info "Scanning organization: $ORG"
-    log_info "Output directory: $(realpath "$OUTPUT_DIR")"
-    log_info "Results will be saved in: leaked_secrets_results structure"
-    
-    get_org_repos "$ORG"
-    scan_all_repos
-    generate_summary
 }
 
 main "$@"
