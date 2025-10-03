@@ -48,7 +48,32 @@ This database contains force push commits for all GitHub organizations, updated 
 
 ## 📂 Output
 
-**Results:** `leaked_secrets_results/TIMESTAMP/ORGANIZATION/verified_secrets_ORG.json`  
+**Directory Structure:**
+```
+leaked_secrets_results/
+  scan_20251003_140530/          # Scan started Oct 3 at 14:05:30
+    2025-10-03/                  # Secrets found on Oct 3
+      organization1/
+        verified_secrets_organization1.json
+      organization2/
+        verified_secrets_organization2.json
+    2025-10-04/                  # Secrets found on Oct 4
+      organization3/
+        verified_secrets_organization3.json
+```
+
+Results are organized by:
+- **Scan start time** (top level) - when the scan began
+- **Discovery date** (subdirectories) - when secrets were actually found
+
+This makes it easy to check what was discovered "today" even during long-running scans!
+
+**View Today's Findings:**
+```bash
+./view_daily_findings.sh              # Show today's findings
+./view_daily_findings.sh 2025-10-03   # Show specific date
+```
+
 **Logs:** `scan_logs/` (when `--debug` enabled)
 
 **State File:** `scan_state.json` - Tracks progress for resume functionality

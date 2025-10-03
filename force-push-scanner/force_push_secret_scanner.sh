@@ -51,7 +51,8 @@ NOTIFICATION_TELEGRAM_CHAT_ID=""  # Telegram chat ID for notifications (empty = 
 
 # Create timestamped results directory inside force-push-scanner folder
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-RESULTS_BASE_DIR="$SCRIPT_DIR/leaked_secrets_results/${TIMESTAMP}"
+SCAN_START_DIR="scan_${TIMESTAMP}"
+RESULTS_BASE_DIR="$SCRIPT_DIR/leaked_secrets_results/${SCAN_START_DIR}"
 
 # Auto-detect system resources for optimal defaults
 CPU_CORES=$(nproc 2>/dev/null || echo "4")
@@ -631,7 +632,18 @@ scan_organization() {
             
             echo "🔑 [$org_num/$total] Found $count verified secrets in $org"
             
-            # Send completion notifications immediately (before file organization)
+            # Organize the file first before sending notifications
+            # Use current date for daily organization
+            DAILY_DATE=$(date +%Y-%m-%d)
+            DAILY_DIR="$RESULTS_BASE_DIR/$DAILY_DATE"
+            ORG_DIR="$DAILY_DIR/$org"
+            mkdir -p "$ORG_DIR"
+            mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
+            
+            # Update secrets_file path to the new location
+            secrets_file="$ORG_DIR/verified_secrets_${org}.json"
+            
+            # Send completion notifications after file has been moved
             if ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]); then
                 echo "📊 [$org_num/$total] Sending completion summary for $org..."
                 
@@ -673,11 +685,6 @@ scan_organization() {
             else
                 echo "⚠️  [$org_num/$total] No notification methods configured (use --email or --telegram-chat-id)"
             fi
-            
-            # Now organize the file
-            ORG_DIR="$RESULTS_BASE_DIR/$org"
-            mkdir -p "$ORG_DIR"
-            mv "$RESULTS_BASE_DIR/verified_secrets_${org}.json" "$ORG_DIR/"
             
             # Only update state file after successful completion
             update_state_with_org "$STATE_FILE" "$org" "secrets_found"
@@ -1127,8 +1134,29 @@ echo "=== SCAN SUMMARY ==="
 ORGS_WITH_SECRETS=$(find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f | wc -l)
 if [ $ORGS_WITH_SECRETS -gt 0 ]; then
     echo -e "${RED}🚨 SECURITY ALERT: $ORGS_WITH_SECRETS organizations have leaked secrets!${NC}"
-    echo "Organizations with secrets:"
-    find "$RESULTS_BASE_DIR" -name "verified_secrets_*.json" -type f -exec basename {} \; | sed 's/verified_secrets_\(.*\)\.json/  - \1/' | sort
+    echo ""
+    echo "📅 Results organized by discovery date in: $RESULTS_BASE_DIR"
+    echo ""
+    
+    # Group findings by date
+    for date_dir in "$RESULTS_BASE_DIR"/*/; do
+        if [ -d "$date_dir" ]; then
+            date_name=$(basename "$date_dir")
+            # Check if it's a date directory (YYYY-MM-DD format)
+            if [[ "$date_name" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+                org_count=$(find "$date_dir" -name "verified_secrets_*.json" -type f | wc -l)
+                if [ $org_count -gt 0 ]; then
+                    echo -e "${YELLOW}📆 $date_name - $org_count organization(s):${NC}"
+                    find "$date_dir" -name "verified_secrets_*.json" -type f | while read -r file; do
+                        org_name=$(basename "$(dirname "$file")")
+                        secret_count=$(jq length "$file" 2>/dev/null || grep -c '"DetectorName"' "$file" 2>/dev/null || echo "?")
+                        echo "     - $org_name ($secret_count secrets)"
+                    done
+                    echo ""
+                fi
+            fi
+        fi
+    done
     
     # Check which notification methods were used
     local notifications_sent=""
