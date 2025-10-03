@@ -63,22 +63,6 @@ cd ../org-scanner/
 
 ---
 
-## 📦 Dependencies
-
-```bash
-pip install requests
-```
-
----
-
-## 🔗 Integration
-
-- **Force Push Scanner** - Uses star counts for organization prioritization
-- **Org Scanner** - References bug bounty lists for target selection
-- **Database Management** - Keeps organization metadata current
-
----
-
 ## 💡 Performance Tips
 
 - Use parallel version for large datasets (1000+ organizations)
