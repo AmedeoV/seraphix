@@ -33,12 +33,6 @@ python github_star_counter_parallel.py
 Fetch organizations that participate in bug bounty programs to prioritize high-value targets.
 
 ```bash
-python fetch_bugbounty_orgs.py --output bugbounty_orgs.txt
-```
-
-Generate a list of organizations to pass to **both scanners**:
-
-```bash
 # Generate bug bounty organization list
 python fetch_bugbounty_orgs.py --output bugbounty_orgs.txt
 
