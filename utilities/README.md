@@ -28,7 +28,8 @@ Fetch organizations that participate in bug bounty programs to prioritize high-v
 
 ```bash
 # Generate bug bounty organization list
-python fetch_bugbounty_orgs.py --output bugbounty_orgs.txt
+python fetch_bugbounty_orgs.py [--output FILE] [--github-token TOKEN]
+# Default output: bugbounty_orgs.txt
 
 # Use with force-push scanner
 cd ../force-push-scanner/
@@ -38,12 +39,6 @@ cd ../force-push-scanner/
 cd ../org-scanner/
 ./scan_org.sh --orgs-file bugbounty_orgs.txt
 ```
-
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `--output FILE` | Output file path (default: `bugbounty_orgs.txt`) |
-| `--github-token TOKEN` | GitHub API token for higher rate limits |
 
 **Credit:** Data sourced from [nikitastupin/orgs-data](https://github.com/nikitastupin/orgs-data) - a curated mapping of bug bounty programs to GitHub organizations.
 
