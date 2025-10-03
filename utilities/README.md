@@ -67,17 +67,3 @@ cd ../org-scanner/
 **Credit:** Data sourced from [nikitastupin/orgs-data](https://github.com/nikitastupin/orgs-data) - a curated mapping of bug bounty programs to GitHub organizations.
 
 ---
-
-## 💡 Performance Tips
-
-- **Use parallel version** for large datasets (1000+ organizations) - it automatically optimizes worker count
-- **⚠️ Schedule wisely:** Run parallel star updates during **off-hours, evenings, or weekends** to avoid exhausting your GitHub API quota during active development
-- **Set GITHUB_TOKEN** environment variable to get 5000 requests/hour (vs 60 unauthenticated)
-- **System resources** are auto-detected (CPU cores, memory, API quota) for optimal performance
-- Run star updates **weekly/monthly**, not during active scans
-- Update bug bounty lists **quarterly** or when new programs announced
-- The parallel script will automatically:
-  - Use 2-16 workers based on your CPU
-  - Reduce workers if API quota is low
-  - Adjust batch size based on dataset size
-  - Wait and resume if rate limit is hit
