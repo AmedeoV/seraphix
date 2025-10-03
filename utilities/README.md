@@ -10,34 +10,27 @@ Fetch and update GitHub star counts for organizations in the database.
 
 ### Single-threaded
 ```bash
-python github_star_counter.py
+python github_star_counter.py [--db-file PATH]
 ```
-
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `--db-file PATH` | Path to SQLite database file (default: `force_push_commits.sqlite3`) |
 
 ### Multi-threaded (Faster, Recommended)
 ```bash
-python github_star_counter_parallel.py
+python github_star_counter_parallel.py [--db-file PATH]
 ```
 
 ⚠️ **Rate Limit Warning:** The parallel version can consume your entire GitHub API quota (5000 requests/hour) quickly. **Run during off-hours or weekends** when you're not actively using the GitHub API for other tasks.
 
-**Features:** 
+**Features (Multi-threaded):** 
 - Automatic parallel processing with dynamic worker calculation
 - Smart rate limiting based on API quota
 - Progress tracking and resume capability
 - Adaptive batch sizing based on dataset
+- Worker count and batch size are auto-detected based on CPU cores and API rate limits
 
-**Options:**
+**Options (Both versions):**
 | Option | Description |
 |--------|-------------|
 | `--db-file PATH` | Path to SQLite database file (default: `force_push_commits.sqlite3`) |
-| `--github-token TOKEN` | GitHub API token (or set `GITHUB_TOKEN` env var) |
-
-**Note:** Worker count and batch size are auto-detected based on CPU cores and API rate limits.
 
 ---
 
