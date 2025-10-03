@@ -33,9 +33,11 @@ from datetime import datetime
 DB_FILE = "force_push_commits.sqlite3"
 GITHUB_TOKEN = None  # Set this or use environment variable GITHUB_TOKEN
 RATE_LIMIT_DELAY = 0.1  # Reduced delay for parallel processing
-BATCH_SIZE = 100  # Increased batch size for better performance
-MAX_WORKERS = 8  # Number of concurrent threads (adjust based on your API limits)
 RATE_LIMIT_BUFFER = 50  # Keep this many requests as buffer before rate limit
+
+# Default values (will be calculated dynamically)
+DEFAULT_BATCH_SIZE = 100
+DEFAULT_MAX_WORKERS = 8
 
 # Global flag for graceful shutdown
 shutdown_requested = False
@@ -80,6 +82,84 @@ def setup_logging():
     logger = logging.getLogger(__name__)
     logger.info(f"Logging initialized. Log file: {log_filepath}")
     return logger, log_filepath
+
+def calculate_optimal_settings(github_token: Optional[str], total_repos: int = 0) -> Tuple[int, int]:
+    """
+    Calculate optimal MAX_WORKERS and BATCH_SIZE based on system resources and API limits.
+    
+    Args:
+        github_token: GitHub API token (if available)
+        total_repos: Total number of repositories to process (for batch size calculation)
+    
+    Returns:
+        Tuple of (max_workers, batch_size)
+    """
+    logger = logging.getLogger(__name__)
+    
+    # Calculate MAX_WORKERS based on CPU cores and API rate limits
+    cpu_count = os.cpu_count() or 4
+    
+    if github_token:
+        # With token: 5000 requests/hour = ~83 requests/minute
+        # Conservative approach: use CPU cores but cap based on rate limit comfort
+        # We want to leave headroom for rate limit management
+        max_workers = min(cpu_count * 2, 16)  # Max 16 workers even on high-core systems
+        
+        # Check initial rate limit to adjust workers
+        try:
+            session = requests.Session()
+            session.headers.update({
+                'Authorization': f'token {github_token}',
+                'Accept': 'application/vnd.github.v3+json'
+            })
+            response = session.get("https://api.github.com/rate_limit", timeout=10)
+            if response.status_code == 200:
+                rate_data = response.json()
+                core = rate_data.get('resources', {}).get('core', {})
+                remaining = core.get('remaining', 5000)
+                limit = core.get('limit', 5000)
+                
+                # If we have low remaining requests, reduce workers
+                if remaining < 500:
+                    max_workers = min(max_workers, 4)
+                    logger.info(f"Low API quota ({remaining}/{limit}), reducing workers to {max_workers}")
+                elif remaining < 1000:
+                    max_workers = min(max_workers, 8)
+                    logger.info(f"Medium API quota ({remaining}/{limit}), limiting workers to {max_workers}")
+        except Exception as e:
+            logger.warning(f"Could not check rate limit for worker calculation: {e}")
+    else:
+        # Without token: 60 requests/hour = 1 request/minute
+        # Use minimal workers to avoid hitting rate limit
+        max_workers = 2
+        logger.info("No GitHub token - limiting to 2 workers due to strict rate limits")
+    
+    # Calculate BATCH_SIZE based on total repositories and memory considerations
+    if total_repos > 0:
+        # For small sets, use smaller batches
+        if total_repos < 100:
+            batch_size = 25
+        elif total_repos < 500:
+            batch_size = 50
+        elif total_repos < 2000:
+            batch_size = 100
+        else:
+            # For large sets, use larger batches for efficiency
+            batch_size = min(250, total_repos // 20)  # ~5% of total or 250, whichever is smaller
+    else:
+        # Default batch size
+        batch_size = DEFAULT_BATCH_SIZE
+    
+    print(f"🧮 Dynamic configuration calculated:")
+    print(f"   CPU cores: {cpu_count}")
+    print(f"   Max workers: {max_workers} ({'token authenticated' if github_token else 'unauthenticated'})")
+    print(f"   Batch size: {batch_size}")
+    if total_repos > 0:
+        print(f"   Total repos: {total_repos:,}")
+    
+    logger.info(f"Dynamic settings: CPU={cpu_count}, Workers={max_workers}, BatchSize={batch_size}, TotalRepos={total_repos}")
+    
+    return max_workers, batch_size
 
 @dataclass
 class RepoResult:
@@ -161,9 +241,18 @@ class RateLimitManager:
             return 0
 
 class ParallelGitHubStarCounter:
-    def __init__(self, github_token: Optional[str] = None, max_workers: int = MAX_WORKERS):
+    def __init__(self, github_token: Optional[str], max_workers: int, batch_size: int):
+        """
+        Initialize the parallel GitHub star counter.
+        
+        Args:
+            github_token: GitHub API token for authentication
+            max_workers: Number of parallel worker threads
+            batch_size: Size of batches for database operations
+        """
         self.github_token = github_token or os.environ.get('GITHUB_TOKEN')
         self.max_workers = max_workers
+        self.batch_size = batch_size
         self.session = requests.Session()
         self.logger = logging.getLogger(__name__)
         
@@ -194,9 +283,9 @@ class ParallelGitHubStarCounter:
         self.db_update_interval = 1800  # 30 minutes in seconds
         self.updates_lock = threading.Lock()
         
-        print(f"🚀 Initialized parallel processor with {max_workers} workers")
+        print(f"🚀 Initialized parallel processor with {max_workers} workers and batch size {batch_size}")
         print(f"💾 Periodic database saves: Every {self.db_update_interval/60:.0f} minutes or when rate limited")
-        self.logger.info(f"Initialized parallel processor with {max_workers} workers")
+        self.logger.info(f"Initialized parallel processor with {max_workers} workers and batch size {batch_size}")
         self.logger.info(f"Periodic database saves enabled: Every {self.db_update_interval/60:.0f} minutes or when rate limited")
         self.check_initial_rate_limit()
     
@@ -708,13 +797,13 @@ class ParallelGitHubStarCounter:
             
             # Update database in batches
             total_rows_updated = 0
-            for i in range(0, len(updates_to_save), BATCH_SIZE):
-                batch = updates_to_save[i:i + BATCH_SIZE]
+            for i in range(0, len(updates_to_save), self.batch_size):
+                batch = updates_to_save[i:i + self.batch_size]
                 rows_updated = self.update_repo_stars_batch(batch)
                 total_rows_updated += rows_updated
                 
-                if len(updates_to_save) > BATCH_SIZE:
-                    batch_msg = f"Save batch {i//BATCH_SIZE + 1}: Updated {rows_updated} database records"
+                if len(updates_to_save) > self.batch_size:
+                    batch_msg = f"Save batch {i//self.batch_size + 1}: Updated {rows_updated} database records"
                     print(f"   {batch_msg}")
                     self.logger.info(batch_msg)
             
@@ -812,19 +901,17 @@ def get_unique_repos_from_db() -> List[Tuple[str, str]]:
 
 def main():
     """Main function to update the database with star counts using parallel processing."""
-    import os
+    global MAX_WORKERS, BATCH_SIZE
     
     print("GitHub Repository Star Count Database Updater (Parallel Version)")
     print("=" * 65)
     print(f"Database: {DB_FILE}")
-    print(f"Max Workers: {MAX_WORKERS}")
-    print(f"Batch Size: {BATCH_SIZE}")
     print()
     
     # Initialize logging
     logger, log_filepath = setup_logging()
     logger.info("Starting GitHub Star Counter (Parallel Version)")
-    logger.info(f"Configuration: Database={DB_FILE}, Workers={MAX_WORKERS}, BatchSize={BATCH_SIZE}")
+    logger.info(f"Configuration: Database={DB_FILE}")
     
     print(f"📝 Detailed logging enabled: {log_filepath}")
     print()
@@ -848,13 +935,31 @@ def main():
         print("✓ GitHub token found - ready for high-speed parallel processing!")
         logger.info("GitHub token found and ready for high-speed processing")
     
-    # Adjust worker count based on token availability
-    max_workers = MAX_WORKERS if github_token else 2  # Limit workers without token
-    if not github_token:
-        print(f"⚠️  Reducing workers to {max_workers} due to no token")
+    print()
     
-    # Initialize parallel star counter
-    star_counter = ParallelGitHubStarCounter(github_token, max_workers)
+    # Get repository count for optimal settings calculation
+    print("Analyzing repository data...")
+    repos_to_update = []
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT repo_org, repo_name 
+            FROM force_push_commits 
+            WHERE stars IS NULL OR stars = 0
+        """)
+        repos_to_update = cursor.fetchall()
+        conn.close()
+    except Exception as e:
+        print(f"⚠️  Could not get repo count: {e}")
+        logger.warning(f"Could not get repo count for optimization: {e}")
+    
+    # Calculate optimal settings based on system resources and repo count
+    MAX_WORKERS, BATCH_SIZE = calculate_optimal_settings(github_token, len(repos_to_update))
+    print()
+    
+    # Initialize parallel star counter with calculated settings
+    star_counter = ParallelGitHubStarCounter(github_token, MAX_WORKERS, BATCH_SIZE)
     
     # Test API access with a simple request
     print("Testing GitHub API access...")
@@ -913,8 +1018,8 @@ def main():
         return
     
     print(f"Found {len(repos_to_update)} repositories to update")
-    print(f"Processing with {max_workers} parallel workers")
-    logger.info(f"Found {len(repos_to_update)} repositories to update with {max_workers} workers")
+    print(f"Processing with {MAX_WORKERS} parallel workers")
+    logger.info(f"Found {len(repos_to_update)} repositories to update with {MAX_WORKERS} workers")
     print()
     
     # Process repositories in parallel
