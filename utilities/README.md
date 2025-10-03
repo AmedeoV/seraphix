@@ -8,14 +8,14 @@ Database management and organization discovery tools for Seraphix scanners.
 
 Fetch and update GitHub star counts for organizations in the database.
 
-### Single-threaded
 ```bash
-python github_star_counter.py [--db-file PATH] (default: `force_push_commits.sqlite3`)
-```
+# Single-threaded
+python github_star_counter.py [--db-file PATH]
 
-### Multi-threaded (Faster, Recommended)
-```bash
-python github_star_counter_parallel.py [--db-file PATH] (default: `force_push_commits.sqlite3`)
+# Multi-threaded (Faster, Recommended)
+python github_star_counter_parallel.py [--db-file PATH]
+
+# Default db-file: force_push_commits.sqlite3
 ```
 
 ⚠️ **Rate Limit Warning:** The parallel version can consume your entire GitHub API quota (5000 requests/hour) quickly. **Run during off-hours or weekends** when you're not actively using the GitHub API for other tasks.
