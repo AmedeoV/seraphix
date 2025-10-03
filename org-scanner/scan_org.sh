@@ -20,12 +20,10 @@ NC='\033[0m'
 
 # Configuration
 CLEANUP=true
-TIMEOUT=900
 OUTPUT_DIR=""
 TEMP_DIR=""
 DEBUG=false
 LOG_DIR="$SCRIPT_DIR/scan_logs"  # Local debug logs directory
-MAX_WORKERS=0  # 0 = auto-detect
 GITHUB_TOKEN="${GITHUB_TOKEN:-""}"  # Use environment variable if set, empty otherwise
 EXCLUDE_FORKS=true
 MAX_REPOS=0
@@ -155,7 +153,7 @@ Usage:
 
 Examples:
     $0 magicbell-io
-    $0 microsoft --max-repos 5 --max-workers 4
+    $0 microsoft --max-repos 5
     $0 microsoft --github-token ghp_xxx --exclude-forks
     $0 microsoft --email security@company.com --telegram-chat-id 123456789
     $0 microsoft --telegram-chat-id 123456789 --debug
@@ -164,8 +162,6 @@ Examples:
 Options:
     --orgs-file FILE     File containing list of organizations (one per line)
     --max-repos N        Maximum repositories to scan (default: all)
-    --max-workers N      Parallel workers (default: auto-detect, 0 = auto)
-    --timeout SEC        Timeout per repo (default: 900)
     --github-token TOK   GitHub API token (overrides GITHUB_TOKEN env var)
     --include-forks      Include forked repositories
     --output-dir DIR     Custom output directory (default: leaked_secrets_results/TIMESTAMP/org_leaked_secrets/scan_ORG_TIMESTAMP)
@@ -177,9 +173,9 @@ Options:
 Environment Variables:
     GITHUB_TOKEN         GitHub API token (can be overridden with --github-token)
 
-System Auto-Detection:
-    The script automatically detects CPU cores, memory, and system load
-    to determine optimal worker count. Use --max-workers to override.
+Dynamic Configuration:
+    The script automatically detects CPU cores, memory, and system load to determine
+    optimal worker count and timeout values based on repository size and complexity.
 
 Notifications:
     Use --email and/or --telegram-chat-id to receive security notifications when
@@ -599,8 +595,6 @@ parse_args() {
         case $1 in
             --help|-h) show_help; exit 0 ;;
             --max-repos) MAX_REPOS="$2"; shift 2 ;;
-            --max-workers) MAX_WORKERS="$2"; shift 2 ;;
-            --timeout) TIMEOUT="$2"; shift 2 ;;
             --github-token) GITHUB_TOKEN="$2"; shift 2 ;;
             --include-forks) EXCLUDE_FORKS=false; shift ;;
             --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
@@ -651,12 +645,10 @@ parse_args() {
 main() {
     parse_args "$@"
     
-    # Apply dynamic worker detection if auto-detect mode (0)
-    if [[ "$MAX_WORKERS" == "0" ]]; then
-        MAX_WORKERS="$AUTO_DETECTED_WORKERS"
-        if [[ "$DEBUG" == "true" ]]; then
-            echo "[DEBUG] Auto-detected workers: $MAX_WORKERS (CPU cores: $CPU_CORES, Memory: ${MEMORY_GB}GB, Load: $LOAD_AVERAGE)"
-        fi
+    # Apply dynamic worker detection (always auto-detect)
+    MAX_WORKERS="$AUTO_DETECTED_WORKERS"
+    if [[ "$DEBUG" == "true" ]]; then
+        echo "[DEBUG] Auto-detected workers: $MAX_WORKERS (CPU cores: $CPU_CORES, Memory: ${MEMORY_GB}GB, Load: $LOAD_AVERAGE)"
     fi
     
     # Check dependencies

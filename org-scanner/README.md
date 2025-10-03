@@ -35,8 +35,6 @@ Scan entire GitHub organizations for secrets using TruffleHog. Queries GitHub AP
 |--------|-------------|
 | `--orgs-file FILE` | File with organizations list (one per line, supports # comments) |
 | `--max-repos N` | Limit repositories to scan |
-| `--max-workers N` | Parallel workers (default: auto-detected) |
-| `--timeout SEC` | Base timeout seconds (default: 900) |
 | `--github-token TOKEN` | GitHub API token for higher rate limits |
 | `--exclude-forks` | Skip forked repositories |
 | `--email EMAIL` | Email for notifications |
@@ -45,6 +43,10 @@ Scan entire GitHub organizations for secrets using TruffleHog. Queries GitHub AP
 
 **Environment Variables:**
 - `GITHUB_TOKEN` - GitHub API token (recommended for private repos and higher rate limits)
+
+**Dynamic Configuration:**
+- Worker count is automatically calculated based on CPU cores, memory, and system load
+- Timeouts are dynamically adjusted based on repository size and complexity
 
 ---
 
