@@ -90,6 +90,19 @@ cp config/mailgun_config.sh.example config/mailgun_config.sh
 # Edit and add your Mailgun credentials
 ```
 
+📖 **[Full Configuration Guide](config/README.md)** - Complete setup instructions and troubleshooting
+
+---
+
+# 🛠️ Utilities
+
+Additional tools for database management and analysis:
+
+- **GitHub Star Counter** - Fetch and update star counts for organizations in the database
+- **Bug Bounty Org Fetcher** - Generate lists of organizations with bug bounty programs
+
+📖 **[Utilities Documentation](utilities/README.md)** - Database tools and helper scripts
+
 ---
 
 # ❓ FAQ
