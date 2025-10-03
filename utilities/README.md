@@ -22,36 +22,6 @@ python github_star_counter_parallel.py --db-file /path/to/database.sqlite3 --wor
 
 ---
 
-## 🗄️ Database Update Scripts
-
-### Python
-```bash
-python update_database_stars.py --db-file /path/to/database.sqlite3
-```
-
-### PowerShell
-```powershell
-.\update_database_stars.ps1 -DbFile "C:\path\to\database.sqlite3"
-```
-
----
-
-## 🔍 Organization Discovery
-
-Query organizations from the database by star count.
-
-### Bash
-```bash
-./get_orgs_with_stars.sh --min-stars 100 --db-file /path/to/database.sqlite3
-```
-
-### PowerShell
-```powershell
-.\get_orgs_with_stars.ps1 -MinStars 100 -DbFile "C:\path\to\database.sqlite3"
-```
-
----
-
 ## 🎯 Bug Bounty Scripts
 
 ### Fetch Bug Bounty Organizations
