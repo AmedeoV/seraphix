@@ -10,15 +10,19 @@ Fetch and update GitHub star counts for organizations in the database.
 
 ### Single-threaded
 ```bash
-python github_star_counter.py --db-file /path/to/database.sqlite3
+python github_star_counter.py
 ```
 
-### Multi-threaded (Faster)
+### Multi-threaded (Faster, Recommended)
 ```bash
-python github_star_counter_parallel.py --db-file /path/to/database.sqlite3 --workers 8
+python github_star_counter_parallel.py
 ```
 
-**Features:** Parallel processing, rate limiting, progress tracking, resume capability
+**Features:** 
+- Automatic parallel processing with dynamic worker calculation
+- Smart rate limiting based on API quota
+- Progress tracking and resume capability
+- Adaptive batch sizing based on dataset
 
 ---
 
@@ -55,17 +59,22 @@ cd ../org-scanner/
 
 | Option | Description |
 |--------|-------------|
-| `--db-file` | Path to SQLite database file |
 | `--github-token` | GitHub API token (or set `GITHUB_TOKEN` env var) |
 | `--output` | Output file path |
 | `--verbose` | Enable debug logging |
-| `--workers` | Number of parallel workers (parallel scripts) |
+
+**Note:** Database file path and worker count are now auto-detected. The scripts automatically use `force_push_commits.sqlite3` in the current directory and calculate optimal worker count based on CPU cores and API rate limits.
 
 ---
 
 ## 💡 Performance Tips
 
-- Use parallel version for large datasets (1000+ organizations)
-- Respect GitHub API limits (5000 requests/hour authenticated)
-- Run star updates weekly/monthly, not during active scans
-- Update bug bounty lists quarterly or when new programs announced
+- **Use parallel version** for large datasets (1000+ organizations) - it automatically optimizes worker count
+- **Set GITHUB_TOKEN** environment variable to get 5000 requests/hour (vs 60 unauthenticated)
+- **System resources** are auto-detected (CPU cores, memory, API quota) for optimal performance
+- Run star updates **weekly/monthly**, not during active scans
+- Update bug bounty lists **quarterly** or when new programs announced
+- The parallel script will automatically:
+  - Use 2-16 workers based on your CPU
+  - Reduce workers if API quota is low
+  - Adjust batch size based on dataset size
