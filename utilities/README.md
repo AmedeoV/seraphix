@@ -18,6 +18,8 @@ python github_star_counter.py
 python github_star_counter_parallel.py
 ```
 
+⚠️ **Rate Limit Warning:** The parallel version can consume your entire GitHub API quota (5000 requests/hour) quickly. **Run during off-hours or weekends** when you're not actively using the GitHub API for other tasks.
+
 **Features:** 
 - Automatic parallel processing with dynamic worker calculation
 - Smart rate limiting based on API quota
@@ -70,6 +72,7 @@ cd ../org-scanner/
 ## 💡 Performance Tips
 
 - **Use parallel version** for large datasets (1000+ organizations) - it automatically optimizes worker count
+- **⚠️ Schedule wisely:** Run parallel star updates during **off-hours, evenings, or weekends** to avoid exhausting your GitHub API quota during active development
 - **Set GITHUB_TOKEN** environment variable to get 5000 requests/hour (vs 60 unauthenticated)
 - **System resources** are auto-detected (CPU cores, memory, API quota) for optimal performance
 - Run star updates **weekly/monthly**, not during active scans
@@ -78,3 +81,4 @@ cd ../org-scanner/
   - Use 2-16 workers based on your CPU
   - Reduce workers if API quota is low
   - Adjust batch size based on dataset size
+  - Wait and resume if rate limit is hit
