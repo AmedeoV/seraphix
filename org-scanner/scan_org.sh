@@ -211,6 +211,7 @@ get_org_repos() {
     
     log_progress "Fetching repositories for $org..."
     
+    # Try organization endpoint first
     local api_url="https://api.github.com/orgs/$org/repos?per_page=100&type=all"
     
     # Perform curl with or without authentication
@@ -226,6 +227,25 @@ get_org_repos() {
         fi
     fi
     
+    # Check if it's a "Not Found" error (might be a user, not an org)
+    if jq -e '.message == "Not Found"' "$repos_file" >/dev/null 2>&1; then
+        log_info "Not an organization. Trying user endpoint..."
+        api_url="https://api.github.com/users/$org/repos?per_page=100&type=all"
+        
+        if [ -n "$GITHUB_TOKEN" ]; then
+            if ! curl -s -H "Authorization: token $GITHUB_TOKEN" "$api_url" > "$repos_file"; then
+                log_error "Failed to fetch repositories"
+                return 1
+            fi
+        else
+            if ! curl -s "$api_url" > "$repos_file"; then
+                log_error "Failed to fetch repositories"
+                return 1
+            fi
+        fi
+    fi
+    
+    # Check for any other API errors
     if jq -e '.message' "$repos_file" >/dev/null 2>&1; then
         local error_msg=$(jq -r '.message' "$repos_file")
         log_error "GitHub API error: $error_msg"
