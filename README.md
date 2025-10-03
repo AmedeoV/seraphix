@@ -8,7 +8,7 @@
 
 <div align="center">
 
-[![License](https://img.shields.io/badge/license-MIT-blue)](/LICENSE)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](/LICENSE)
 ![GitHub Stars](https://img.shields.io/github/stars/AmedeoV/seraphix)
 
 </div>
@@ -126,6 +126,6 @@ Please open an issue or pull request on GitHub.
 
 # 📜 License
 
-This project is provided as-is under the MIT License. See [LICENSE](LICENSE) for details.
+This project is licensed under the GNU Affero General Public License v3.0. See [LICENSE](LICENSE) for details.
 
 **⚠️ Disclaimer:** This tool is intended exclusively for authorized defensive security operations. Always obtain explicit permission before performing any analysis. Unauthorized use is strictly prohibited and at your own risk.
