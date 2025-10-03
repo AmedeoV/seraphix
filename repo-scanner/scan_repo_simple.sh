@@ -19,7 +19,6 @@ NC='\033[0m'
 
 # Default configuration
 CLEANUP=true
-TIMEOUT=1200
 OUTPUT_FILE=""
 TEMP_DIR=""
 COMMIT_HASH=""
@@ -150,7 +149,6 @@ Options:
     --commit HASH        Scan only a specific commit hash
     --output FILE        Save results to specified JSON file
     --no-cleanup         Don't clean up temporary files
-    --timeout SEC        Timeout in seconds (default: 1200)
     --debug              Enable debug output
     --email EMAIL        Email address for security notifications
     --telegram-chat-id ID Telegram chat ID for security notifications
@@ -434,10 +432,6 @@ parse_arguments() {
             --no-cleanup)
                 CLEANUP=false
                 shift
-                ;;
-            --timeout)
-                TIMEOUT="$2"
-                shift 2
                 ;;
             --debug)
                 DEBUG=true
