@@ -66,14 +66,6 @@ Results are organized by:
 - **Scan start time** (top level) - when the scan began
 - **Discovery date** (subdirectories) - when secrets were actually found
 
-This makes it easy to check what was discovered "today" even during long-running scans!
-
-**View Today's Findings:**
-```bash
-./view_daily_findings.sh              # Show today's findings
-./view_daily_findings.sh 2025-10-03   # Show specific date
-```
-
 **Logs:** `scan_logs/` (when `--debug` enabled)
 
 **State File:** `scan_state.json` - Tracks progress for resume functionality
