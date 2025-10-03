@@ -13,6 +13,11 @@ Fetch and update GitHub star counts for organizations in the database.
 python github_star_counter.py
 ```
 
+**Options:**
+| Option | Description |
+|--------|-------------|
+| `--db-file PATH` | Path to SQLite database file (default: `force_push_commits.sqlite3`) |
+
 ### Multi-threaded (Faster, Recommended)
 ```bash
 python github_star_counter_parallel.py
@@ -29,9 +34,10 @@ python github_star_counter_parallel.py
 **Options:**
 | Option | Description |
 |--------|-------------|
+| `--db-file PATH` | Path to SQLite database file (default: `force_push_commits.sqlite3`) |
 | `--github-token TOKEN` | GitHub API token (or set `GITHUB_TOKEN` env var) |
 
-**Note:** Database file (`force_push_commits.sqlite3`) and worker count are auto-detected based on CPU cores and API rate limits.
+**Note:** Worker count and batch size are auto-detected based on CPU cores and API rate limits.
 
 ---
 

@@ -12,18 +12,20 @@ import json
 import sys
 import os
 import time
+import argparse
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional
 
 # Configuration
-DB_FILE = "force_push_commits.sqlite3"
+DEFAULT_DB_FILE = "force_push_commits.sqlite3"
 GITHUB_TOKEN = None  # Set this or use environment variable GITHUB_TOKEN
 RATE_LIMIT_DELAY = 1  # Seconds between API calls
 BATCH_SIZE = 50  # Number of repos to process before committing to database
 
 class GitHubStarCounter:
-    def __init__(self, github_token: Optional[str] = None):
+    def __init__(self, github_token: Optional[str] = None, db_file: str = DEFAULT_DB_FILE):
         self.github_token = github_token or os.environ.get('GITHUB_TOKEN')
+        self.db_file = db_file
         self.session = requests.Session()
         if self.github_token:
             self.session.headers.update({
@@ -71,7 +73,7 @@ class GitHubStarCounter:
     def setup_database(self):
         """Add the stars column to the database if it doesn't exist."""
         try:
-            db = sqlite3.connect(DB_FILE)
+            db = sqlite3.connect(self.db_file)
             cur = db.cursor()
             
             # Check if stars column exists
@@ -190,7 +192,7 @@ class GitHubStarCounter:
     def update_repo_stars_batch(self, repo_updates: List[Tuple[str, str, int]]):
         """Update star counts for multiple repositories in a single transaction."""
         try:
-            db = sqlite3.connect(DB_FILE)
+            db = sqlite3.connect(self.db_file)
             cur = db.cursor()
             
             total_rows_updated = 0
@@ -214,7 +216,7 @@ class GitHubStarCounter:
     def update_repo_stars_in_db(self, org_name: str, repo_name: str, stars: int):
         """Update the star count for all matching records in the database (single repo)."""
         try:
-            db = sqlite3.connect(DB_FILE)
+            db = sqlite3.connect(self.db_file)
             cur = db.cursor()
             
             # Update all records for this org/repo combination
@@ -237,7 +239,7 @@ class GitHubStarCounter:
     def get_repos_to_update(self) -> List[Tuple[str, str]]:
         """Get list of unique repo_org/repo_name pairs that need star count updates."""
         try:
-            db = sqlite3.connect(DB_FILE)
+            db = sqlite3.connect(self.db_file)
             cur = db.cursor()
             
             # Get unique repos that have NULL stars (need updating)
@@ -294,10 +296,10 @@ class GitHubStarCounter:
             print(f"❌ Error querying database: {e}")
             return []
 
-def get_unique_repos_from_db() -> List[Tuple[str, str]]:
+def get_unique_repos_from_db(db_file: str = DEFAULT_DB_FILE) -> List[Tuple[str, str]]:
     """Get distinct repo_org/repo_name pairs from the SQLite database."""
     try:
-        db = sqlite3.connect(DB_FILE)
+        db = sqlite3.connect(db_file)
         cur = db.cursor()
         
         repos = []
@@ -314,6 +316,14 @@ def get_unique_repos_from_db() -> List[Tuple[str, str]]:
 def main():
     """Main function to update the database with star counts."""
     import os
+    
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Update GitHub repository star counts in the database.')
+    parser.add_argument('--db-file', type=str, default=DEFAULT_DB_FILE,
+                        help=f'Path to the SQLite database file (default: {DEFAULT_DB_FILE})')
+    args = parser.parse_args()
+    
+    DB_FILE = args.db_file
     
     print("GitHub Repository Star Count Database Updater")
     print("=" * 50)
@@ -336,7 +346,7 @@ def main():
         print("✓ GitHub token found")
     
     # Initialize star counter
-    star_counter = GitHubStarCounter(github_token)
+    star_counter = GitHubStarCounter(github_token, DB_FILE)
     
     # Test API access with a simple request
     print("Testing GitHub API access...")
@@ -362,7 +372,7 @@ def main():
         print("✅ All repositories already have star counts!")
         
         # Show some statistics
-        all_repos = get_unique_repos_from_db()
+        all_repos = get_unique_repos_from_db(DB_FILE)
         print(f"📊 Total unique repositories in database: {len(all_repos)}")
         
         # Show a few examples with their star counts

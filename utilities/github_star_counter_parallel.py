@@ -22,6 +22,7 @@ import time
 import threading
 import logging
 import signal
+import argparse
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional, Set
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -30,7 +31,7 @@ import queue
 from datetime import datetime
 
 # Configuration
-DB_FILE = "force_push_commits.sqlite3"
+DEFAULT_DB_FILE = "force_push_commits.sqlite3"
 GITHUB_TOKEN = None  # Set this or use environment variable GITHUB_TOKEN
 RATE_LIMIT_DELAY = 0.1  # Reduced delay for parallel processing
 RATE_LIMIT_BUFFER = 50  # Keep this many requests as buffer before rate limit
@@ -241,7 +242,7 @@ class RateLimitManager:
             return 0
 
 class ParallelGitHubStarCounter:
-    def __init__(self, github_token: Optional[str], max_workers: int, batch_size: int):
+    def __init__(self, github_token: Optional[str], max_workers: int, batch_size: int, db_file: str = DEFAULT_DB_FILE):
         """
         Initialize the parallel GitHub star counter.
         
@@ -249,10 +250,12 @@ class ParallelGitHubStarCounter:
             github_token: GitHub API token for authentication
             max_workers: Number of parallel worker threads
             batch_size: Size of batches for database operations
+            db_file: Path to SQLite database file
         """
         self.github_token = github_token or os.environ.get('GITHUB_TOKEN')
         self.max_workers = max_workers
         self.batch_size = batch_size
+        self.db_file = db_file
         self.session = requests.Session()
         self.logger = logging.getLogger(__name__)
         
@@ -390,7 +393,7 @@ class ParallelGitHubStarCounter:
     def setup_database(self):
         """Add the stars column to the database if it doesn't exist."""
         try:
-            db = sqlite3.connect(DB_FILE)
+            db = sqlite3.connect(self.db_file)
             cur = db.cursor()
             
             # Check if stars column exists
@@ -737,7 +740,7 @@ class ParallelGitHubStarCounter:
     def update_repo_stars_batch(self, repo_updates: List[Tuple[str, str, int]]):
         """Update star counts for multiple repositories in a single transaction."""
         try:
-            db = sqlite3.connect(DB_FILE)
+            db = sqlite3.connect(self.db_file)
             cur = db.cursor()
             
             total_rows_updated = 0
@@ -825,7 +828,7 @@ class ParallelGitHubStarCounter:
     def get_repos_to_update(self) -> List[Tuple[str, str]]:
         """Get list of unique repo_org/repo_name pairs that need star count updates."""
         try:
-            db = sqlite3.connect(DB_FILE)
+            db = sqlite3.connect(self.db_file)
             cur = db.cursor()
             
             # Get unique repos that have NULL stars (need updating)
@@ -882,10 +885,10 @@ class ParallelGitHubStarCounter:
             print(f"❌ Error querying database: {e}")
             return []
 
-def get_unique_repos_from_db() -> List[Tuple[str, str]]:
+def get_unique_repos_from_db(db_file: str) -> List[Tuple[str, str]]:
     """Get distinct repo_org/repo_name pairs from the SQLite database."""
     try:
-        db = sqlite3.connect(DB_FILE)
+        db = sqlite3.connect(db_file)
         cur = db.cursor()
         
         repos = []
@@ -902,6 +905,28 @@ def get_unique_repos_from_db() -> List[Tuple[str, str]]:
 def main():
     """Main function to update the database with star counts using parallel processing."""
     global MAX_WORKERS, BATCH_SIZE
+    
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description='GitHub Repository Star Count Database Updater (Parallel Version)',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+Examples:
+  python %(prog)s
+  python %(prog)s --db-file /path/to/custom.sqlite3
+  
+Environment Variables:
+  GITHUB_TOKEN    GitHub API token for authentication (5000 requests/hour vs 60 unauthenticated)
+        '''
+    )
+    parser.add_argument(
+        '--db-file',
+        default=DEFAULT_DB_FILE,
+        help=f'Path to SQLite database file (default: {DEFAULT_DB_FILE})'
+    )
+    
+    args = parser.parse_args()
+    DB_FILE = args.db_file
     
     print("GitHub Repository Star Count Database Updater (Parallel Version)")
     print("=" * 65)
@@ -959,7 +984,7 @@ def main():
     print()
     
     # Initialize parallel star counter with calculated settings
-    star_counter = ParallelGitHubStarCounter(github_token, MAX_WORKERS, BATCH_SIZE)
+    star_counter = ParallelGitHubStarCounter(github_token, MAX_WORKERS, BATCH_SIZE, DB_FILE)
     
     # Test API access with a simple request
     print("Testing GitHub API access...")
@@ -992,7 +1017,7 @@ def main():
         logger.info("All repositories already have star counts - no work needed")
         
         # Show some statistics
-        all_repos = get_unique_repos_from_db()
+        all_repos = get_unique_repos_from_db(DB_FILE)
         print(f"📊 Total unique repositories in database: {len(all_repos)}")
         logger.info(f"Total unique repositories in database: {len(all_repos)}")
         
