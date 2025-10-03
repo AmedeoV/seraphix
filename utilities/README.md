@@ -45,21 +45,24 @@ cd ../org-scanner/
 ./scan_org.sh --orgs-file bugbounty_orgs.txt
 ```
 
-**File Format:** One organization per line, supports `#` comments
-
 **Credit:** Data sourced from [nikitastupin/orgs-data](https://github.com/nikitastupin/orgs-data) - a curated mapping of bug bounty programs to GitHub organizations.
 
 ---
 
-## ⚙️ Common Options
+## ⚙️ Script Options
 
+### Star Counter Scripts
 | Option | Description |
 |--------|-------------|
-| `--github-token` | GitHub API token (or set `GITHUB_TOKEN` env var) |
-| `--output` | Output file path |
-| `--verbose` | Enable debug logging |
+| `--github-token TOKEN` | GitHub API token (or set `GITHUB_TOKEN` env var) |
 
-**Note:** Database file path and worker count are now auto-detected. The scripts automatically use `force_push_commits.sqlite3` in the current directory and calculate optimal worker count based on CPU cores and API rate limits.
+**Note:** Database file (`force_push_commits.sqlite3`) and worker count are auto-detected based on CPU cores and API rate limits.
+
+### Bug Bounty Fetcher
+| Option | Description |
+|--------|-------------|
+| `--output FILE` | Output file path (default: `bugbounty_orgs.txt`) |
+| `--github-token TOKEN` | GitHub API token for higher rate limits |
 
 ---
 
