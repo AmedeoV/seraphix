@@ -26,6 +26,13 @@ python github_star_counter_parallel.py
 - Progress tracking and resume capability
 - Adaptive batch sizing based on dataset
 
+**Options:**
+| Option | Description |
+|--------|-------------|
+| `--github-token TOKEN` | GitHub API token (or set `GITHUB_TOKEN` env var) |
+
+**Note:** Database file (`force_push_commits.sqlite3`) and worker count are auto-detected based on CPU cores and API rate limits.
+
 ---
 
 ## 🎯 Bug Bounty Organizations
@@ -45,24 +52,13 @@ cd ../org-scanner/
 ./scan_org.sh --orgs-file bugbounty_orgs.txt
 ```
 
-**Credit:** Data sourced from [nikitastupin/orgs-data](https://github.com/nikitastupin/orgs-data) - a curated mapping of bug bounty programs to GitHub organizations.
-
----
-
-## ⚙️ Script Options
-
-### Star Counter Scripts
-| Option | Description |
-|--------|-------------|
-| `--github-token TOKEN` | GitHub API token (or set `GITHUB_TOKEN` env var) |
-
-**Note:** Database file (`force_push_commits.sqlite3`) and worker count are auto-detected based on CPU cores and API rate limits.
-
-### Bug Bounty Fetcher
+**Options:**
 | Option | Description |
 |--------|-------------|
 | `--output FILE` | Output file path (default: `bugbounty_orgs.txt`) |
 | `--github-token TOKEN` | GitHub API token for higher rate limits |
+
+**Credit:** Data sourced from [nikitastupin/orgs-data](https://github.com/nikitastupin/orgs-data) - a curated mapping of bug bounty programs to GitHub organizations.
 
 ---
 
