@@ -22,14 +22,25 @@ python github_star_counter_parallel.py --db-file /path/to/database.sqlite3 --wor
 
 ---
 
-## 🎯 Bug Bounty Scripts
+## 🎯 Bug Bounty Organizations
 
-### Fetch Bug Bounty Organizations
+Fetch organizations that participate in bug bounty programs to prioritize high-value targets.
+
 ```bash
 python fetch_bugbounty_orgs.py --output bugbounty_orgs.txt
 ```
 
-Generates a curated list of organizations with active bug bounty programs for prioritizing high-value targets.
+Generate a list of organizations to pass to scanners:
+```bash
+# Generate bug bounty organization list
+python fetch_bugbounty_orgs.py --output bugbounty_orgs.txt
+
+# Use with force-push scanner
+cd ../force-push-scanner/
+./force_push_secret_scanner.sh --orgs-file bugbounty_orgs.txt
+```
+
+**Credit:** Data sourced from [nikitastupin/orgs-data](https://github.com/nikitastupin/orgs-data) - a curated mapping of bug bounty programs to GitHub organizations.
 
 ---
 
