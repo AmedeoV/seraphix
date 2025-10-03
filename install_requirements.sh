@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Seraphix Scanner Setup Script
-# Installs all dependencies required for all scanner modules
+# Installs TruffleHog and Python dependencies for secret scanning
 #
 
 set -euo pipefail
@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 echo -e "${PURPLE}"
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║                    🔍 Seraphix Scanner Setup                 ║"
-echo "║              Installing dependencies for all modules         ║"
+echo "║           Installing dependencies for all modules            ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
@@ -66,8 +66,9 @@ install_python_deps() {
     log_progress "Installing Python dependencies..."
     
     if ! command_exists python3 && ! command_exists python; then
-        log_error "Python is not installed. Please install Python 3.7+ first."
-        exit 1
+        log_warning "Python is not installed. Skipping Python package installation."
+        log_info "Python utilities won't work without Python 3.7+ and required packages."
+        return 0
     fi
     
     # Try python3 first, then python
@@ -78,15 +79,13 @@ install_python_deps() {
     
     log_info "Using Python: $($PYTHON_CMD --version)"
     
-    # Install Python packages
-    if [ -f "requirements.txt" ]; then
-        log_progress "Installing from requirements.txt..."
-        $PYTHON_CMD -m pip install --upgrade pip
-        $PYTHON_CMD -m pip install -r requirements.txt
+    # Install required packages
+    log_progress "Installing Python packages (requests, colorama)..."
+    if $PYTHON_CMD -m pip install --upgrade pip requests colorama; then
         log_success "Python dependencies installed successfully"
     else
-        log_error "requirements.txt not found"
-        exit 1
+        log_warning "Failed to install Python packages. Python utilities may not work."
+        log_info "You can manually install with: $PYTHON_CMD -m pip install requests colorama"
     fi
 }
 
@@ -179,6 +178,71 @@ check_git() {
     fi
 }
 
+# Function to check additional shell script dependencies
+check_shell_dependencies() {
+    log_progress "Checking shell script dependencies..."
+    
+    local missing_tools=()
+    local optional_tools=()
+    
+    # Required tools
+    for tool in curl jq; do
+        if command_exists "$tool"; then
+            log_success "$tool is installed"
+        else
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    # Optional but recommended tools
+    if command_exists bc; then
+        log_success "bc is installed (used for floating-point calculations)"
+    else
+        optional_tools+=("bc")
+    fi
+    
+    if command_exists parallel; then
+        log_success "GNU parallel is installed (optional, for faster processing)"
+    else
+        optional_tools+=("parallel")
+    fi
+    
+    # Report missing required tools
+    if [ ${#missing_tools[@]} -gt 0 ]; then
+        log_error "Missing required tools: ${missing_tools[*]}"
+        echo ""
+        log_info "Installation instructions:"
+        for tool in "${missing_tools[@]}"; do
+            case $tool in
+                curl)
+                    log_info "  curl: Usually pre-installed. Install with: apt-get install curl (Ubuntu/Debian) or brew install curl (macOS)"
+                    ;;
+                jq)
+                    log_info "  jq: JSON processor. Install with: apt-get install jq (Ubuntu/Debian) or brew install jq (macOS)"
+                    ;;
+            esac
+        done
+        exit 1
+    fi
+    
+    # Report optional missing tools
+    if [ ${#optional_tools[@]} -gt 0 ]; then
+        log_warning "Optional tools not found: ${optional_tools[*]}"
+        log_info "These are not required but provide better functionality:"
+        for tool in "${optional_tools[@]}"; do
+            case $tool in
+                bc)
+                    log_info "  bc: Calculator for floating-point math. Install with: apt-get install bc (Ubuntu/Debian) or brew install bc (macOS)"
+                    ;;
+                parallel)
+                    log_info "  parallel: GNU parallel for faster processing. Install with: apt-get install parallel (Ubuntu/Debian) or brew install parallel (macOS)"
+                    ;;
+            esac
+        done
+        echo ""
+    fi
+}
+
 # Function to show scanner modules
 show_scanners() {
     echo ""
@@ -200,6 +264,9 @@ main() {
     
     # Check prerequisites
     check_git
+    echo ""
+    check_shell_dependencies
+    echo ""
     
     # Install dependencies
     install_python_deps
@@ -211,7 +278,7 @@ main() {
     echo -e "${GREEN}"
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║                    🎉 Setup Complete!                       ║"
-    echo "║         All Seraphix scanner dependencies installed         ║"
+    echo "║            All scanner dependencies installed               ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     
@@ -229,21 +296,31 @@ case "${1:-}" in
         echo "Usage: $0 [options]"
         echo ""
         echo "Options:"
-        echo "  --help, -h     Show this help message"
-        echo "  --python-only  Install only Python dependencies"
-        echo "  --trufflehog-only  Install only TruffleHog"
+        echo "  --help, -h            Show this help message"
+        echo "  --python-only         Install only Python dependencies"
+        echo "  --trufflehog-only     Install only TruffleHog"
         echo ""
-        echo "This script installs all dependencies for Seraphix scanners:"
-        echo "  - Python packages (colorama, requests, GitPython)"
-        echo "  - TruffleHog secret scanner"
+        echo "This script checks and installs all dependencies for Seraphix scanners:"
+        echo ""
+        echo "Required Dependencies:"
+        echo "  - Git (version control)"
+        echo "  - curl (HTTP client for API calls)"
+        echo "  - jq (JSON processor for parsing results)"
+        echo "  - TruffleHog (secret scanner)"
+        echo "  - Python 3.7+ with packages:"
+        echo "    • requests (for GitHub API utilities)"
+        echo "    • colorama (for colored terminal output)"
+        echo ""
+        echo "Optional Dependencies (recommended):"
+        echo "  - bc (calculator for floating-point math)"
+        echo "  - GNU parallel (for faster parallel processing)"
         echo ""
         exit 0
         ;;
     "--python-only")
         log_info "Installing Python dependencies only..."
-        check_git
         install_python_deps
-        log_success "Python dependencies installed!"
+        log_success "Python dependencies installation complete!"
         exit 0
         ;;
     "--trufflehog-only")
