@@ -1,6 +1,19 @@
 <p align="center">
   <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" height="140" />
   <h2 align="center">Seraphix</h2>
+  <p align="center">Comprehensive GitHub secret scanner for security researchers.</p>
+</p>
+
+---
+
+<div align="center">
+
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](/LICENSE)
+![GitHub Stars](https://img.shields.io/github/stars/AmedeoV/seraphix)
+
+</div>
+
+---
 
 # 🔍 What is Seraphix?
 
