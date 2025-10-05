@@ -159,7 +159,7 @@ Please open an issue or pull request on GitHub.
 
 Have questions or want to collaborate? Feel free to reach out:
 
-- - **Discord**: [step0fail7920](https://discord.com/users/720315386394050560) (for project-related questions)
+- **Discord**: [step0fail7920](https://discord.com/users/720315386394050560) (for project-related questions)
 - **GitHub Issues**: For bug reports and feature requests
 - **Buy me a coffee**: If you find Seraphix useful, consider supporting the project ☕
 
