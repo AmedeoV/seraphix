@@ -19,6 +19,10 @@
 
 Seraphix is a **comprehensive secret scanning toolkit** designed for security researchers and bug bounty hunters. It provides multiple scanning strategies to discover leaked credentials across GitHub:
 
+<p align="center">
+  <img src="demo-force-push.gif" alt="Seraphix Scanner Demo" width="800"/>
+</p>
+
 ## 🎯 Scanning Capabilities
 
 **🔥 Force-Pushed Commits** - Hunt for secrets in dangling commits created by `git push --force` operations. When developers force push, they often overwrite history containing mistakes like hard-coded credentials. Seraphix uses [GHArchive](https://www.gharchive.org/) data to identify these hidden commits.
