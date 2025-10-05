@@ -1,7 +1,19 @@
 <p align="center">
   <img src="seraphix-scanner-logo.jpg" alt="Seraphix Scanner Logo" height="140" />
   <h2 align="center">Seraphix</h2>
-  <p align="center">Comprehensive GitHub secret scanner for security researchers.</p>
+  <---
+
+# 📬 Contact
+
+Have questions or want to collaborate? Feel free to reach out:
+
+- **Discord**: [step0fail7920](https://discord.com/users/720315386394050560) (for project-related questions)
+- **GitHub Issues**: For bug reports and feature requests
+- **Buy me a coffee**: If you find Seraphix useful, consider supporting the project ☕
+
+---
+
+# 📜 Licenseer">Comprehensive GitHub secret scanner for security researchers.</p>
 </p>
 
 ---
@@ -147,13 +159,13 @@ Please open an issue or pull request on GitHub.
 
 Have questions or want to collaborate? Feel free to reach out:
 
-- - **Discord**: [step0fail7920](https://discord.com/users/step0fail7920) (for project-related questions)
+- - **Discord**: [step0fail7920](https://discord.com/users/720315386394050560) (for project-related questions)
 - **GitHub Issues**: For bug reports and feature requests
 - **Buy me a coffee**: If you find Seraphix useful, consider supporting the project ☕
 
 ---
 
-# �📜 License
+# � License
 
 This project is licensed under the GNU Affero General Public License v3.0. See [LICENSE](LICENSE) for details.
 
