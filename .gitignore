@@ -28,4 +28,5 @@ scan_state.json
 # Configuration files (now in config/ directory)
 config/mailgun_config.sh
 config/telegram_config.sh
+config/discord_config.sh
 # Template files are tracked in git
