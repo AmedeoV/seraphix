@@ -155,7 +155,7 @@ Please open an issue or pull request on GitHub.
 
 ---
 
-# � Contact
+# 📬 Contact
 
 Have questions or want to collaborate? Feel free to reach out:
 
@@ -165,7 +165,7 @@ Have questions or want to collaborate? Feel free to reach out:
 
 ---
 
-# � License
+# 📜 License
 
 This project is licensed under the GNU Affero General Public License v3.0. See [LICENSE](LICENSE) for details.
 
