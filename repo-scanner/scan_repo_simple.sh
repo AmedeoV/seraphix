@@ -372,7 +372,8 @@ process_results() {
     log_success "Found $findings verified secret(s)"
     
     # Send notification if secrets were found and notifications are enabled
-    if [ "$findings" -gt 0 ] && ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]); then
+    # Check if any notification method is configured
+    if [ "$findings" -gt 0 ] && ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ] || [ -f "$SCRIPT_DIR/../config/discord_config.sh" ]); then
         send_immediate_notification "$repo_name" "$output_file"
     fi
 }

@@ -423,7 +423,19 @@ else
     echo "  📱 Telegram: Disabled (use --telegram-chat-id to enable)"
 fi
 
-if [ -z "$NOTIFICATION_EMAIL" ] && [ -z "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
+# Check for Discord configuration
+if [ -f "$SCRIPT_DIR/../config/discord_config.sh" ]; then
+    source "$SCRIPT_DIR/../config/discord_config.sh"
+    if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+        echo "  💬 Discord: Webhook configured"
+    else
+        echo "  💬 Discord: Config found but webhook URL not set"
+    fi
+else
+    echo "  💬 Discord: Disabled (configure config/discord_config.sh to enable)"
+fi
+
+if [ -z "$NOTIFICATION_EMAIL" ] && [ -z "$NOTIFICATION_TELEGRAM_CHAT_ID" ] && [ ! -f "$SCRIPT_DIR/../config/discord_config.sh" ]; then
     echo "  ⚠️  No notifications enabled - secrets will only be saved to files"
     echo "     Use --email EMAIL and/or --telegram-chat-id CHAT_ID to enable notifications"
 fi
@@ -644,7 +656,8 @@ scan_organization() {
             secrets_file="$ORG_DIR/verified_secrets_${org}.json"
             
             # Send completion notifications after file has been moved
-            if ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]); then
+            # Check if any notification method is configured
+            if ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ] || [ -f "$SCRIPT_DIR/../config/discord_config.sh" ]); then
                 echo "📊 [$org_num/$total] Sending completion summary for $org..."
                 
                 # Set environment variables for the notification script

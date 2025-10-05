@@ -376,7 +376,8 @@ scan_repo() {
         log_success "[$worker_id] Found $findings secrets in $repo_name"
         
         # Send immediate notification for any secrets found
-        if [ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]; then
+        # Check if any notification method is configured
+        if [ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ] || [ -f "$SCRIPT_DIR/../config/discord_config.sh" ]; then
             send_immediate_notification "$repo_name" "$output_file" "$worker_id"
         fi
     else
@@ -511,7 +512,8 @@ generate_summary() {
     echo "============================================================"
     
     # Send completion notification if notifications are enabled and secrets were found
-    if ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ]) && [ "$total_secrets" -gt 0 ]; then
+    # Check if any notification method is configured
+    if ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ] || [ -f "$SCRIPT_DIR/../config/discord_config.sh" ]) && [ "$total_secrets" -gt 0 ]; then
         send_completion_notification "$total_secrets" "$repos_with_secrets"
     fi
     

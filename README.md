@@ -84,6 +84,12 @@ cp config/telegram_config.sh.example config/telegram_config.sh
 # Edit and add your bot token and chat ID
 ```
 
+**Discord:**
+```bash
+cp config/discord_config.sh.example config/discord_config.sh
+# Edit and add your webhook URL
+```
+
 **Email (Mailgun):**
 ```bash
 cp config/mailgun_config.sh.example config/mailgun_config.sh

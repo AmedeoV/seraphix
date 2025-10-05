@@ -14,6 +14,10 @@ if [ -f "$SCRIPT_DIR/config/telegram_config.sh" ]; then
     source "$SCRIPT_DIR/config/telegram_config.sh"
 fi
 
+if [ -f "$SCRIPT_DIR/config/discord_config.sh" ]; then
+    source "$SCRIPT_DIR/config/discord_config.sh"
+fi
+
 # Preserve environment telegram chat ID if passed
 PASSED_TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
 if [ -f "$SCRIPT_DIR/config/telegram_config.sh" ]; then
@@ -99,6 +103,11 @@ send_immediate_notification() {
     if [ -n "$TELEGRAM_CHAT_ID" ] && [ -n "$TELEGRAM_BOT_TOKEN" ]; then
         send_immediate_telegram "$org" "$secrets_file" "$timestamp" "$hostname" "$scanner_user" "$secret_details"
     fi
+    
+    # Discord notification
+    if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+        send_immediate_discord "$org" "$secrets_file" "$timestamp" "$hostname" "$scanner_user" "$secret_details"
+    fi
 }
 
 # Send completion notification (scan finished)
@@ -127,6 +136,11 @@ send_completion_notification() {
     # Telegram notification
     if [ -n "$TELEGRAM_CHAT_ID" ] && [ -n "$TELEGRAM_BOT_TOKEN" ]; then
         send_completion_telegram "$org" "$secrets_file" "$timestamp" "$hostname" "$scanner_user" "$secret_types" "$total_count"
+    fi
+    
+    # Discord notification
+    if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+        send_completion_discord "$org" "$secrets_file" "$timestamp" "$hostname" "$scanner_user" "$secret_types" "$total_count"
     fi
 }
 
@@ -420,6 +434,202 @@ _This is an automated report from the force push secret scanner._"
         return 0
     else
         echo -e "${RED}❌ Failed to send completion Telegram notification: $response${NC}" >&2
+        return 1
+    fi
+}
+
+# Immediate Discord notification
+send_immediate_discord() {
+    local org="$1"
+    local secrets_file="$2"
+    local timestamp="$3"
+    local hostname="$4"
+    local scanner_user="$5"
+    local secret_details="$6"
+    
+    local username="${DISCORD_USERNAME:-Secret Scanner}"
+    local avatar_url="${DISCORD_AVATAR_URL}"
+    
+    # Use jq to properly escape JSON strings
+    local escaped_org=$(echo -n "$org" | jq -Rs .)
+    local escaped_timestamp=$(echo -n "$timestamp" | jq -Rs .)
+    local escaped_hostname=$(echo -n "$hostname" | jq -Rs .)
+    local escaped_user=$(echo -n "$scanner_user" | jq -Rs .)
+    local escaped_details=$(echo -n "$secret_details" | jq -Rs .)
+    local escaped_username=$(echo -n "$username" | jq -Rs .)
+    
+    # Create Discord embed JSON using jq for proper formatting
+    local json_payload=$(jq -n \
+        --arg username "$username" \
+        --arg avatar "$avatar_url" \
+        --arg org "$org" \
+        --arg timestamp "$timestamp" \
+        --arg hostname "$hostname" \
+        --arg user "$scanner_user" \
+        --arg details "$secret_details" \
+        '{
+            username: $username,
+            avatar_url: $avatar,
+            embeds: [{
+                title: "🚨 FIRST SECRET DETECTED - IMMEDIATE ALERT",
+                description: "⏳ **Status:** Scan IN PROGRESS - more secrets may be found",
+                color: 15158332,
+                fields: [
+                    {
+                        name: "📊 Organization",
+                        value: "`\($org)`",
+                        inline: true
+                    },
+                    {
+                        name: "⏰ Detection Time",
+                        value: $timestamp,
+                        inline: true
+                    },
+                    {
+                        name: "🖥️ Scanner Host",
+                        value: "`\($hostname)`",
+                        inline: true
+                    },
+                    {
+                        name: "👤 Scanner User",
+                        value: "`\($user)`",
+                        inline: true
+                    },
+                    {
+                        name: "🔍 Secret Details",
+                        value: "```\n\($details)\n```",
+                        inline: false
+                    },
+                    {
+                        name: "📋 Next Steps",
+                        value: "• This is the first secret detected for this organization\n• The scan is continuing and may find additional secrets\n• You will receive a summary notification when scan completes\n• Consider immediate action on this secret while waiting for full report",
+                        inline: false
+                    }
+                ],
+                footer: {
+                    text: "Automated alert from force push secret scanner"
+                },
+                timestamp: (now | strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+            }]
+        }'
+    )
+    
+    local response
+    response=$(curl -s -H "Content-Type: application/json" \
+        -d "$json_payload" \
+        "$DISCORD_WEBHOOK_URL")
+    
+    if [ -z "$response" ] || echo "$response" | grep -q '"id"'; then
+        echo -e "${GREEN}💬 Immediate Discord notification sent${NC}"
+        return 0
+    else
+        echo -e "${RED}❌ Failed to send immediate Discord notification: $response${NC}" >&2
+        return 1
+    fi
+}
+
+# Completion Discord notification
+send_completion_discord() {
+    local org="$1"
+    local secrets_file="$2"
+    local timestamp="$3"
+    local hostname="$4"
+    local scanner_user="$5"
+    local secret_types="$6"
+    local total_count="$7"
+    
+    local file_size=$(du -h "$secrets_file" | cut -f1)
+    local username="${DISCORD_USERNAME:-Secret Scanner}"
+    local avatar_url="${DISCORD_AVATAR_URL}"
+    
+    # Determine color based on secret count (green < 10, yellow < 50, red >= 50)
+    local color=3066993  # green
+    if [ "$total_count" -ge 50 ]; then
+        color=15158332  # red
+    elif [ "$total_count" -ge 10 ]; then
+        color=16776960  # yellow
+    fi
+    
+    # Create Discord embed JSON using jq for proper formatting
+    local json_payload=$(jq -n \
+        --arg username "$username" \
+        --arg avatar "$avatar_url" \
+        --arg org "$org" \
+        --arg count "$total_count" \
+        --arg timestamp "$timestamp" \
+        --arg hostname "$hostname" \
+        --arg user "$scanner_user" \
+        --arg file "$secrets_file" \
+        --arg size "$file_size" \
+        --arg types "$secret_types" \
+        --argjson color "$color" \
+        '{
+            username: $username,
+            avatar_url: $avatar,
+            embeds: [{
+                title: "📊 SCAN COMPLETION REPORT",
+                description: "✅ **Status:** Scan COMPLETED",
+                color: $color,
+                fields: [
+                    {
+                        name: "📊 Organization",
+                        value: "`\($org)`",
+                        inline: true
+                    },
+                    {
+                        name: "🔍 Total Secrets Found",
+                        value: ("**" + $count + "**"),
+                        inline: true
+                    },
+                    {
+                        name: "⏰ Scan Completed",
+                        value: $timestamp,
+                        inline: false
+                    },
+                    {
+                        name: "🖥️ Scanner Host",
+                        value: "`\($hostname)`",
+                        inline: true
+                    },
+                    {
+                        name: "👤 Scanner User",
+                        value: "`\($user)`",
+                        inline: true
+                    },
+                    {
+                        name: "📁 Results File",
+                        value: "`\($file)`",
+                        inline: false
+                    },
+                    {
+                        name: "💾 File Size",
+                        value: $size,
+                        inline: true
+                    },
+                    {
+                        name: "🔍 Secret Types Detected",
+                        value: "```\n\($types)\n```",
+                        inline: false
+                    }
+                ],
+                footer: {
+                    text: "Automated report from force push secret scanner"
+                },
+                timestamp: (now | strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+            }]
+        }'
+    )
+    
+    local response
+    response=$(curl -s -H "Content-Type: application/json" \
+        -d "$json_payload" \
+        "$DISCORD_WEBHOOK_URL")
+    
+    if [ -z "$response" ] || echo "$response" | grep -q '"id"'; then
+        echo -e "${GREEN}💬 Completion Discord notification sent${NC}"
+        return 0
+    else
+        echo -e "${RED}❌ Failed to send completion Discord notification: $response${NC}" >&2
         return 1
     fi
 }

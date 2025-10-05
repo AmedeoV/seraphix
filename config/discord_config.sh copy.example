@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Discord Webhook Configuration
+# Copy this file to discord_config.sh and fill in your webhook URL
+
+# Discord Webhook URL
+# Get this from Discord: Server Settings -> Integrations -> Webhooks -> Create/Edit Webhook
+# Example: https://discord.com/api/webhooks/123456789/abcdefghijklmnopqrstuvwxyz
+DISCORD_WEBHOOK_URL=""
+
+# Optional: Custom username for the webhook bot (default: "Secret Scanner")
+DISCORD_USERNAME="Secret Scanner"
+
+# Optional: Custom avatar URL for the webhook bot
+DISCORD_AVATAR_URL=""
