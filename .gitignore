@@ -19,6 +19,10 @@ verified_secrets*
 analyzer/analyzed_results/
 */analyzed_results/
 
+# Visualizations (generated dashboards - but keep README)
+analyzer/visualizations/*_dashboard.html
+analyzer/visualizations/*.tmp
+
 # Python cache files
 __pycache__/
 */__pycache__/
