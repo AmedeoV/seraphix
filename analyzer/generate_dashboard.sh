@@ -85,7 +85,8 @@ for detector_dir in $DETECTOR_DIRS; do
         fi
         
         org_name=$(basename "$analysis_file" | sed 's/_analysis.json//')
-        secrets_in_file=$(jq '.total_secrets' "$analysis_file" 2>/dev/null || echo "0")
+        # Try both .total_secrets (Alchemy/Algolia/Alibaba) and .summary.total_secrets (Artifactory)
+        secrets_in_file=$(jq '.total_secrets // .summary.total_secrets' "$analysis_file" 2>/dev/null || echo "0")
         
         if [ "$secrets_in_file" = "0" ] || [ "$secrets_in_file" = "null" ]; then
             continue
@@ -99,10 +100,12 @@ for detector_dir in $DETECTOR_DIRS; do
         # Track per-detector counts
         detector_counts[$detector_name]=$((${detector_counts[$detector_name]:-0} + secrets_in_file))
         
-        # Count by status
-        active=$(jq '[.secrets[] | select(.verification.status == "ACTIVE")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        revoked=$(jq '[.secrets[] | select(.verification.status == "REVOKED")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        rate_limited=$(jq '[.secrets[] | select(.verification.status == "RATE_LIMITED")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        # Count by status - handle both formats
+        # Alchemy/Algolia/Alibaba: .secrets[].verification.status
+        # Artifactory: .secrets[].status
+        active=$(jq '[.secrets[] | select((.verification.status // .status) == "ACTIVE")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        revoked=$(jq '[.secrets[] | select((.verification.status // .status) == "REVOKED")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        rate_limited=$(jq '[.secrets[] | select((.verification.status // .status) == "RATE_LIMITED")] | length' "$analysis_file" 2>/dev/null || echo "0")
         
         active_secrets=$((active_secrets + active))
         revoked_secrets=$((revoked_secrets + revoked))
@@ -110,11 +113,13 @@ for detector_dir in $DETECTOR_DIRS; do
         
         detector_active_counts[$detector_name]=$((${detector_active_counts[$detector_name]:-0} + active))
         
-        # Count by risk level
-        critical=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "CRITICAL")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        high=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "HIGH")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        medium=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "MEDIUM")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        low=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "LOW")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        # Count by risk level - handle both formats
+        # Alchemy/Algolia/Alibaba: .secrets[].risk_assessment.risk_level
+        # Artifactory: .secrets[].risk_level
+        critical=$(jq '[.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "CRITICAL")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        high=$(jq '[.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "HIGH")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        medium=$(jq '[.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "MEDIUM")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        low=$(jq '[.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "LOW")] | length' "$analysis_file" 2>/dev/null || echo "0")
         
         critical_count=$((critical_count + critical))
         high_count=$((high_count + high))
@@ -125,7 +130,8 @@ for detector_dir in $DETECTOR_DIRS; do
         
         # Count capabilities dynamically (extract all boolean capabilities from first secret)
         if [ "$active" -gt 0 ]; then
-            capabilities=$(jq -r '.secrets[] | select(.verification.status == "ACTIVE") | .capabilities | keys[] | select(. != "supported_chains" and . != "acl_permissions")' "$analysis_file" 2>/dev/null | sort -u)
+            # Handle both .secrets[].verification.status and .secrets[].status formats
+            capabilities=$(jq -r '.secrets[] | select((.verification.status // .status) == "ACTIVE") | .capabilities | keys[] | select(. != "supported_chains" and . != "acl_permissions")' "$analysis_file" 2>/dev/null | sort -u)
             for cap in $capabilities; do
                 # Check if it's a boolean capability
                 is_bool=$(jq -r ".secrets[0].capabilities.${cap} | type" "$analysis_file" 2>/dev/null)
@@ -734,9 +740,12 @@ for detector_dir in $DETECTOR_DIRS; do
             fi
             
             commit=$(echo "$secret" | jq -r '.commit[0:7]')
-            status=$(echo "$secret" | jq -r '.verification.status')
-            risk_level=$(echo "$secret" | jq -r '.risk_assessment.risk_level')
-            risk_score=$(echo "$secret" | jq -r '.risk_assessment.score')
+            # Handle both formats: .verification.status and .status
+            status=$(echo "$secret" | jq -r '.verification.status // .status')
+            # Handle both formats: .risk_assessment.risk_level and .risk_level
+            risk_level=$(echo "$secret" | jq -r '.risk_assessment.risk_level // .risk_level')
+            # Handle both formats: .risk_assessment.score and .risk_score
+            risk_score=$(echo "$secret" | jq -r '.risk_assessment.score // .risk_score')
             
             # Build capabilities string dynamically
             capabilities=""
