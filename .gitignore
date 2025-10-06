@@ -15,6 +15,10 @@ logs/
 */logs/
 verified_secrets*
 
+# Analyzer results (contains sensitive data)
+analyzer/analyzed_results/
+*/analyzed_results/
+
 # Python cache files
 __pycache__/
 */__pycache__/
