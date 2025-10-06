@@ -491,12 +491,12 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
             </div>
             
             <div class="chart-card">
-                <h2>� Detector Types</h2>
+                <h2>🔍 Detector Types</h2>
                 <canvas id="detectorChart"></canvas>
             </div>
             
             <div class="chart-card">
-                <h2>�🛠️ API Capabilities</h2>
+                <h2>🛠️ API Capabilities</h2>
                 <canvas id="capabilitiesChart"></canvas>
             </div>
             
