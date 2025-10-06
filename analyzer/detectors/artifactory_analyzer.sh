@@ -278,7 +278,7 @@ process_org_secrets() {
     
     # Find ALL verified secrets files across all scanners (force-push, org-scanner, repo-scanner)
     # This ensures we capture secrets from all sources
-    local secrets_files=$(find "$VERIFIED_SECRETS_DIR" -type f -name "verified_secrets_${org_name}.json" 2>/dev/null || true)
+    local secrets_files=$(find "$VERIFIED_SECRETS_DIR" -type f -name "verified_secrets_*.json" 2>/dev/null | grep -F "${org_name}" || true)
     
     if [ -z "$secrets_files" ]; then
         log_warning "No verified secrets file found for $org_name"
@@ -312,7 +312,9 @@ process_org_secrets() {
         fi
         
         # Extract Artifactory secrets using grep with context
-        local artifactory_count=$(grep -c '"DetectorName".*"ArtifactoryAccessToken"' "$secrets_file" || echo "0")
+        local artifactory_count=$(grep -c '"DetectorName".*"ArtifactoryAccessToken"' "$secrets_file" 2>/dev/null || echo "0")
+        # Remove any newlines and ensure it's a valid number
+        artifactory_count=$(echo "$artifactory_count" | tr -d '\n' | tail -1)
         
         if [ "$artifactory_count" -eq 0 ]; then
             log_info "No Artifactory secrets found in $(basename "$secrets_file")"
@@ -432,6 +434,58 @@ process_org_secrets() {
     return 0
 }
 
+# Analyze all organizations with Artifactory secrets
+analyze_all_organizations() {
+    log_info "Scanning for organizations with Artifactory secrets..."
+    
+    # Find all unique organizations with Artifactory secrets
+    local organizations
+    organizations=$(find "$VERIFIED_SECRETS_DIR" -name "verified_secrets_*.json" -type f 2>/dev/null | while read -r file; do
+        if grep -q '"DetectorName": "ArtifactoryAccessToken"' "$file" 2>/dev/null; then
+            basename "$file" | sed 's/verified_secrets_//' | sed 's/.json//'
+        fi
+    done | sort -u)
+    
+    if [ -z "$organizations" ]; then
+        log_error "No organizations with Artifactory secrets found!"
+        return 1
+    fi
+    
+    local org_count
+    org_count=$(echo "$organizations" | wc -l)
+    log_info "Found $org_count organization(s) with Artifactory secrets"
+    echo ""
+    
+    # Process each organization
+    local current=0
+    local success_count=0
+    local failed_count=0
+    
+    for org in $organizations; do
+        current=$((current + 1))
+        log_info "[$current/$org_count] Analyzing organization: $org"
+        
+        if process_org_secrets "$org"; then
+            success_count=$((success_count + 1))
+            log_success "Completed: $org"
+        else
+            failed_count=$((failed_count + 1))
+            log_error "Failed: $org"
+        fi
+        
+        echo ""
+    done
+    
+    echo "================================================"
+    log_success "Artifactory Analysis Complete!"
+    echo "  Total organizations: $org_count"
+    echo "  Successful: $success_count"
+    echo "  Failed: $failed_count"
+    echo "================================================"
+    
+    return 0
+}
+
 ################################################################################
 # Main Execution
 ################################################################################
@@ -447,9 +501,37 @@ main() {
     # Check arguments
     if [ $# -lt 1 ]; then
         echo -e "${RED}Usage: $0 <org_name>${NC}"
+        echo -e "${RED}       $0 --all${NC}"
         echo ""
-        echo "Example: $0 braintree"
+        echo "Examples:"
+        echo "  $0 braintree    # Analyze specific organization"
+        echo "  $0 --all        # Analyze all organizations"
         exit 1
+    fi
+    
+    # Check for --all flag
+    if [ "$1" = "--all" ]; then
+        log_info "Starting Artifactory token analysis"
+        log_info "Mode: Analyze all organizations"
+        log_info "Timestamp: $(date)"
+        
+        # Check if jq is installed
+        if ! command -v jq &> /dev/null; then
+            log_warning "jq not installed. JSON output will not be formatted."
+        fi
+        
+        echo ""
+        
+        # Run analysis for all organizations
+        if analyze_all_organizations; then
+            echo ""
+            echo -e "${GREEN}${BOLD}✓ Analysis completed successfully${NC}"
+            exit 0
+        else
+            echo ""
+            echo -e "${RED}${BOLD}✗ Analysis failed${NC}"
+            exit 1
+        fi
     fi
     
     local org_name="$1"

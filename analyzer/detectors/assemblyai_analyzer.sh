@@ -148,7 +148,7 @@ analyze_organization() {
     
     # Find all verified secrets files for this organization
     local secrets_files
-    secrets_files=$(find "$secrets_dir" -type f -name "verified_secrets_${org_name}.json" 2>/dev/null || true)
+    secrets_files=$(find "$secrets_dir" -type f -name "verified_secrets_*.json" 2>/dev/null | grep -F "${org_name}" || true)
     
     if [ -z "$secrets_files" ]; then
         log_error "No secrets file found for organization: $org_name"
@@ -309,17 +309,87 @@ JSONSTART
     echo "Total: $total_secrets, Active: $active_count ($active_percentage%), Revoked: $revoked_count"
 }
 
+# Analyze all organizations with AssemblyAI secrets
+analyze_all_organizations() {
+    local secrets_dir="$1"
+    
+    log_info "Scanning for organizations with AssemblyAI secrets..."
+    
+    # Find all unique organizations with AssemblyAI secrets
+    local organizations
+    organizations=$(find "$secrets_dir" -name "verified_secrets_*.json" -type f 2>/dev/null | while read -r file; do
+        if grep -q '"DetectorName": "AssemblyAI"' "$file" 2>/dev/null; then
+            basename "$file" | sed 's/verified_secrets_//' | sed 's/.json//'
+        fi
+    done | sort -u)
+    
+    if [ -z "$organizations" ]; then
+        log_error "No organizations with AssemblyAI secrets found!"
+        return 1
+    fi
+    
+    local org_count
+    org_count=$(echo "$organizations" | wc -l)
+    log_info "Found $org_count organization(s) with AssemblyAI secrets"
+    echo "" >&2
+    
+    # Process each organization
+    local current=0
+    local success_count=0
+    local failed_count=0
+    
+    for org in $organizations; do
+        current=$((current + 1))
+        log_info "[$current/$org_count] Analyzing organization: $org"
+        
+        if analyze_organization "$org" "$secrets_dir"; then
+            success_count=$((success_count + 1))
+            log_success "Completed: $org"
+        else
+            failed_count=$((failed_count + 1))
+            log_error "Failed: $org"
+        fi
+        
+        echo "" >&2
+    done
+    
+    echo "================================================" >&2
+    log_success "AssemblyAI Analysis Complete!"
+    echo "  Total organizations: $org_count" >&2
+    echo "  Successful: $success_count" >&2
+    echo "  Failed: $failed_count" >&2
+    echo "================================================" >&2
+    
+    return 0
+}
+
 # Script entry point
 main() {
+    local secrets_dir
+    local org_name
+    local analyze_all=false
+    
+    # Parse arguments
     if [ $# -eq 0 ]; then
         log_error "Usage: $0 <organization_name> [secrets_directory]"
-        log_error "Example: $0 myorg"
-        log_error "         $0 myorg /path/to/leaked_secrets_results"
+        log_error "       $0 --all [secrets_directory]"
+        log_error ""
+        log_error "Examples:"
+        log_error "  $0 myorg                                    # Analyze specific organization"
+        log_error "  $0 myorg /path/to/leaked_secrets_results   # Analyze with custom path"
+        log_error "  $0 --all                                    # Analyze all organizations"
+        log_error "  $0 --all /path/to/leaked_secrets_results   # Analyze all with custom path"
         exit 1
     fi
     
-    local org_name="$1"
-    local secrets_dir="${2:-$(dirname "$SCRIPT_DIR")/../force-push-scanner/leaked_secrets_results}"
+    # Check for --all flag
+    if [ "$1" = "--all" ]; then
+        analyze_all=true
+        secrets_dir="${2:-$(dirname "$SCRIPT_DIR")/../force-push-scanner/leaked_secrets_results}"
+    else
+        org_name="$1"
+        secrets_dir="${2:-$(dirname "$SCRIPT_DIR")/../force-push-scanner/leaked_secrets_results}"
+    fi
     
     # Validate secrets directory
     if [ ! -d "$secrets_dir" ]; then
@@ -328,21 +398,32 @@ main() {
     fi
     
     log_info "Starting AssemblyAI key analysis"
-    log_info "Organization: $org_name"
-    log_info "Secrets directory: $secrets_dir"
-    log_info "Output directory: $ANALYZED_RESULTS_DIR"
-    echo "" >&2
     
-    # Run analysis
-    analyze_organization "$org_name" "$secrets_dir"
-    
-    local exit_code=$?
-    
-    echo "" >&2
-    if [ $exit_code -eq 0 ]; then
-        log_success "AssemblyAI analysis completed successfully!"
+    if [ "$analyze_all" = true ]; then
+        log_info "Mode: Analyze all organizations"
+        log_info "Secrets directory: $secrets_dir"
+        log_info "Output directory: $ANALYZED_RESULTS_DIR"
+        echo "" >&2
+        
+        # Run analysis for all organizations
+        analyze_all_organizations "$secrets_dir"
+        exit_code=$?
     else
-        log_error "AssemblyAI analysis failed with exit code: $exit_code"
+        log_info "Organization: $org_name"
+        log_info "Secrets directory: $secrets_dir"
+        log_info "Output directory: $ANALYZED_RESULTS_DIR"
+        echo "" >&2
+        
+        # Run analysis for single organization
+        analyze_organization "$org_name" "$secrets_dir"
+        exit_code=$?
+        
+        echo "" >&2
+        if [ $exit_code -eq 0 ]; then
+            log_success "AssemblyAI analysis completed successfully!"
+        else
+            log_error "AssemblyAI analysis failed with exit code: $exit_code"
+        fi
     fi
     
     exit $exit_code

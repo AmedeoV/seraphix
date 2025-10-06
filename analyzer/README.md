@@ -6,40 +6,81 @@ Analyze leaked secrets from scan results to determine active status, risk level,
 
 ```
 analyzer/
-├── alchemy/                    # Alchemy analyzer
-│   └── analyze.sh             # Script to analyze all Alchemy secrets
-├── aws/                       # AWS analyzer (TODO)
-│   └── analyze.sh
-├── azure/                     # Azure analyzer (TODO)
-│   └── analyze.sh
-└── analyzed_results/          # Output directory (organized by detector)
-    ├── alchemy/
-    │   ├── yearn_analysis.json
-    │   └── uniswap_analysis.json
-    └── aws/
-        └── org1_analysis.json
+├── detectors/                  # All analyzer scripts
+│   ├── alchemy_analyzer.sh    # Alchemy blockchain API keys
+│   ├── algolia_analyzer.sh    # Algolia search API keys
+│   ├── alibaba_analyzer.sh    # Alibaba Cloud credentials
+│   ├── artifactory_analyzer.sh # JFrog Artifactory tokens
+│   ├── assemblyai_analyzer.sh  # AssemblyAI API keys
+│   └── aws_analyzer.sh         # AWS credentials
+├── analyzed_results/           # Output directory (organized by detector)
+│   ├── Alchemy/
+│   ├── algolia/
+│   ├── Alibaba/
+│   ├── Artifactory/
+│   ├── AssemblyAI/
+│   └── AWS/
+├── visualizations/             # Dashboard HTML files
+│   └── dashboard.html
+└── generate_dashboard.sh       # Generate interactive dashboards
 ```
-
-Each detector has its own folder with an independent `analyze.sh` script.
 
 ## 🚀 Quick Start
 
-### Run Alchemy analyzer
+### Analyze a Specific Organization
+
 ```bash
-cd analyzer/alchemy
-./analyze.sh
+# AssemblyAI
+bash analyzer/detectors/assemblyai_analyzer.sh nwakaku
+
+# Artifactory
+bash analyzer/detectors/artifactory_analyzer.sh braintree
+
+# AWS
+bash analyzer/detectors/aws_analyzer.sh enajera
 ```
 
-### Run AWS analyzer
+### Analyze ALL Organizations
+
 ```bash
-cd analyzer/aws
-./analyze.sh
+# AssemblyAI - analyze all organizations with AssemblyAI secrets
+bash analyzer/detectors/assemblyai_analyzer.sh --all
+
+# Artifactory - analyze all organizations with Artifactory tokens
+bash analyzer/detectors/artifactory_analyzer.sh --all
+
+# AWS - analyze all organizations with AWS credentials
+bash analyzer/detectors/aws_analyzer.sh --all
+
+# Alchemy - automatically processes all organizations (no flags needed)
+bash analyzer/detectors/alchemy_analyzer.sh
+
+# Algolia - automatically processes all organizations (no flags needed)
+bash analyzer/detectors/algolia_analyzer.sh
+
+# Alibaba - automatically processes all organizations (no flags needed)
+bash analyzer/detectors/alibaba_analyzer.sh
+
+# Generate dashboard for all detectors
+bash analyzer/generate_dashboard.sh all
 ```
+
+### Analyzer Types
+
+**📌 Organization-specific analyzers** (support both single org and `--all` mode):
+- `assemblyai_analyzer.sh` - AssemblyAI transcription API keys
+- `artifactory_analyzer.sh` - JFrog Artifactory access tokens
+- `aws_analyzer.sh` - AWS access keys and secret keys
+
+**🔄 Auto-processing analyzers** (automatically scan all organizations):
+- `alchemy_analyzer.sh` - Alchemy blockchain API keys
+- `algolia_analyzer.sh` - Algolia search API admin keys
+- `alibaba_analyzer.sh` - Alibaba Cloud API credentials
 
 Each analyzer script will:
-1. Find all secrets of that type in `force-push-scanner/leaked_secrets_results`
+1. Find all secrets of that type in `leaked_secrets_results` (across all scanners)
 2. Verify if secrets are still active
-3. Assess risk level
+3. Assess risk level and capabilities
 4. Save analysis to `analyzer/analyzed_results/{detector}/`
 
 ## 📊 Output Format
