@@ -1,13 +1,22 @@
 #!/bin/bash
-# Generate HTML Dashboard from Alchemy Analysis Results
+# Generate HTML Dashboard from Analysis Results
 # 
-# Reads all *_analysis.json files and creates an interactive dashboard
+# Reads all *_analysis.json files from multiple detector types and creates an interactive dashboard
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RESULTS_DIR="$SCRIPT_DIR/analyzed_results/alchemy"
-OUTPUT_FILE="$SCRIPT_DIR/visualizations/alchemy_dashboard.html"
+ANALYZED_RESULTS_DIR="$SCRIPT_DIR/analyzed_results"
+OUTPUT_DIR="$SCRIPT_DIR/visualizations"
 
-echo "📊 Generating Alchemy Secrets Dashboard..."
+# Parse command line arguments
+DETECTOR_TYPE="${1:-all}"
+
+if [ "$DETECTOR_TYPE" = "all" ]; then
+    echo "📊 Generating Multi-Detector Secrets Dashboard..."
+    OUTPUT_FILE="$OUTPUT_DIR/dashboard.html"
+else
+    echo "📊 Generating ${DETECTOR_TYPE} Secrets Dashboard..."
+    OUTPUT_FILE="$OUTPUT_DIR/${DETECTOR_TYPE}_dashboard.html"
+fi
 echo ""
 
 # Create visualizations directory
@@ -33,76 +42,150 @@ low_count=0
 
 org_count=0
 
-# Count capabilities
-node_api_count=0
-nft_api_count=0
-token_api_count=0
-multichain_count=0
+# Detector-specific counters
+declare -A detector_counts
+declare -A detector_active_counts
 
-# Process all analysis files
-echo "📂 Processing analysis files from: $RESULTS_DIR"
+# Dynamic capability counters
+declare -A capability_counts
 
-for analysis_file in "$RESULTS_DIR"/*_analysis.json; do
-    if [ ! -f "$analysis_file" ]; then
+# Determine which detectors to process
+if [ "$DETECTOR_TYPE" = "all" ]; then
+    echo "📂 Processing all detector results from: $ANALYZED_RESULTS_DIR"
+    DETECTOR_DIRS=$(find "$ANALYZED_RESULTS_DIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null || echo "")
+else
+    echo "📂 Processing ${DETECTOR_TYPE} results from: $ANALYZED_RESULTS_DIR/${DETECTOR_TYPE}"
+    if [ ! -d "$ANALYZED_RESULTS_DIR/$DETECTOR_TYPE" ]; then
+        echo "❌ Error: Detector directory not found: $ANALYZED_RESULTS_DIR/$DETECTOR_TYPE"
+        exit 1
+    fi
+    DETECTOR_DIRS="$ANALYZED_RESULTS_DIR/$DETECTOR_TYPE"
+fi
+
+if [ -z "$DETECTOR_DIRS" ]; then
+    echo "❌ Error: No detector directories found"
+    exit 1
+fi
+
+echo ""
+
+# Process each detector directory
+for detector_dir in $DETECTOR_DIRS; do
+    if [ ! -d "$detector_dir" ]; then
         continue
     fi
     
-    org_name=$(basename "$analysis_file" | sed 's/_analysis.json//')
-    secrets_in_file=$(jq '.total_secrets' "$analysis_file" 2>/dev/null || echo "0")
+    detector_name=$(basename "$detector_dir")
+    echo "🔍 Processing detector: $detector_name"
     
-    if [ "$secrets_in_file" = "0" ] || [ "$secrets_in_file" = "null" ]; then
-        continue
-    fi
-    
-    echo "  Processing: $org_name ($secrets_in_file secrets)"
-    
-    org_count=$((org_count + 1))
-    total_secrets=$((total_secrets + secrets_in_file))
-    
-    # Count by status
-    active=$(jq '[.secrets[] | select(.verification.status == "ACTIVE")] | length' "$analysis_file" 2>/dev/null || echo "0")
-    revoked=$(jq '[.secrets[] | select(.verification.status == "REVOKED")] | length' "$analysis_file" 2>/dev/null || echo "0")
-    rate_limited=$(jq '[.secrets[] | select(.verification.status == "RATE_LIMITED")] | length' "$analysis_file" 2>/dev/null || echo "0")
-    
-    active_secrets=$((active_secrets + active))
-    revoked_secrets=$((revoked_secrets + revoked))
-    rate_limited_secrets=$((rate_limited_secrets + rate_limited))
-    
-    # Count by risk level
-    critical=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "CRITICAL")] | length' "$analysis_file" 2>/dev/null || echo "0")
-    high=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "HIGH")] | length' "$analysis_file" 2>/dev/null || echo "0")
-    medium=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "MEDIUM")] | length' "$analysis_file" 2>/dev/null || echo "0")
-    low=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "LOW")] | length' "$analysis_file" 2>/dev/null || echo "0")
-    
-    critical_count=$((critical_count + critical))
-    high_count=$((high_count + high))
-    medium_count=$((medium_count + medium))
-    low_count=$((low_count + low))
-    
-    echo "    Risk: C=$critical H=$high M=$medium L=$low"
-    
-    # Count capabilities
-    node_api=$(jq '[.secrets[] | select(.capabilities.node_api == true)] | length' "$analysis_file" 2>/dev/null || echo "0")
-    nft_api=$(jq '[.secrets[] | select(.capabilities.nft_api == true)] | length' "$analysis_file" 2>/dev/null || echo "0")
-    token_api=$(jq '[.secrets[] | select(.capabilities.token_api == true)] | length' "$analysis_file" 2>/dev/null || echo "0")
-    multichain=$(jq '[.secrets[] | select(.capabilities.multi_chain_enabled == true)] | length' "$analysis_file" 2>/dev/null || echo "0")
-    
-    node_api_count=$((node_api_count + node_api))
-    nft_api_count=$((nft_api_count + nft_api))
-    token_api_count=$((token_api_count + token_api))
-    multichain_count=$((multichain_count + multichain))
+    # Process all analysis files in this detector
+    for analysis_file in "$detector_dir"/*_analysis.json; do
+        if [ ! -f "$analysis_file" ]; then
+            continue
+        fi
+        
+        org_name=$(basename "$analysis_file" | sed 's/_analysis.json//')
+        secrets_in_file=$(jq '.total_secrets' "$analysis_file" 2>/dev/null || echo "0")
+        
+        if [ "$secrets_in_file" = "0" ] || [ "$secrets_in_file" = "null" ]; then
+            continue
+        fi
+        
+        echo "  Processing: $org_name ($secrets_in_file secrets)"
+        
+        org_count=$((org_count + 1))
+        total_secrets=$((total_secrets + secrets_in_file))
+        
+        # Track per-detector counts
+        detector_counts[$detector_name]=$((${detector_counts[$detector_name]:-0} + secrets_in_file))
+        
+        # Count by status
+        active=$(jq '[.secrets[] | select(.verification.status == "ACTIVE")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        revoked=$(jq '[.secrets[] | select(.verification.status == "REVOKED")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        rate_limited=$(jq '[.secrets[] | select(.verification.status == "RATE_LIMITED")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        
+        active_secrets=$((active_secrets + active))
+        revoked_secrets=$((revoked_secrets + revoked))
+        rate_limited_secrets=$((rate_limited_secrets + rate_limited))
+        
+        detector_active_counts[$detector_name]=$((${detector_active_counts[$detector_name]:-0} + active))
+        
+        # Count by risk level
+        critical=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "CRITICAL")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        high=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "HIGH")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        medium=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "MEDIUM")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        low=$(jq '[.secrets[] | select(.risk_assessment.risk_level == "LOW")] | length' "$analysis_file" 2>/dev/null || echo "0")
+        
+        critical_count=$((critical_count + critical))
+        high_count=$((high_count + high))
+        medium_count=$((medium_count + medium))
+        low_count=$((low_count + low))
+        
+        echo "    Risk: C=$critical H=$high M=$medium L=$low"
+        
+        # Count capabilities dynamically (extract all boolean capabilities from first secret)
+        if [ "$active" -gt 0 ]; then
+            capabilities=$(jq -r '.secrets[] | select(.verification.status == "ACTIVE") | .capabilities | keys[] | select(. != "supported_chains" and . != "acl_permissions")' "$analysis_file" 2>/dev/null | sort -u)
+            for cap in $capabilities; do
+                # Check if it's a boolean capability
+                is_bool=$(jq -r ".secrets[0].capabilities.${cap} | type" "$analysis_file" 2>/dev/null)
+                if [ "$is_bool" = "boolean" ]; then
+                    cap_count=$(jq "[.secrets[] | select(.capabilities.${cap} == true)] | length" "$analysis_file" 2>/dev/null || echo "0")
+                    capability_counts[$cap]=$((${capability_counts[$cap]:-0} + cap_count))
+                fi
+            done
+        fi
+    done
 done
 
 unknown_secrets=$((total_secrets - active_secrets - revoked_secrets - rate_limited_secrets))
 
 echo ""
 echo "📊 Statistics:"
+echo "  Detectors: ${#detector_counts[@]}"
+for detector in "${!detector_counts[@]}"; do
+    echo "    - $detector: ${detector_counts[$detector]} secrets (${detector_active_counts[$detector]:-0} active)"
+done
 echo "  Organizations: $org_count"
 echo "  Total Secrets: $total_secrets"
 echo "  Active: $active_secrets"
 echo "  Revoked: $revoked_secrets"
 echo "  Rate Limited: $rate_limited_secrets"
 echo ""
+
+# Prepare detector chart data
+DETECTOR_LABELS=""
+DETECTOR_DATA=""
+first_detector=true
+
+for detector in "${!detector_counts[@]}"; do
+    # Format detector name (capitalize)
+    detector_label=$(echo "$detector" | sed 's/\b\w/\U&/g')
+    
+    if [ "$first_detector" = true ]; then
+        DETECTOR_LABELS="'$detector_label'"
+        DETECTOR_DATA="${detector_counts[$detector]}"
+        first_detector=false
+    else
+        DETECTOR_LABELS="$DETECTOR_LABELS, '$detector_label'"
+        DETECTOR_DATA="$DETECTOR_DATA, ${detector_counts[$detector]}"
+    fi
+done
+
+# If no detectors, show placeholder
+if [ "$first_detector" = true ]; then
+    DETECTOR_LABELS="'No Detectors'"
+    DETECTOR_DATA="0"
+fi
+
+# Determine dashboard title
+if [ "$DETECTOR_TYPE" = "all" ]; then
+    DASHBOARD_TITLE="Multi-Detector Secrets Analysis Dashboard"
+else
+    # Capitalize first letter
+    detector_cap=$(echo "$DETECTOR_TYPE" | sed 's/\b\w/\U&/g')
+    DASHBOARD_TITLE="$detector_cap Secrets Analysis Dashboard"
+fi
 
 # Generate HTML Dashboard
 cat > "$OUTPUT_FILE" <<'HTML_START'
@@ -111,7 +194,11 @@ cat > "$OUTPUT_FILE" <<'HTML_START'
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alchemy Secrets Analysis Dashboard</title>
+HTML_START
+
+echo "    <title>$DASHBOARD_TITLE</title>" >> "$OUTPUT_FILE"
+
+cat >> "$OUTPUT_FILE" <<'HTML_START'
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -284,6 +371,8 @@ cat > "$OUTPUT_FILE" <<'HTML_START'
             text-transform: uppercase;
         }
         
+        .badge.detector { background: #e3f2fd; color: #1976d2; }
+        
         .badge.critical { background: #fee; color: #e74c3c; }
         .badge.high { background: #fef5e7; color: #f39c12; }
         .badge.medium { background: #fef9e7; color: #f1c40f; }
@@ -327,8 +416,25 @@ cat > "$OUTPUT_FILE" <<'HTML_START'
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔐 Alchemy Secrets Analysis Dashboard</h1>
-            <p>Comprehensive analysis of leaked Alchemy API keys</p>
+HTML_START
+
+echo "            <h1>🔐 $DASHBOARD_TITLE</h1>" >> "$OUTPUT_FILE"
+
+if [ "$DETECTOR_TYPE" = "all" ]; then
+    echo "            <p>Comprehensive analysis of leaked secrets across multiple detector types</p>" >> "$OUTPUT_FILE"
+else
+    detector_cap=$(echo "$DETECTOR_TYPE" | sed 's/\b\w/\U&/g')
+    echo "            <p>Comprehensive analysis of leaked $detector_cap secrets</p>" >> "$OUTPUT_FILE"
+fi
+
+cat >> "$OUTPUT_FILE" <<'HTML_START'
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <label for="masterDetectorFilter" style="font-size: 1.1em; margin-right: 10px; font-weight: bold;">🔍 View Detector:</label>
+            <select id="masterDetectorFilter" style="padding: 8px 15px; font-size: 1em; border-radius: 6px; border: 2px solid #667eea; background: white; cursor: pointer;">
+                <option value="">All Detectors</option>
+            </select>
         </div>
         
         <div class="stats-grid">
@@ -385,7 +491,12 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
             </div>
             
             <div class="chart-card">
-                <h2>🛠️ API Capabilities</h2>
+                <h2>� Detector Types</h2>
+                <canvas id="detectorChart"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <h2>�🛠️ API Capabilities</h2>
                 <canvas id="capabilitiesChart"></canvas>
             </div>
             
@@ -399,6 +510,9 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
             <h2>🔍 Detailed Findings</h2>
             <div class="controls">
                 <input type="text" id="searchInput" placeholder="🔎 Search organization, commit, file...">
+                <select id="detectorFilter">
+                    <option value="">All Detectors</option>
+                </select>
                 <select id="riskFilter">
                     <option value="">All Risk Levels</option>
                     <option value="CRITICAL">Critical</option>
@@ -416,6 +530,7 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
             <table id="secretsTable">
                 <thead>
                     <tr>
+                        <th>Detector</th>
                         <th>Organization</th>
                         <th>Commit</th>
                         <th>Status</th>
@@ -432,6 +547,10 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
     </div>
     
     <script>
+STATS_CARDS
+
+# Continue with JavaScript
+cat >> "$OUTPUT_FILE" <<HTML_START
         // Chart.js configurations
         const chartColors = {
             critical: '#e74c3c',
@@ -443,8 +562,14 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
             rateLimited: '#f39c12'
         };
         
+        // Store chart instances globally
+        let riskChartInstance, statusChartInstance, detectorChartInstance, capabilitiesChartInstance, orgsChartInstance;
+        
+        // Store original data for filtering
+        const allSecretsData = [];
+        
         // Risk Distribution Pie Chart
-        new Chart(document.getElementById('riskChart'), {
+        riskChartInstance = new Chart(document.getElementById('riskChart'), {
             type: 'doughnut',
             data: {
                 labels: ['Critical', 'High', 'Medium', 'Low'],
@@ -470,7 +595,7 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
         });
         
         // Status Breakdown Pie Chart
-        new Chart(document.getElementById('statusChart'), {
+        statusChartInstance = new Chart(document.getElementById('statusChart'), {
             type: 'pie',
             data: {
                 labels: ['Active', 'Revoked', 'Rate Limited'],
@@ -494,14 +619,72 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
             }
         });
         
+        // Detector Types Pie Chart
+        detectorChartInstance = new Chart(document.getElementById('detectorChart'), {
+            type: 'doughnut',
+            data: {
+                labels: [${DETECTOR_LABELS}],
+                datasets: [{
+                    data: [${DETECTOR_DATA}],
+                    backgroundColor: [
+                        '#3498db',
+                        '#9b59b6',
+                        '#e67e22',
+                        '#1abc9c',
+                        '#e74c3c',
+                        '#f39c12',
+                        '#2ecc71',
+                        '#34495e'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
         // Capabilities Bar Chart
-        new Chart(document.getElementById('capabilitiesChart'), {
+        capabilitiesChartInstance = new Chart(document.getElementById('capabilitiesChart'), {
+HTML_START
+
+# Build capability labels and data dynamically
+cap_labels=""
+cap_data=""
+first_cap=true
+
+for cap in "${!capability_counts[@]}"; do
+    # Format capability name (replace underscores with spaces, capitalize)
+    cap_label=$(echo "$cap" | sed 's/_/ /g' | sed 's/\b\w/\U&/g')
+    
+    if [ "$first_cap" = true ]; then
+        cap_labels="'$cap_label'"
+        cap_data="${capability_counts[$cap]}"
+        first_cap=false
+    else
+        cap_labels="$cap_labels, '$cap_label'"
+        cap_data="$cap_data, ${capability_counts[$cap]}"
+    fi
+done
+
+# If no capabilities, show placeholder
+if [ "$first_cap" = true ]; then
+    cap_labels="'No Capabilities'"
+    cap_data="0"
+fi
+
+cat >> "$OUTPUT_FILE" <<CAP_CHART
             type: 'bar',
             data: {
-                labels: ['Node API', 'NFT API', 'Token API', 'Multi-Chain'],
+                labels: [$cap_labels],
                 datasets: [{
                     label: 'Keys with Capability',
-                    data: [$node_api_count, $nft_api_count, $token_api_count, $multichain_count],
+                    data: [$cap_data],
                     backgroundColor: '#667eea'
                 }]
             },
@@ -523,54 +706,83 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
         
         // Load secrets data
         const secretsData = [
-STATS_CARDS
+CAP_CHART
 
 # Generate JavaScript data for table
 # We need to track if we've added the first entry across ALL files
 first_secret_added=false
 
-for analysis_file in "$RESULTS_DIR"/*_analysis.json; do
-    if [ ! -f "$analysis_file" ]; then
+# Process each detector directory again for table data
+for detector_dir in $DETECTOR_DIRS; do
+    if [ ! -d "$detector_dir" ]; then
         continue
     fi
     
-    org_name=$(basename "$analysis_file" | sed 's/_analysis.json//')
+    detector_name=$(basename "$detector_dir")
     
-    # Extract secrets and format as JavaScript objects
-    jq -c '.secrets[]' "$analysis_file" 2>/dev/null | while IFS= read -r secret; do
-        if [ -z "$secret" ]; then
+    for analysis_file in "$detector_dir"/*_analysis.json; do
+        if [ ! -f "$analysis_file" ]; then
             continue
         fi
         
-        commit=$(echo "$secret" | jq -r '.commit[0:7]')
-        status=$(echo "$secret" | jq -r '.verification.status')
-        risk_level=$(echo "$secret" | jq -r '.risk_assessment.risk_level')
-        risk_score=$(echo "$secret" | jq -r '.risk_assessment.score')
-        node_api=$(echo "$secret" | jq -r '.capabilities.node_api')
-        nft_api=$(echo "$secret" | jq -r '.capabilities.nft_api')
-        token_api=$(echo "$secret" | jq -r '.capabilities.token_api')
-        chains=$(echo "$secret" | jq -r '.capabilities.supported_chains | length')
+        org_name=$(basename "$analysis_file" | sed 's/_analysis.json//')
         
-        # Add comma before this entry if it's not the very first one
-        if [ -f "$OUTPUT_FILE.tmp" ]; then
-            echo "," >> "$OUTPUT_FILE"
-        else
-            touch "$OUTPUT_FILE.tmp"
-        fi
-        
-        cat >> "$OUTPUT_FILE" <<SECRET_ENTRY
-            {
-                organization: "$org_name",
-                commit: "$commit",
-                status: "$status",
-                riskLevel: "$risk_level",
-                riskScore: $risk_score,
-                nodeApi: $node_api,
-                nftApi: $nft_api,
-                tokenApi: $token_api,
-                chains: $chains
-            }
-SECRET_ENTRY
+        # Extract secrets and format as JavaScript objects
+        jq -c '.secrets[]' "$analysis_file" 2>/dev/null | while IFS= read -r secret; do
+            if [ -z "$secret" ]; then
+                continue
+            fi
+            
+            commit=$(echo "$secret" | jq -r '.commit[0:7]')
+            status=$(echo "$secret" | jq -r '.verification.status')
+            risk_level=$(echo "$secret" | jq -r '.risk_assessment.risk_level')
+            risk_score=$(echo "$secret" | jq -r '.risk_assessment.score')
+            
+            # Build capabilities string dynamically
+            capabilities=""
+            cap_keys=$(echo "$secret" | jq -r '.capabilities | keys[]' 2>/dev/null)
+            for cap_key in $cap_keys; do
+                # Skip non-boolean capabilities
+                if [[ "$cap_key" =~ (supported_chains|acl_permissions) ]]; then
+                    continue
+                fi
+                
+                cap_value=$(echo "$secret" | jq -r ".capabilities.${cap_key}" 2>/dev/null)
+                if [ "$cap_value" = "true" ]; then
+                    cap_display=$(echo "$cap_key" | sed 's/_/ /g' | sed 's/\b\w/\U&/g')
+                    if [ -z "$capabilities" ]; then
+                        capabilities="$cap_display"
+                    else
+                        capabilities="$capabilities, $cap_display"
+                    fi
+                fi
+            done
+            
+            # Get chain count if exists
+            chains=$(echo "$secret" | jq -r '.capabilities.supported_chains | length' 2>/dev/null || echo "0")
+            if [ "$chains" = "null" ]; then
+                chains="0"
+            fi
+            
+            # Add comma before this entry if it's not the very first one
+            if [ -f "$OUTPUT_FILE.tmp" ]; then
+                echo "," >> "$OUTPUT_FILE"
+            else
+                touch "$OUTPUT_FILE.tmp"
+            fi
+            
+            # Write JSON object for this secret
+            echo "            {" >> "$OUTPUT_FILE"
+            echo "                \"detector\": \"$detector_name\"," >> "$OUTPUT_FILE"
+            echo "                \"organization\": \"$org_name\"," >> "$OUTPUT_FILE"
+            echo "                \"commit\": \"$commit\"," >> "$OUTPUT_FILE"
+            echo "                \"status\": \"$status\"," >> "$OUTPUT_FILE"
+            echo "                \"riskLevel\": \"$risk_level\"," >> "$OUTPUT_FILE"
+            echo "                \"riskScore\": $risk_score," >> "$OUTPUT_FILE"
+            echo "                \"capabilities\": \"$capabilities\"," >> "$OUTPUT_FILE"
+            echo "                \"chains\": $chains" >> "$OUTPUT_FILE"
+            echo "            }" >> "$OUTPUT_FILE"
+        done
     done
 done
 
@@ -592,7 +804,7 @@ cat >> "$OUTPUT_FILE" <<'HTML_END'
             .slice(0, 10);
         
         // Organizations Bar Chart
-        new Chart(document.getElementById('orgsChart'), {
+        orgsChartInstance = new Chart(document.getElementById('orgsChart'), {
             type: 'bar',
             data: {
                 labels: topOrgs.map(o => o[0]),
@@ -627,12 +839,13 @@ cat >> "$OUTPUT_FILE" <<'HTML_END'
             data.forEach(secret => {
                 const row = document.createElement('tr');
                 
-                const capabilities = [];
-                if (secret.nodeApi) capabilities.push('Node');
-                if (secret.nftApi) capabilities.push('NFT');
-                if (secret.tokenApi) capabilities.push('Token');
+                // Format capabilities - already a string from bash
+                const capabilitiesHtml = secret.capabilities 
+                    ? secret.capabilities.split(', ').map(c => `<span class="capability-badge">${c}</span>`).join('')
+                    : '<span class="capability-badge">None</span>';
                 
                 row.innerHTML = `
+                    <td><span class="badge detector">${secret.detector}</span></td>
                     <td><strong>${secret.organization}</strong></td>
                     <td><code>${secret.commit}</code></td>
                     <td><span class="badge ${secret.status.toLowerCase().replace('_', '-')}">${secret.status}</span></td>
@@ -640,7 +853,7 @@ cat >> "$OUTPUT_FILE" <<'HTML_END'
                     <td><span class="score">${secret.riskScore}</span></td>
                     <td>
                         <div class="capability-badges">
-                            ${capabilities.map(c => `<span class="capability-badge">${c}</span>`).join('')}
+                            ${capabilitiesHtml}
                         </div>
                     </td>
                     <td>${secret.chains} chain${secret.chains !== 1 ? 's' : ''}</td>
@@ -653,27 +866,150 @@ cat >> "$OUTPUT_FILE" <<'HTML_END'
         // Initial table population
         populateTable(secretsData);
         
-        // Filtering logic
+        // Store all secrets data for master filtering
+        secretsData.forEach(s => allSecretsData.push(s));
+        
+        // Populate detector filter dropdowns dynamically
+        const detectorSet = new Set(secretsData.map(s => s.detector));
+        const detectorFilter = document.getElementById('detectorFilter');
+        const masterDetectorFilter = document.getElementById('masterDetectorFilter');
+        
+        detectorSet.forEach(detector => {
+            // Table filter dropdown
+            const option = document.createElement('option');
+            option.value = detector;
+            option.textContent = detector.charAt(0).toUpperCase() + detector.slice(1);
+            detectorFilter.appendChild(option);
+            
+            // Master filter dropdown
+            const masterOption = document.createElement('option');
+            masterOption.value = detector;
+            masterOption.textContent = detector.charAt(0).toUpperCase() + detector.slice(1);
+            masterDetectorFilter.appendChild(masterOption);
+        });
+        
+        // Function to update all charts based on filtered data
+        function updateCharts(filteredData) {
+            // Calculate statistics from filtered data
+            const criticalCount = filteredData.filter(s => s.riskLevel === 'CRITICAL').length;
+            const highCount = filteredData.filter(s => s.riskLevel === 'HIGH').length;
+            const mediumCount = filteredData.filter(s => s.riskLevel === 'MEDIUM').length;
+            const lowCount = filteredData.filter(s => s.riskLevel === 'LOW').length;
+            
+            const activeCount = filteredData.filter(s => s.status === 'ACTIVE').length;
+            const revokedCount = filteredData.filter(s => s.status === 'REVOKED').length;
+            const rateLimitedCount = filteredData.filter(s => s.status === 'RATE_LIMITED').length;
+            
+            // Update Risk Chart
+            riskChartInstance.data.datasets[0].data = [criticalCount, highCount, mediumCount, lowCount];
+            riskChartInstance.update();
+            
+            // Update Status Chart
+            statusChartInstance.data.datasets[0].data = [activeCount, revokedCount, rateLimitedCount];
+            statusChartInstance.update();
+            
+            // Update Detector Chart
+            const detectorCounts = {};
+            filteredData.forEach(s => {
+                detectorCounts[s.detector] = (detectorCounts[s.detector] || 0) + 1;
+            });
+            const detectorLabels = Object.keys(detectorCounts).map(d => d.charAt(0).toUpperCase() + d.slice(1));
+            const detectorData = Object.values(detectorCounts);
+            
+            detectorChartInstance.data.labels = detectorLabels.length > 0 ? detectorLabels : ['No Data'];
+            detectorChartInstance.data.datasets[0].data = detectorData.length > 0 ? detectorData : [0];
+            detectorChartInstance.update();
+            
+            // Update Capabilities Chart
+            const capabilityCounts = {};
+            filteredData.forEach(s => {
+                if (s.capabilities) {
+                    s.capabilities.split(', ').forEach(cap => {
+                        if (cap && cap !== 'None') {
+                            capabilityCounts[cap] = (capabilityCounts[cap] || 0) + 1;
+                        }
+                    });
+                }
+            });
+            const capLabels = Object.keys(capabilityCounts);
+            const capData = Object.values(capabilityCounts);
+            
+            capabilitiesChartInstance.data.labels = capLabels.length > 0 ? capLabels : ['No Capabilities'];
+            capabilitiesChartInstance.data.datasets[0].data = capData.length > 0 ? capData : [0];
+            capabilitiesChartInstance.update();
+            
+            // Update Organizations Chart
+            const orgCounts = {};
+            filteredData.forEach(s => {
+                orgCounts[s.organization] = (orgCounts[s.organization] || 0) + 1;
+            });
+            const topOrgs = Object.entries(orgCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            orgsChartInstance.data.labels = topOrgs.map(o => o[0]);
+            orgsChartInstance.data.datasets[0].data = topOrgs.map(o => o[1]);
+            orgsChartInstance.update();
+            
+            // Update stats cards
+            document.querySelector('.stat-card:nth-child(2) .value').textContent = filteredData.length;
+            document.querySelector('.stat-card:nth-child(3) .value').textContent = activeCount;
+            document.querySelector('.stat-card:nth-child(4) .value').textContent = criticalCount;
+        }
+        
+        // Master detector filter handler
+        masterDetectorFilter.addEventListener('change', function() {
+            const selectedDetector = this.value;
+            
+            // Filter the data
+            const filteredData = selectedDetector 
+                ? allSecretsData.filter(s => s.detector === selectedDetector)
+                : allSecretsData;
+            
+            // Update all charts
+            updateCharts(filteredData);
+            
+            // Update table with filtered data
+            populateTable(filteredData);
+            
+            // Reset table filters when master filter changes
+            document.getElementById('searchInput').value = '';
+            document.getElementById('detectorFilter').value = '';
+            document.getElementById('riskFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+        });
+        
+        // Filtering logic for table filters (works on currently displayed data)
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const detectorFilterValue = document.getElementById('detectorFilter').value;
             const riskFilter = document.getElementById('riskFilter').value;
             const statusFilter = document.getElementById('statusFilter').value;
+            const masterDetectorValue = document.getElementById('masterDetectorFilter').value;
             
-            const filtered = secretsData.filter(secret => {
+            // Start with data based on master filter
+            let baseData = masterDetectorValue 
+                ? allSecretsData.filter(s => s.detector === masterDetectorValue)
+                : allSecretsData;
+            
+            // Apply table filters
+            const filtered = baseData.filter(secret => {
                 const matchesSearch = !searchTerm || 
                     secret.organization.toLowerCase().includes(searchTerm) ||
                     secret.commit.toLowerCase().includes(searchTerm);
-                    
+                
+                const matchesDetector = !detectorFilterValue || secret.detector === detectorFilterValue;
                 const matchesRisk = !riskFilter || secret.riskLevel === riskFilter;
                 const matchesStatus = !statusFilter || secret.status === statusFilter;
                 
-                return matchesSearch && matchesRisk && matchesStatus;
+                return matchesSearch && matchesDetector && matchesRisk && matchesStatus;
             });
             
             populateTable(filtered);
         }
         
         document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('detectorFilter').addEventListener('change', applyFilters);
         document.getElementById('riskFilter').addEventListener('change', applyFilters);
         document.getElementById('statusFilter').addEventListener('change', applyFilters);
     </script>
