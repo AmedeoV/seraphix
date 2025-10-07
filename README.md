@@ -39,11 +39,16 @@ Seraphix includes a powerful **interactive dashboard** for visualizing and analy
   <img src="seraphix-dashboard.png" alt="Seraphix Dashboard" width="800"/>
 </p>
 
-Generate the dashboard from your scan results:
+Analyze and generate the dashboard from your scan results:
 ```bash
-cd analyzer/
-./generate_dashboard.sh
+# Analyze all secrets (verify status, assess risk)
+bash analyzer/run_all_analyzers.sh
+
+# Generate interactive dashboard
+bash analyzer/generate_dashboard.sh
 ```
+
+📖 **[Analyzer Documentation](analyzer/README.md)** - Full analyzer usage and advanced options
 
 ## 💰 Proven Results
 
