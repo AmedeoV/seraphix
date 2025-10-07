@@ -24,9 +24,10 @@ analyzer/
 │   ├── AWS/
 │   ├── Azure/
 │   └── BrowserStack/
-├── visualizations/             # Dashboard HTML files
-│   └── dashboard.html
-└── generate_dashboard.sh       # Generate interactive dashboards
+├── visualizations/             # Generated dashboard
+│   └── dashboard.html          # Interactive HTML dashboard
+├── generate_dashboard.sh       # Generate dashboard from analysis results
+└── run_all_analyzers.sh        # Run all analyzers in parallel
 ```
 
 ## 🚀 Quick Start
@@ -80,6 +81,76 @@ bash analyzer/analyzers/alibaba_analyzer.sh
 # Generate dashboard for all detectors
 bash analyzer/generate_dashboard.sh all
 ```
+
+## 📊 Dashboard Generation
+
+After running analyzers, generate an interactive HTML dashboard to visualize all results:
+
+### Generate Dashboard
+
+```bash
+# Generate dashboard from all analysis results
+cd analyzer/
+bash generate_dashboard.sh
+```
+
+The dashboard will be created at `analyzer/visualizations/dashboard.html`
+
+### View Dashboard
+
+Open in your browser:
+- **Windows**: Double-click `visualizations/dashboard.html`
+- **Linux/Mac**: `open visualizations/dashboard.html`
+- **Direct path**: `file:///path/to/seraphix/analyzer/visualizations/dashboard.html`
+
+### Dashboard Features
+
+#### 📈 Summary Cards
+- Total Organizations analyzed
+- Total Secrets found
+- Active Keys (still working)
+- Revoked Keys
+- Rate Limited Keys
+
+#### 📊 Interactive Charts
+- **Risk Distribution** - Pie chart showing secrets by risk level (Critical/High/Medium/Low)
+- **Status Breakdown** - Active vs Revoked vs Rate Limited keys
+- **Top Organizations** - Organizations with most leaked secrets (bar chart)
+- **Detector Distribution** - Secrets found by each detector type
+
+#### 🔍 Detailed Secrets Table
+Searchable and filterable table with all secrets:
+- **Search** - Filter by organization, detector, commit, or secret
+- **Detector Filter** - Filter by specific detector type
+- **Status Filter** - Show only Active/Revoked/Rate Limited keys
+- **Risk Filter** - Show only Critical/High/Medium/Low risks
+
+Each row displays:
+- Detector type (AWS, Alchemy, MongoDB, etc.)
+- Organization name
+- Secret hash or prefix
+- Git commit (first 7 chars)
+- Verification status (Active/Revoked/Rate Limited)
+- Risk level and score
+- API capabilities (for supported detectors)
+
+### Dashboard Performance
+
+The dashboard generator uses:
+- **Parallel processing** - Utilizes 75% of CPU cores for statistics
+- **Optimized jq queries** - Single-pass extraction per file
+- **Typical generation time** - 10-15 seconds for ~450 secrets across 240+ organizations
+
+### Sharing the Dashboard
+
+The dashboard is a **single self-contained HTML file** that can be:
+- ✅ Opened offline (no internet required after first load)
+- ✅ Shared via email or file sharing
+- ✅ Committed to git (contains hashes, not actual secrets)
+- ✅ Hosted on a web server
+- ✅ Embedded in security reports
+
+**Note**: The dashboard shows secret hashes or prefixes, not actual keys, making it safe to share.
 
 ### Analyzer Types
 
