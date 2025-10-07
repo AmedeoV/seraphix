@@ -47,6 +47,9 @@ PARALLEL_JOBS=$(( NUM_CORES * 3 / 4 ))
 echo "🚀 Parallel processing enabled: Using $PARALLEL_JOBS cores (of $NUM_CORES available)"
 echo ""
 
+# Start timing
+START_TIME=$(date +%s)
+
 # Collect statistics
 total_secrets=0
 active_secrets=0
@@ -844,96 +847,58 @@ cat >> "$OUTPUT_FILE" <<CAP_CHART
         const secretsData = [
 CAP_CHART
 
-# Generate JavaScript data for table
-# We need to track if we've added the first entry across ALL files
-first_secret_added=false
+echo "📊 Generating secrets table data..."
+SECRETS_START=$(date +%s)
 
-# Process each detector directory again for table data
+# OPTIMIZED: Collect all secrets into temp file, then format once
+TEMP_ALL_SECRETS="$OUTPUT_DIR/all_secrets_temp.jsonl"
+> "$TEMP_ALL_SECRETS"  # Clear file
+
 for detector_dir in $DETECTOR_DIRS; do
     if [ ! -d "$detector_dir" ]; then
         continue
     fi
     
-    detector_name=$(basename "$detector_dir")
+    detector=$(basename "$detector_dir")
     
     for analysis_file in "$detector_dir"/*_analysis.json; do
         if [ ! -f "$analysis_file" ]; then
             continue
         fi
         
-        org_name=$(basename "$analysis_file" | sed 's/_analysis.json//')
+        org=$(basename "$analysis_file" | sed 's/_analysis.json//')
         
-        # Extract secrets and format as JavaScript objects
-        jq -c '.secrets[]' "$analysis_file" 2>/dev/null | while IFS= read -r secret; do
-            if [ -z "$secret" ]; then
-                continue
-            fi
-            
-            commit=$(echo "$secret" | jq -r '.commit[0:7]')
-            # Handle both formats: .verification.status and .status
-            status=$(echo "$secret" | jq -r '.verification.status // .status')
-            # Handle both formats: .risk_assessment.risk_level and .risk_level
-            risk_level=$(echo "$secret" | jq -r '.risk_assessment.risk_level // .risk_level')
-            # Handle both formats: .risk_assessment.score and .risk_score
-            risk_score=$(echo "$secret" | jq -r '.risk_assessment.score // .risk_score')
-            # Extract secret value from various possible field names
-            # raw_secret (new analyzers), secret_prefix (truncated), secret_hash (hashed),
-            # access_key_id (AWS), token_prefix (Artifactory), api_key, token, key, etc.
-            raw_secret=$(echo "$secret" | jq -r '.raw_secret // .secret_prefix // .secret_hash // .access_key_id // .token_prefix // .api_key // .token // .key // "N/A"')
-            # Sanitize for JSON (escape newlines, quotes, and backslashes)
-            raw_secret=$(echo "$raw_secret" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-            
-            # Build capabilities string dynamically
-            capabilities=""
-            cap_keys=$(echo "$secret" | jq -r '.capabilities | keys[]' 2>/dev/null)
-            for cap_key in $cap_keys; do
-                # Skip non-boolean capabilities
-                if [[ "$cap_key" =~ (supported_chains|acl_permissions) ]]; then
-                    continue
-                fi
-                
-                cap_value=$(echo "$secret" | jq -r ".capabilities.${cap_key}" 2>/dev/null)
-                if [ "$cap_value" = "true" ]; then
-                    cap_display=$(echo "$cap_key" | sed 's/_/ /g' | sed 's/\b\w/\U&/g')
-                    if [ -z "$capabilities" ]; then
-                        capabilities="$cap_display"
-                    else
-                        capabilities="$capabilities, $cap_display"
-                    fi
-                fi
-            done
-            
-            # Get chain count if exists
-            chains=$(echo "$secret" | jq -r '.capabilities.supported_chains | length' 2>/dev/null || echo "0")
-            if [ "$chains" = "null" ]; then
-                chains="0"
-            fi
-            
-            # Add comma before this entry if it's not the very first one
-            if [ -f "$OUTPUT_FILE.tmp" ]; then
-                echo "," >> "$OUTPUT_FILE"
-            else
-                touch "$OUTPUT_FILE.tmp"
-            fi
-            
-            # Write JSON object for this secret
-            echo "            {" >> "$OUTPUT_FILE"
-            echo "                \"detector\": \"$detector_name\"," >> "$OUTPUT_FILE"
-            echo "                \"organization\": \"$org_name\"," >> "$OUTPUT_FILE"
-            echo "                \"secret\": \"$raw_secret\"," >> "$OUTPUT_FILE"
-            echo "                \"commit\": \"$commit\"," >> "$OUTPUT_FILE"
-            echo "                \"status\": \"$status\"," >> "$OUTPUT_FILE"
-            echo "                \"riskLevel\": \"$risk_level\"," >> "$OUTPUT_FILE"
-            echo "                \"riskScore\": $risk_score," >> "$OUTPUT_FILE"
-            echo "                \"capabilities\": \"$capabilities\"," >> "$OUTPUT_FILE"
-            echo "                \"chains\": $chains" >> "$OUTPUT_FILE"
-            echo "            }" >> "$OUTPUT_FILE"
-        done
+        # Append all secrets from this file (single jq call per file)
+        jq -c --arg detector "$detector" --arg org "$org" '
+            .secrets[]? | 
+            {
+                detector: $detector,
+                organization: $org,
+                secret: (.raw_secret // .secret_prefix // .secret_hash // .access_key_id // .token_prefix // .api_key // .token // .key // "N/A"),
+                commit: (.commit[0:7]),
+                status: (.verification.status // .status),
+                riskLevel: (.risk_assessment.risk_level // .risk_level),
+                riskScore: (.risk_assessment.score // .risk_score),
+                capabilities: ([.capabilities | to_entries[] | select(.value == true and .key != "supported_chains" and .key != "acl_permissions") | .key] | join(", ")),
+                chains: ((.capabilities.supported_chains // []) | length)
+            }
+        ' "$analysis_file" 2>/dev/null >> "$TEMP_ALL_SECRETS"
     done
 done
 
-# Clean up temp file
-rm -f "$OUTPUT_FILE.tmp"
+# Count total secrets
+total_secrets=$(wc -l < "$TEMP_ALL_SECRETS")
+echo "✅ Extracted $total_secrets secrets"
+
+# Format for JavaScript: add commas and indentation
+awk 'NR==1 {printf "            %s", $0} NR>1 {printf ",\n            %s", $0}' "$TEMP_ALL_SECRETS" >> "$OUTPUT_FILE"
+
+# Clean up
+rm -f "$TEMP_ALL_SECRETS"
+
+SECRETS_END=$(date +%s)
+SECRETS_TIME=$((SECRETS_END - SECRETS_START))
+echo "✅ Secrets processing completed in ${SECRETS_TIME}s (${#all_analysis_files[@]} files processed in parallel)"
 
 # Complete the JavaScript and HTML
 cat >> "$OUTPUT_FILE" <<'HTML_END'
@@ -1168,6 +1133,13 @@ echo ""
 echo "✅ Dashboard generated successfully!"
 echo "📁 Location: $OUTPUT_FILE"
 echo ""
+
+# Calculate and display timing
+END_TIME=$(date +%s)
+ELAPSED_TIME=$((END_TIME - START_TIME))
+echo "⏱️  Generation completed in ${ELAPSED_TIME}s"
+echo ""
+
 echo "🌐 Open in browser:"
 echo "   file://$(cd "$(dirname "$OUTPUT_FILE")" && pwd)/$(basename "$OUTPUT_FILE")"
 echo ""
