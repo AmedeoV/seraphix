@@ -33,38 +33,21 @@ Seraphix is a **comprehensive secret scanning toolkit** designed for security re
 
 ## � Secret Analysis & Dashboard
 
-After scanning, **analyze** the discovered secrets to verify if they're still active, assess risk levels, and check capabilities:
+After scanning, analyze secrets and generate an interactive dashboard:
 
 ```bash
-# Run all analyzers (recommended)
-cd analyzer/
-bash run_all_analyzers.sh
+# Run all analyzers
+bash analyzer/run_all_analyzers.sh
 
-# Or run specific analyzers
-bash analyzers/alchemy_analyzer.sh      # Alchemy API keys
-bash analyzers/aws_analyzer.sh --all    # AWS credentials
-bash analyzers/mongodb_analyzer.sh      # MongoDB connection strings
+# Generate dashboard
+bash analyzer/generate_dashboard.sh
 ```
-
-**Generate Interactive Dashboard:**
 
 <p align="center">
   <img src="seraphix-dashboard.png" alt="Seraphix Dashboard" width="800"/>
 </p>
 
-```bash
-cd analyzer/
-bash generate_dashboard.sh
-# Opens: analyzer/visualizations/dashboard.html
-```
-
-The dashboard provides:
-- 📊 Statistics and risk distribution charts
-- 🔍 Searchable table of all secrets
-- ✅ Verification status (Active/Revoked/Rate Limited)
-- 🎯 Risk scores and API capabilities
-
-📖 **[Full Analyzer Documentation](analyzer/README.md)** - Detailed usage and output formats
+ **[Full Analyzer Documentation](analyzer/README.md)**
 
 ## 💰 Proven Results
 
