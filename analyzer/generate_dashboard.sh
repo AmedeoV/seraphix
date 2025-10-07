@@ -31,6 +31,22 @@ if ! command -v jq >/dev/null 2>&1; then
     exit 1
 fi
 
+# Detect CPU cores for parallel processing
+if command -v nproc >/dev/null 2>&1; then
+    NUM_CORES=$(nproc)
+elif [ -f /proc/cpuinfo ]; then
+    NUM_CORES=$(grep -c ^processor /proc/cpuinfo)
+else
+    NUM_CORES=4  # Default fallback
+fi
+
+# Use 75% of cores to avoid system overload
+PARALLEL_JOBS=$(( NUM_CORES * 3 / 4 ))
+[ "$PARALLEL_JOBS" -lt 1 ] && PARALLEL_JOBS=1
+
+echo "🚀 Parallel processing enabled: Using $PARALLEL_JOBS cores (of $NUM_CORES available)"
+echo ""
+
 # Collect statistics
 total_secrets=0
 active_secrets=0
@@ -72,7 +88,97 @@ fi
 
 echo ""
 
-# Process each detector directory
+# Function to process a single analysis file (optimized with single jq call)
+process_analysis_file() {
+    local analysis_file="$1"
+    local detector_name="$2"
+    local temp_dir="$3"
+    
+    if [ ! -f "$analysis_file" ]; then
+        return
+    fi
+    
+    local org_name=$(basename "$analysis_file" | sed 's/_analysis.json//')
+    
+    # Single jq call to extract all needed data at once (much faster!)
+    local stats=$(jq -r '
+        {
+            total: (.total_secrets // .summary.total_secrets // 0),
+            active: ([.secrets[] | select((.verification.status // .status) == "ACTIVE")] | length),
+            revoked: ([.secrets[] | select((.verification.status // .status) == "REVOKED")] | length),
+            rate_limited: ([.secrets[] | select((.verification.status // .status) == "RATE_LIMITED")] | length),
+            critical: ([.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "CRITICAL")] | length),
+            high: ([.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "HIGH")] | length),
+            medium: ([.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "MEDIUM")] | length),
+            low: ([.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "LOW")] | length)
+        } | "\(.total)|\(.active)|\(.revoked)|\(.rate_limited)|\(.critical)|\(.high)|\(.medium)|\(.low)"
+    ' "$analysis_file" 2>/dev/null || echo "0|0|0|0|0|0|0|0")
+    
+    IFS='|' read -r secrets_in_file active revoked rate_limited critical high medium low <<< "$stats"
+    
+    if [ "$secrets_in_file" = "0" ] || [ "$secrets_in_file" = "null" ]; then
+        return
+    fi
+    
+    echo "  Processing: $org_name ($secrets_in_file secrets)"
+    
+    # Write results to temporary file for aggregation
+    echo "$detector_name|$secrets_in_file|$active|$revoked|$rate_limited|$critical|$high|$medium|$low" >> "$temp_dir/stats_${detector_name}_${org_name}.tmp"
+    
+    # Extract capabilities for active secrets (only if active > 0)
+    if [ "$active" -gt 0 ]; then
+        jq -r '.secrets[] | select((.verification.status // .status) == "ACTIVE") | .capabilities | to_entries[] | select(.value == true and .key != "supported_chains" and .key != "acl_permissions") | .key' "$analysis_file" 2>/dev/null | sort -u >> "$temp_dir/capabilities.tmp"
+    fi
+}
+
+export -f process_analysis_file
+
+# Collect statistics
+total_secrets=0
+active_secrets=0
+revoked_secrets=0
+rate_limited_secrets=0
+unknown_secrets=0
+
+critical_count=0
+high_count=0
+medium_count=0
+low_count=0
+
+org_count=0
+
+# Detector-specific counters
+declare -A detector_counts
+declare -A detector_active_counts
+
+# Dynamic capability counters
+declare -A capability_counts
+
+# Determine which detectors to process
+if [ "$DETECTOR_TYPE" = "all" ]; then
+    echo "📂 Processing all detector results from: $ANALYZED_RESULTS_DIR"
+    DETECTOR_DIRS=$(find "$ANALYZED_RESULTS_DIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null || echo "")
+else
+    echo "📂 Processing ${DETECTOR_TYPE} results from: $ANALYZED_RESULTS_DIR/${DETECTOR_TYPE}"
+    if [ ! -d "$ANALYZED_RESULTS_DIR/$DETECTOR_TYPE" ]; then
+        echo "❌ Error: Detector directory not found: $ANALYZED_RESULTS_DIR/$DETECTOR_TYPE"
+        exit 1
+    fi
+    DETECTOR_DIRS="$ANALYZED_RESULTS_DIR/$DETECTOR_TYPE"
+fi
+
+if [ -z "$DETECTOR_DIRS" ]; then
+    echo "❌ Error: No detector directories found"
+    exit 1
+fi
+
+echo ""
+
+# Create temp directory for parallel processing
+TEMP_DIR="$OUTPUT_DIR/temp_$$"
+mkdir -p "$TEMP_DIR"
+
+# Process each detector directory with parallel file processing
 for detector_dir in $DETECTOR_DIRS; do
     if [ ! -d "$detector_dir" ]; then
         continue
@@ -81,71 +187,58 @@ for detector_dir in $DETECTOR_DIRS; do
     detector_name=$(basename "$detector_dir")
     echo "🔍 Processing detector: $detector_name"
     
-    # Process all analysis files in this detector
-    for analysis_file in "$detector_dir"/*_analysis.json; do
-        if [ ! -f "$analysis_file" ]; then
-            continue
+    # Get list of analysis files
+    analysis_files=()
+    for file in "$detector_dir"/*_analysis.json; do
+        [ -f "$file" ] && analysis_files+=("$file")
+    done
+    
+    # Process files in parallel if we have multiple files
+    if [ ${#analysis_files[@]} -gt 0 ]; then
+        if [ ${#analysis_files[@]} -gt 1 ] && [ "$PARALLEL_JOBS" -gt 1 ]; then
+            # Parallel processing for multiple files
+            printf "%s\n" "${analysis_files[@]}" | xargs -P "$PARALLEL_JOBS" -I {} bash -c "process_analysis_file '{}' '$detector_name' '$TEMP_DIR'"
+        else
+            # Sequential for single file
+            for file in "${analysis_files[@]}"; do
+                process_analysis_file "$file" "$detector_name" "$TEMP_DIR"
+            done
         fi
-        
-        org_name=$(basename "$analysis_file" | sed 's/_analysis.json//')
-        # Try both .total_secrets (Alchemy/Algolia/Alibaba) and .summary.total_secrets (Artifactory)
-        secrets_in_file=$(jq '.total_secrets // .summary.total_secrets' "$analysis_file" 2>/dev/null || echo "0")
-        
-        if [ "$secrets_in_file" = "0" ] || [ "$secrets_in_file" = "null" ]; then
-            continue
-        fi
-        
-        echo "  Processing: $org_name ($secrets_in_file secrets)"
-        
+    fi
+done
+
+# Aggregate results from temporary files
+echo ""
+echo "📊 Aggregating results..."
+
+for stats_file in "$TEMP_DIR"/stats_*.tmp; do
+    [ ! -f "$stats_file" ] && continue
+    
+    while IFS='|' read -r detector secrets active revoked rate_limited critical high medium low; do
         org_count=$((org_count + 1))
-        total_secrets=$((total_secrets + secrets_in_file))
-        
-        # Track per-detector counts
-        detector_counts[$detector_name]=$((${detector_counts[$detector_name]:-0} + secrets_in_file))
-        
-        # Count by status - handle both formats
-        # Alchemy/Algolia/Alibaba: .secrets[].verification.status
-        # Artifactory: .secrets[].status
-        active=$(jq '[.secrets[] | select((.verification.status // .status) == "ACTIVE")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        revoked=$(jq '[.secrets[] | select((.verification.status // .status) == "REVOKED")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        rate_limited=$(jq '[.secrets[] | select((.verification.status // .status) == "RATE_LIMITED")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        
+        total_secrets=$((total_secrets + secrets))
         active_secrets=$((active_secrets + active))
         revoked_secrets=$((revoked_secrets + revoked))
         rate_limited_secrets=$((rate_limited_secrets + rate_limited))
-        
-        detector_active_counts[$detector_name]=$((${detector_active_counts[$detector_name]:-0} + active))
-        
-        # Count by risk level - handle both formats
-        # Alchemy/Algolia/Alibaba: .secrets[].risk_assessment.risk_level
-        # Artifactory: .secrets[].risk_level
-        critical=$(jq '[.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "CRITICAL")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        high=$(jq '[.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "HIGH")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        medium=$(jq '[.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "MEDIUM")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        low=$(jq '[.secrets[] | select((.risk_assessment.risk_level // .risk_level) == "LOW")] | length' "$analysis_file" 2>/dev/null || echo "0")
-        
         critical_count=$((critical_count + critical))
         high_count=$((high_count + high))
         medium_count=$((medium_count + medium))
         low_count=$((low_count + low))
         
-        echo "    Risk: C=$critical H=$high M=$medium L=$low"
-        
-        # Count capabilities dynamically (extract all boolean capabilities from first secret)
-        if [ "$active" -gt 0 ]; then
-            # Handle both .secrets[].verification.status and .secrets[].status formats
-            capabilities=$(jq -r '.secrets[] | select((.verification.status // .status) == "ACTIVE") | .capabilities | keys[] | select(. != "supported_chains" and . != "acl_permissions")' "$analysis_file" 2>/dev/null | sort -u)
-            for cap in $capabilities; do
-                # Check if it's a boolean capability
-                is_bool=$(jq -r ".secrets[0].capabilities.${cap} | type" "$analysis_file" 2>/dev/null)
-                if [ "$is_bool" = "boolean" ]; then
-                    cap_count=$(jq "[.secrets[] | select(.capabilities.${cap} == true)] | length" "$analysis_file" 2>/dev/null || echo "0")
-                    capability_counts[$cap]=$((${capability_counts[$cap]:-0} + cap_count))
-                fi
-            done
-        fi
-    done
+        detector_counts[$detector]=$((${detector_counts[$detector]:-0} + secrets))
+        detector_active_counts[$detector]=$((${detector_active_counts[$detector]:-0} + active))
+    done < "$stats_file"
 done
+
+# Count unique capabilities
+if [ -f "$TEMP_DIR/capabilities.tmp" ]; then
+    while read -r cap; do
+        capability_counts[$cap]=$((${capability_counts[$cap]:-0} + 1))
+    done < <(sort "$TEMP_DIR/capabilities.tmp" | uniq -c | awk '{print $2"|"$1}' | sed 's/|/ /')
+fi
+
+# Clean up temp directory
+rm -rf "$TEMP_DIR"
 
 unknown_secrets=$((total_secrets - active_secrets - revoked_secrets - rate_limited_secrets))
 
