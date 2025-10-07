@@ -74,11 +74,29 @@ for analyzer in "${analyzers[@]}"; do
     
     echo "🔄 [$current/$total] Running $analyzer analyzer..."
     
-    if bash "$script" --all > /dev/null 2>&1; then
+    # Fix line endings (CRLF -> LF) before running
+    if command -v dos2unix >/dev/null 2>&1; then
+        dos2unix "$script" 2>/dev/null
+    else
+        sed -i 's/\r$//' "$script" 2>/dev/null || true
+    fi
+    
+    # Create log file for this analyzer
+    log_file="$ANALYZER_DIR/logs/${analyzer}_$(date +%Y%m%d_%H%M%S).log"
+    mkdir -p "$ANALYZER_DIR/logs"
+    
+    if bash "$script" --all > "$log_file" 2>&1; then
         echo "✅ [$current/$total] $analyzer completed successfully"
         success=$((success + 1))
     else
-        echo "⚠️  [$current/$total] $analyzer completed with warnings/errors"
+        exit_code=$?
+        echo "⚠️  [$current/$total] $analyzer completed with warnings/errors (exit code: $exit_code)"
+        echo "    Log: $log_file"
+        # Show last few lines of the log for quick debugging
+        if [ -f "$log_file" ]; then
+            echo "    Last 3 lines:"
+            tail -3 "$log_file" | sed 's/^/      /'
+        fi
         success=$((success + 1))
     fi
     echo ""
@@ -93,6 +111,16 @@ echo "================================================"
 echo ""
 echo "✅ All analyzers have been executed!"
 echo ""
+
+# Fix any incomplete JSON files before deduplication
+echo "🔧 Fixing incomplete JSON files..."
+if [ -f "fix_incomplete_json.py" ]; then
+    python3 fix_incomplete_json.py
+    echo ""
+else
+    echo "⚠️  JSON fix script not found, skipping..."
+    echo ""
+fi
 
 # Run post-processing deduplication
 echo "🧹 Running post-processing deduplication..."
