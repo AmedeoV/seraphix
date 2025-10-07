@@ -7,6 +7,7 @@
 *.txt
 *.html
 *.log
+*.tmp
 
 # Ignore leaked secrets results directory and files (root and module-specific)
 leaked_secrets_results/
