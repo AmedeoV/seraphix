@@ -548,11 +548,11 @@ if [ -n "$LOGO_BASE64" ]; then
     cat >> "$OUTPUT_FILE" <<LOGO_HTML
             <div class="logo-container">
                 <img src="data:image/jpeg;base64,$LOGO_BASE64" alt="Seraphix Logo" class="logo">
-                <h1>🔐 $DASHBOARD_TITLE</h1>
+                <h1>$DASHBOARD_TITLE</h1>
             </div>
 LOGO_HTML
 else
-    echo "            <h1>🔐 $DASHBOARD_TITLE</h1>" >> "$OUTPUT_FILE"
+    echo "            <h1>$DASHBOARD_TITLE</h1>" >> "$OUTPUT_FILE"
 fi
 
 if [ "$DETECTOR_TYPE" = "all" ]; then
@@ -880,8 +880,8 @@ for detector_dir in $DETECTOR_DIRS; do
             # raw_secret (new analyzers), secret_prefix (truncated), secret_hash (hashed),
             # access_key_id (AWS), token_prefix (Artifactory), api_key, token, key, etc.
             raw_secret=$(echo "$secret" | jq -r '.raw_secret // .secret_prefix // .secret_hash // .access_key_id // .token_prefix // .api_key // .token // .key // "N/A"')
-            # Sanitize for JSON (escape quotes and backslashes)
-            raw_secret=$(echo "$raw_secret" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
+            # Sanitize for JSON (escape newlines, quotes, and backslashes)
+            raw_secret=$(echo "$raw_secret" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
             
             # Build capabilities string dynamically
             capabilities=""
