@@ -676,7 +676,6 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
                         <th>Risk</th>
                         <th>Score</th>
                         <th>Capabilities</th>
-                        <th>Chains</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -879,8 +878,7 @@ for detector_dir in $DETECTOR_DIRS; do
                 status: (.verification.status // .status),
                 riskLevel: (.risk_assessment.risk_level // .risk_level),
                 riskScore: (.risk_assessment.score // .risk_score),
-                capabilities: ([.capabilities | to_entries[] | select(.value == true and .key != "supported_chains" and .key != "acl_permissions") | .key] | join(", ")),
-                chains: ((.capabilities.supported_chains // []) | length)
+                capabilities: ([.capabilities | to_entries[] | select(.value == true and .key != "supported_chains" and .key != "acl_permissions") | .key] | join(", "))
             }
         ' "$analysis_file" 2>/dev/null >> "$TEMP_ALL_SECRETS"
     done
@@ -968,7 +966,6 @@ cat >> "$OUTPUT_FILE" <<'HTML_END'
                             ${capabilitiesHtml}
                         </div>
                     </td>
-                    <td>${secret.chains} chain${secret.chains !== 1 ? 's' : ''}</td>
                 `;
                 
                 tbody.appendChild(row);
