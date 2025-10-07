@@ -6,6 +6,7 @@
 *.db-wal
 *.txt
 *.html
+*.log
 
 # Ignore leaked secrets results directory and files (root and module-specific)
 leaked_secrets_results/

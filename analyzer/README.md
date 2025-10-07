@@ -246,3 +246,57 @@ Based on your scan results, these are the most common detector types:
 - [ ] Historical tracking (is key still active over time?)
 - [ ] Automated bug bounty report generation
 - [ ] Dashboard for visualization
+
+##  Automatic Deduplication
+
+### Overview
+
+The analyzer now includes **automatic deduplication** of secrets to eliminate duplicates within each organization's results.
+
+### How It Works
+
+Deduplication runs automatically after all analyzers complete:
+
+1. **Post-Processing Script**: \deduplicate_analysis_results.py2. **Trigger**: Automatically runs when using \ash run_all_analyzers.sh3. **Scope**: Removes duplicate secrets within each organization
+4. **Method**: SHA256 hash comparison of raw secret values
+
+### When Deduplication Runs
+
+-  **Automatically**: When running \ash run_all_analyzers.sh-  **Manually**: \python3 analyzer/deduplicate_analysis_results.py
+### What Gets Deduplicated
+
+- Duplicate secrets within the same organization's analysis
+- Based on SHA256 hash of the raw secret value
+- Preserves the first occurrence, removes subsequent duplicates
+- Updates summary statistics (total_secrets, active_percentage, etc.)
+
+### What Doesn't Get Deduplicated
+
+- Cross-organization duplicates (intentional - shows credential reuse)
+- Different credential formats of the same secret
+- Secrets with different metadata but same raw value across organizations
+
+### Manual Deduplication
+
+If needed, run deduplication separately:
+
+\\ash
+cd analyzer
+python3 deduplicate_analysis_results.py
+\
+### Integration with run_all_analyzers.sh
+
+The main analyzer runner now includes automatic deduplication:
+
+\\ash
+bash run_all_analyzers.sh
+# 1. Runs all 50+ analyzers
+# 2. Automatically deduplicates results  
+# 3. Shows summary statistics
+# 4. Ready for dashboard generation
+\
+After deduplication, regenerate the dashboard to see updated counts:
+
+\\ash
+bash analyzer/generate_dashboard.sh all
+\EOF
