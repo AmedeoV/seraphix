@@ -11,7 +11,7 @@ OUTPUT_DIR="$SCRIPT_DIR/visualizations"
 DETECTOR_TYPE="${1:-all}"
 
 if [ "$DETECTOR_TYPE" = "all" ]; then
-    echo "📊 Generating Multi-Detector Secrets Dashboard..."
+    echo "📊 Generating Seraphix Analysis Dashboard..."
     OUTPUT_FILE="$OUTPUT_DIR/dashboard.html"
 else
     echo "📊 Generating ${DETECTOR_TYPE} Secrets Dashboard..."
@@ -282,11 +282,19 @@ fi
 
 # Determine dashboard title
 if [ "$DETECTOR_TYPE" = "all" ]; then
-    DASHBOARD_TITLE="Multi-Detector Secrets Analysis Dashboard"
+    DASHBOARD_TITLE="Seraphix Analysis Dashboard"
 else
     # Capitalize first letter
     detector_cap=$(echo "$DETECTOR_TYPE" | sed 's/\b\w/\U&/g')
-    DASHBOARD_TITLE="$detector_cap Secrets Analysis Dashboard"
+    DASHBOARD_TITLE="Seraphix - $detector_cap Analysis"
+fi
+
+# Encode logo as base64 for embedding
+LOGO_PATH="$SCRIPT_DIR/../seraphix-scanner-logo.jpg"
+if [ -f "$LOGO_PATH" ]; then
+    LOGO_BASE64=$(base64 -w 0 "$LOGO_PATH" 2>/dev/null || base64 "$LOGO_PATH")
+else
+    LOGO_BASE64=""
 fi
 
 # Generate HTML Dashboard
@@ -325,6 +333,21 @@ cat >> "$OUTPUT_FILE" <<'HTML_START'
             text-align: center;
             color: white;
             margin-bottom: 30px;
+        }
+        
+        .header .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .header .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         
         .header h1 {
@@ -520,7 +543,17 @@ cat >> "$OUTPUT_FILE" <<'HTML_START'
         <div class="header">
 HTML_START
 
-echo "            <h1>🔐 $DASHBOARD_TITLE</h1>" >> "$OUTPUT_FILE"
+# Add logo if available
+if [ -n "$LOGO_BASE64" ]; then
+    cat >> "$OUTPUT_FILE" <<LOGO_HTML
+            <div class="logo-container">
+                <img src="data:image/jpeg;base64,$LOGO_BASE64" alt="Seraphix Logo" class="logo">
+                <h1>🔐 $DASHBOARD_TITLE</h1>
+            </div>
+LOGO_HTML
+else
+    echo "            <h1>🔐 $DASHBOARD_TITLE</h1>" >> "$OUTPUT_FILE"
+fi
 
 if [ "$DETECTOR_TYPE" = "all" ]; then
     echo "            <p>Comprehensive analysis of leaked secrets across multiple detector types</p>" >> "$OUTPUT_FILE"
