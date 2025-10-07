@@ -22,6 +22,9 @@ echo ""
 # Create visualizations directory
 mkdir -p "$SCRIPT_DIR/visualizations"
 
+# Clean up any temporary files from previous runs
+rm -f "$OUTPUT_DIR"/*.tmp
+
 # Check for jq
 if ! command -v jq >/dev/null 2>&1; then
     echo "❌ Error: jq is required but not installed"
@@ -538,6 +541,7 @@ cat >> "$OUTPUT_FILE" <<STATS_CARDS
                     <tr>
                         <th>Detector</th>
                         <th>Organization</th>
+                        <th>Secret</th>
                         <th>Commit</th>
                         <th>Status</th>
                         <th>Risk</th>
@@ -746,6 +750,12 @@ for detector_dir in $DETECTOR_DIRS; do
             risk_level=$(echo "$secret" | jq -r '.risk_assessment.risk_level // .risk_level')
             # Handle both formats: .risk_assessment.score and .risk_score
             risk_score=$(echo "$secret" | jq -r '.risk_assessment.score // .risk_score')
+            # Extract secret value from various possible field names
+            # raw_secret (new analyzers), secret_prefix (truncated), secret_hash (hashed),
+            # access_key_id (AWS), token_prefix (Artifactory), api_key, token, key, etc.
+            raw_secret=$(echo "$secret" | jq -r '.raw_secret // .secret_prefix // .secret_hash // .access_key_id // .token_prefix // .api_key // .token // .key // "N/A"')
+            # Sanitize for JSON (escape quotes and backslashes)
+            raw_secret=$(echo "$raw_secret" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
             
             # Build capabilities string dynamically
             capabilities=""
@@ -784,6 +794,7 @@ for detector_dir in $DETECTOR_DIRS; do
             echo "            {" >> "$OUTPUT_FILE"
             echo "                \"detector\": \"$detector_name\"," >> "$OUTPUT_FILE"
             echo "                \"organization\": \"$org_name\"," >> "$OUTPUT_FILE"
+            echo "                \"secret\": \"$raw_secret\"," >> "$OUTPUT_FILE"
             echo "                \"commit\": \"$commit\"," >> "$OUTPUT_FILE"
             echo "                \"status\": \"$status\"," >> "$OUTPUT_FILE"
             echo "                \"riskLevel\": \"$risk_level\"," >> "$OUTPUT_FILE"
@@ -856,6 +867,7 @@ cat >> "$OUTPUT_FILE" <<'HTML_END'
                 row.innerHTML = `
                     <td><span class="badge detector">${secret.detector}</span></td>
                     <td><strong>${secret.organization}</strong></td>
+                    <td><code style="font-size: 0.85em; word-break: break-all;">${secret.secret}</code></td>
                     <td><code>${secret.commit}</code></td>
                     <td><span class="badge ${secret.status.toLowerCase().replace('_', '-')}">${secret.status}</span></td>
                     <td><span class="badge ${secret.riskLevel.toLowerCase()}">${secret.riskLevel}</span></td>

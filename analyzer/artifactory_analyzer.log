@@ -1,0 +1,2807 @@
+[2025-10-06 17:16:58] [INFO] Starting Artifactory token analysis
+[2025-10-06 17:16:58] [INFO] Organization: braintree
+[2025-10-06 17:16:58] [INFO] Timestamp: Mon Oct  6 17:16:58 IST 2025
+[2025-10-06 17:16:58] [INFO] Processing Artifactory secrets for organization: braintree
+[2025-10-06 17:16:59] [INFO] Found 911 file(s) for braintree
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_harmony-one.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_trufflesecurity.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_trufflesecurity.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_trufflesecurity.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_aurora-is-near.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Badger-Finance.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_cartesi.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_hoprnet.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Kwenta.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Mean-Finance.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_primitivefinance.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_reserve-protocol.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_saddle-finance.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_stakewise.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_superfluid-finance.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Tenderize.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_threshold-network.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Threshold-USD.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Uniswap.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_xdaichain.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_AdExNetwork.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_aloelabs.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_axiom-crypto.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_brave-experiments.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_consenlabs.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_consensys-vertical-apps.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_CoolBitX-Technology.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_cryptonative-ch.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_DimensionDev.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_GoodDollar.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_iearn-finance.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_libssh2.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_magicbell-io.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_NFTX-project.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_OlympusDAO.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_overlay-market.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_PeggyJV.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_ProjectOpenSea.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Proof-Of-Humanity.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_rocket-pool.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_stonedefi.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_zeriontech.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Ankr-network.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_baofinance.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_daimo-eth.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_DecenterApps.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_DeltaPrimeLabs.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_ethereum-push-notification-service.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_IncrementFi.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_IronCoreLabs.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_polynetwork.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Popcorn-Limited.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_ribbon-finance.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_smartsheet-platform.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_TempleDAO.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_UMAprotocol.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_yaxis-project.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_yearn.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_0xPolygonHermez.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_0xProject.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_aave.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_Accenture.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:16:59] [INFO] Processing file: verified_secrets_across-protocol.json
+[2025-10-06 17:16:59] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_adobe-experience-league.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_adobe.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_airbnb.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_aiven.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_AleoHQ.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_algolia.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_aliyun.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_allegro.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_AmbireTech.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_angular.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_apache.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_apple.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_aragon.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_argoproj.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_ArtifexSoftware.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_artsy.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_atlassian.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_AugurProject.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_Automattic.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_ava-labs.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_axelarnetwork.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_baidu.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_balancednetwork.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_balancer-labs.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_betagouv.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_binance-chain.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_binary-com.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_bitsoex.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_bolcom.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_brave-intl.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_brave.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_braze-inc.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_bunqCommunity.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_bytedance.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_canonical-web-and-design.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_Canva.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_celo-org.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_chain.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_chain4travel.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_ChainSafe.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_CheckPointSW.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_cloudamqp.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_cloudflare.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_cockroachdb.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_coda.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_coinbase.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_cometchat-pro.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_ComposableFi.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_Consensys.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_cosmos.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_CpanelInc.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_Cryptorubic.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_CudoVentures.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_curl.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_dappnode.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_databrickslabs.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_datto.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_debridge-finance.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_delvtech.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_demlabs-cellframe.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_deskpro.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_dfinity.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_digitalocean.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_discourse.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_DISIC.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_DistributedCollective.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_docker.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_dotnet.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_Dynatrace.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_dysonltd.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_EFForg.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_elastic.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_epam.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_ethereum.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_evmos.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_exactly.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_facebook.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_facebookexperimental.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_filecoin-project.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_firebase.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_firecracker-microvm.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_firefox-devtools.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_FirefoxUX.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_flutter.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_fuseio.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_fusionjs.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_gear-tech.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_getsentry.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_github.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_Giveth.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_gnosis.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_golang.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_goldmansachs.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_googleapis.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_GoogleChrome.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_GoogleChromeLabs.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_GoogleContainerTools.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_googlefonts.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_googlemaps.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_GovTechSG.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_govuk-one-login.json
+[2025-10-06 17:17:00] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:00] [INFO] Processing file: verified_secrets_gravitational.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_harvestfi.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_hashgraph.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_helium.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_home-assistant.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_HorizenOfficial.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_horizontalsystems.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_HuaweiSwitch.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_humanode-network.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_hyperledger-labs.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_identity-com.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_IndexCoop.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_Infomaniak.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_input-output-hk.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_IntelLabs.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_interlay.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_iotaledger.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_iron-fish.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_istio.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_jekyll.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_JetBrains.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_Jigsaw-Code.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_joomla.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_jupyter-server.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_jupyterhub.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_jupyterlab.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_justeat.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_kadena-io.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_keep-network.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_kubernetes-client.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_kubernetes-nightly.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_kubernetes.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_launchdarkly.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_lidofinance.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_lifinance.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_line.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_livepeer.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_lyft.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_mastodon.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_matrix-org.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_mattermost.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_mdn.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_meganz.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_mergifyio-testing.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_Mergifyio.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_MetisProtocol.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_microsoft.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_MicrosoftDocs.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_MinaProtocol.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_Modern-Treasury.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_mongodb.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_mozilla-b2g.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_mozilla.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_MozillaReality.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_ms-iot.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_MyEtherWallet.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_naver.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_Netflix.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_netlify.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_newrelic.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_nextcloud.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_NexusMutual.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_nordic-institute.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_npm.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_nucypher.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_nukeviet.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_o1-labs.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_OasisDEX.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_oceanprotocol.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_octopus-network.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_OfficeDev.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_okta.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_okx.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_OneKeyHQ.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_openai.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_opentelekomcloud.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_OpenZeppelin.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_OriginProtocol.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_ovh.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_owncloud.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_pantheon-systems.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_paritytech.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_paypal.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_php.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_pingidentity.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_pinterest.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_poanetwork.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_PolymathNetwork.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_PolymeshAssociation.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_PowerShell.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_PrestaShop.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_RabbyHub.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_ref-finance.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_RevenueCat.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_RIPE-NCC.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_risc0.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_rsksmart.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_rubygems.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_safe-global.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_scroll-tech.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_seek-oss.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_segmentio.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_sei-protocol.json
+[2025-10-06 17:17:01] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:01] [INFO] Processing file: verified_secrets_sendbird.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_sense-finance.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_shapeshift-globalization.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_sheinsight.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Shopify.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_signalapp.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_skalenetwork.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_sora-xor.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_starkware-libs.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_status-im.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_stellar.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_stream-labs.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_stripe.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_sushiswap.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_swisscom-bigdata.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Switcheo.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Tencent.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_TencentCloud.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_tencentcloudstack.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_tencentyun.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_tendermint.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_tensorflow.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_thesandboxgame.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_tmobile.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_tree-sitter.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_trezor.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_tronprotocol.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_uber.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_valuedefi.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_vanilla.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_vector-im.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_WalletConnect.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_woocommerce.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_WordPress.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_wormhole-foundation.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Xilinx.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_yahoo.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Yelp.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_zendesk.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Zilliqa.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_akov40320.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_AmandaLyckenius.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_AnasMultani17.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Andre-Brito-py.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_BayshoreCommunication.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Chiranjeevi005.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Dieghonm.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Euler-JS.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_HailXD.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_iokeke-cos.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_japhar6.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_jasonculbertson.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_kinyichukwu.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_liantsoaaa.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_mahirTaj.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_mrcicil.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_NabiulinDamir.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Nadanalogaa.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_nwakaku.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Nyerho.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_PIPO1968.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_poc-e2e-testing.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_reksryle.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_RonitKiranMurmu.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_rsvofc.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Sai-Ashwin-2003.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Samuels-Development.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_trufflesecurity.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_ZKliio.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_egl74.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_dima91.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_G6-F24-COMP231.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_gfhdutra.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_jeffery9.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_lichunown.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_public-awesome.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Qt-dev.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_veald.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_enajera.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_thegridelectric.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_seifsami.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_1deep1.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_alejandro501.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_andBrandCo.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_hernandezleon.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_jinengandhi-intel.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_Lumix26.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_sanjabh11.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_shadowgarden1314.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_vvscode.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_00labs.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_0114444777771.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_0359562311.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_05-rahul-vishwakarma.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_06776.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_0712023.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_0750kosse.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:02] [INFO] Processing file: verified_secrets_0802222.json
+[2025-10-06 17:17:02] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0bs-chat.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0confirmation.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0keiji0.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x27b68e.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x506978656c.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xB370.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xbitcoin.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xChaddB.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xdya.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xHabitat.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xhank.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xhiro.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xJepsen.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xkek.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xkorin.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xMasayoshi.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xMycenaean.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xProject.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xsquid.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xweb-org.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xWOLAND.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1023604540.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_10973-202335.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_10KNetwork.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1137882300.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1166544.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_12345txy.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_12vanblart.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1369187714.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_142vip.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_31Carlton7.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_3box.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_AKASHAorg.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_Ankr-network.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_Anonym-tsk.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_ApolloFoundation.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_00-matt.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_00gh.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_01-edu.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_01alchemist.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_01org.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0405ysj.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_097115.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0chain.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0ctobot.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0hmX.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0install.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0lvin.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0Monet.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0penBrain.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0tkl.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0vrseer.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x00101010.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x01x0.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x14307.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x2CA.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x49b.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x5bfa.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x5ea000000.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x7f454c46.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0x84f.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xAnon0602.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xbakry.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xc0000142.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xDrMoe.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xELFi02.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xGingi.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xHericles.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xpi-ai.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xPolygon.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xPolygonHermez.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xsend.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xtechnobabble.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xWDG.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_0xZOne.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_100mslive.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_10110111.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1024pix.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_105ron.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1078249029.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1091969221.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_10up.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_11-whyred-new.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_110y.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1299172402.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_12xx12.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1330Petrel.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_133332D.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1337bugs.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1337N0013.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1337Steven1337.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1715173329.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_18F.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1j01.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1Panel-dev.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_1q23lyc45.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_20k.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_24eme.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_24pullrequests.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_26F-Studio.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:03] [INFO] Processing file: verified_secrets_29ki.json
+[2025-10-06 17:17:03] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_2anki.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_2dos.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_2factorauth.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_2gis.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_2i2c-org.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_33cn.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3846masa.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3liz.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3scale.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3Shain.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3YOURMIND.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_48klocs.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_4k4xs4pH1r3.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_51Degrees.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_7Ji.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_8398a7.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_8thwall.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_9001.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_987123879113.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_99designs.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_9elements.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AArnott.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ACEmulator.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ACINQ.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AFLplusplus.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AICP.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AKSW.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ALIGN-analoglayout.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AmbireTech.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Ameba-AIoT.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Amebis.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AmmarAbouZor.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AmpersandTarski.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Amsterdam.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Ana06.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Andersbakken.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Andy2244.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AndyObtiva.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AngelaViVi.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AniLeo.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AniTrend.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Ansuel.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Antergos.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AnzhiZhang.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AospExtended.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ApexAI.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ApolloAuto.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Appdynamics.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ApplETS.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_142vip.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3846masa.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Aptoide.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_01-edu.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_01org.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_0x5bfa.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_0x676e67.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_0xPolygon.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_0xPolygonZero.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_1024pix.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_10up.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_1299172402.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_1q23lyc45.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_24eme.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_24pullrequests.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_26F-Studio.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_33cn.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3liz.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3scale.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3Shain.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_3YOURMIND.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_48klocs.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_8thwall.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Abjad.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AbsaOSS.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ACEmulator.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ActiveState.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AdaptiveConsulting.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Admidio.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Admin9705.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Adpro-Team.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Aethersailor.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Aetopia.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Agenta-AI.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Akianonymus.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AladW.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AlexDenisov.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Alfresco.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Aljullu.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AllayMC.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AllenInstitute.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AlphaWallet.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AmmarAbouZor.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Andersbakken.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AndyObtiva.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Animated-Java.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Ansuel.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_Apicurio.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ArchipelagoMW.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_ARM-software.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_AVSLab.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:04] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:17:04] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_crank-it.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_0xProject.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_AdExNetwork.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_aloelabs.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_Ankr-network.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_aragon.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_Automattic.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_Badger-Finance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_baofinance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_BeanstalkFarms.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_brave-experiments.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_cartesi.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_ChainSafe.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_consenlabs.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_CoolBitX-Technology.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_cowri.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_crypto-org-chain.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_cryptonative-ch.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_CudoVentures.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_daimo-eth.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_DecenterApps.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_DeltaPrimeLabs.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_DimensionDev.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_DistributedCollective.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_drips-network.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_ethereum-push-notification-service.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_FraxFinance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_FuelLabs.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_fuseio.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_GammaStrategies.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_Gearbox-protocol.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_GoodDollar.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_google-research-datasets.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_iearn-finance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_immutable.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_IncrementFi.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_Instadapp.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_InverseFinance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_IronCoreLabs.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_kleros.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_LayerZero-Labs.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_lemma-finance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_magicbell-io.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_MetisProtocol.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_NFTfi-Genesis.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_NFTX-project.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_nginx.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_nomad-xyz.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_OlympusDAO.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_overlay-market.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_polynetwork.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_pooltogether.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_primitivefinance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_Proof-Of-Humanity.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_rarible.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_reserve-protocol.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_ribbon-finance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_saddle-finance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_shapeshift.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_smartsheet-platform.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_stakewise.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_stonedefi.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_superfluid-finance.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_teller-protocol.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_Tenderize.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_Threshold-USD.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_trufflesuite.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_UMAprotocol.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_xdaichain.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_yaxis-project.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_yearn.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_zeriontech.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_0xPolygonHermez.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_0xPolygonZero.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_Accenture.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_adafruit.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_adobe-experience-league.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_adobe-rnd.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_adobe.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_AdobeDocs.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_alchemyplatform.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_alexgo-io.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_alibaba.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_aliyun.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_amazonlinux.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_angular.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_apple.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_aquasecurity.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:05] [INFO] Processing file: verified_secrets_ArkEcosystem.json
+[2025-10-06 17:17:05] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_ArtifexSoftware.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_ava-labs.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_axelarnetwork.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_Azure-Samples.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_Azure.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_balancednetwork.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_bazelbuild.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_bigcommerce.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_binance-chain.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_binary-com.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_blablacar.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_bloxapp.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_bolcom.json
+[2025-10-06 17:17:06] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing file: verified_secrets_braintree.json
+[2025-10-06 17:17:06] [INFO] Found 4 Artifactory secret(s) in file
+[2025-10-06 17:17:06] [INFO] Processing Artifactory secret #1
+[2025-10-06 17:17:06] [INFO]   Domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:06] [INFO]   Token: AKCp8jQcoDy2hxS...usJpp
+[2025-10-06 17:17:06] [INFO] Verifying token for domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:06] [SUCCESS] Token ACTIVE for cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:06] [SUCCESS] Token AKCp8jQcoD...: ACTIVE (Risk: CRITICAL)
+[2025-10-06 17:17:06] [INFO] Processing Artifactory secret #2
+[2025-10-06 17:17:06] [INFO]   Domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:06] [INFO]   Token: AKCp8jQcoDy2hxS...usJpp
+[2025-10-06 17:17:06] [INFO] Verifying token for domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:07] [SUCCESS] Token ACTIVE for cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:07] [SUCCESS] Token AKCp8jQcoD...: ACTIVE (Risk: CRITICAL)
+[2025-10-06 17:17:07] [INFO] Processing Artifactory secret #3
+[2025-10-06 17:17:07] [INFO]   Domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:07] [INFO]   Token: AKCp8jQcoDy2hxS...usJpp
+[2025-10-06 17:17:07] [INFO] Verifying token for domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:07] [SUCCESS] Token ACTIVE for cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:07] [SUCCESS] Token AKCp8jQcoD...: ACTIVE (Risk: CRITICAL)
+[2025-10-06 17:17:07] [INFO] Processing Artifactory secret #4
+[2025-10-06 17:17:07] [INFO]   Domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:07] [INFO]   Token: AKCp8jQcoDy2hxS...usJpp
+[2025-10-06 17:17:07] [INFO] Verifying token for domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:08] [SUCCESS] Token ACTIVE for cardinalcommerceprod.jfrog.io
+[2025-10-06 17:17:08] [SUCCESS] Token AKCp8jQcoD...: ACTIVE (Risk: CRITICAL)
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_brave-intl.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_brave.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_braze-inc.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_broxus.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_bugcrowd.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_canonical-web-and-design.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_canonical.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_Canva.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_cardano-foundation.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_celo-org.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_chain4travel.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_ChainSafe.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_charmed-kubernetes.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_CheckPointSW.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_civicteam.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_CleverCloud.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_cockroachdb.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_coinbase.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_ComposableFi.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_cosmos.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_Countly.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_Cryptorubic.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_darwinia-network.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_databricks.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_decentraland.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_demlabs-cellframe.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_dfinity.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_discourse.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_DISIC.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_docker.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_dynatrace-oss.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_Dynatrace.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_EFForg.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_emberjs.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_epam.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_ethereum-optimism.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_everitoken.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_exactly.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_facebook.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_facebookexperimental.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_firebase.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_firecracker-microvm.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_firefox-devtools.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_flashbots.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_FraxFinance.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_frontapp.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_getsentry.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_git-lfs.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_Giveth.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_gnosis.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_google.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_googleapis.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_GoogleChrome.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_GoogleChromeLabs.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_GoogleCloudPlatform.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_googlefonts.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_googlemaps.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_grafana.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_graphprotocol.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_gravitational.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_GSA.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_harmony-one.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_harvestfi.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_hashgraph.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_helium.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_heremaps.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_heroku.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_hirosystems.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_home-assistant-libs.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_home-assistant.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_HorizenOfficial.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_horizontalsystems.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_huawei-cloudnative.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_HuaweiSwitch.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_HubSpot.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_humanode-network.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_hyperledger-labs.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_hyperledger.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_Informatievlaanderen.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_innogames.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_instructure.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:08] [INFO] Processing file: verified_secrets_intel.json
+[2025-10-06 17:17:08] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_IntelLabs.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_IntelPython.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_iotaledger.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_iron-fish.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_istio.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_jaegertracing.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_JetBrains.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_joomla.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_jupyter-server.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_jupyter.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_jupyterhub.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_justeattakeaway.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_keep-network.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_kilnfi.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_Kotlin.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_kubernetes-sigs.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_kubernetes.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_lastpass.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_launchdarkly.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_LavaMoat.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_Layr-Labs.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_leather-wallet.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_lidofinance.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_line.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_linkedin.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_Logitech.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_lyft.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_mapbox.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_maticnetwork.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_matrix-org.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_matter-labs.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_mattermost.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_mdn.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_meganz.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_MetaMask.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_meterio.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_microsoft.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_MicrosoftDocs.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_Modern-Treasury.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_mongodb.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_mozilla-services.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_mozilla.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_MozillaReality.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_MyEtherWallet.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_near.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_netlify.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_newrelic.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_NexusMutual.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_nginxinc.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_nordic-institute.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_npm.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_nubank.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_nukeviet.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_OasisDEX.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_oasislabs.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_oasisprotocol.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_oceanprotocol.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_octokit.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_OctopusDeploy.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_OfficeDev.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_okta.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_okx.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_omisego.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_onflow.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_openai.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_OpenZeppelin.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_oroinc.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_ovh.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_owncloud.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_palantir.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_pantheon-systems.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_paritytech.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_particle-iot.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_paypal.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_PCextreme.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_pillarwallet.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_plexinc.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_PolymeshAssociation.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_PowerShell.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_PrestaShop.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_ProtonMail.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_PureStake.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_Recidiviz.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_RevenueCat.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_RIPE-NCC.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_risc0.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_rsksmart.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_rust-lang.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_Samsung.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_scroll-tech.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_seek-oss.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_sei-protocol.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_sense-finance.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_shapeshift-globalization.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:09] [INFO] Processing file: verified_secrets_Shopify.json
+[2025-10-06 17:17:09] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_skalenetwork.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_slackhq.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_snowflakedb.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_snyk.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_solana-foundation.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_solana-labs.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_sourcegraph.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_square.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_stafiprotocol.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_stellar.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_stream-labs.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_stripe.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_sushiswap.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_Switcheo.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_Synthetixio.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_telekom.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_TencentCloud.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_tencentcloudstack.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_thriftrw.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_tmobile.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_tree-sitter.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_trezor.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_twitter.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_ubuntu.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_Unity-Technologies.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_vector-im.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_voys.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_woocommerce.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_WordPress.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_wormhole-foundation.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_wp-cli.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_Xilinx.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_yandex-cloud.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_yandex.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_youtube.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_zabbix.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_anthonykoch.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_calavera.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_droztech.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_Forestscribe.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_impressdesigns.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_IT533.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_binduak.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_googleapis.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_jveillet.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_mesmart34.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_onera.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_OpenZeppelin.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_probot.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_rpuboh.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_Tarsnap.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_TencentCloudBase.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_theusccs111.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_yearn.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [INFO] Processing file: verified_secrets_microsoft.json
+[2025-10-06 17:17:10] [INFO] Found 0
+0 Artifactory secret(s) in file
+[2025-10-06 17:17:10] [SUCCESS] Analysis complete for braintree
+[2025-10-06 17:17:10] [INFO] Results saved to: /mnt/c/Projects/seraphix/analyzer/analyzed_results/Artifactory/braintree_analysis.json
+[2025-10-06 17:17:10] [INFO] Total secrets: 4
+[2025-10-06 17:17:10] [INFO] Active: 4 (\033[0;32m100%\033[0m)
+[2025-10-06 17:17:10] [INFO] Revoked: 0
+[2025-10-06 18:04:22] [INFO] Starting Artifactory token analysis
+[2025-10-06 18:04:22] [INFO] Mode: Analyze all organizations
+[2025-10-06 18:04:22] [INFO] Timestamp: Mon Oct  6 18:04:22 IST 2025
+[2025-10-06 18:04:22] [INFO] Scanning for organizations with Artifactory secrets...
+[2025-10-06 18:04:24] [INFO] Found 1 organization(s) with Artifactory secrets
+[2025-10-06 18:04:24] [INFO] [1/1] Analyzing organization: braintree
+[2025-10-06 18:04:24] [INFO] Processing Artifactory secrets for organization: braintree
+[2025-10-06 18:04:24] [INFO] Found 1 file(s) for braintree
+[2025-10-06 18:04:24] [INFO] Processing file: verified_secrets_braintree.json
+[2025-10-06 18:04:24] [INFO] Found 4 Artifactory secret(s) in file
+[2025-10-06 18:04:24] [INFO] Processing Artifactory secret #1
+[2025-10-06 18:04:24] [INFO]   Domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:24] [INFO]   Token: AKCp8jQcoDy2hxS...usJpp
+[2025-10-06 18:04:24] [INFO] Verifying token for domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:25] [SUCCESS] Token ACTIVE for cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:25] [SUCCESS] Token AKCp8jQcoD...: ACTIVE (Risk: CRITICAL)
+[2025-10-06 18:04:25] [INFO] Processing Artifactory secret #2
+[2025-10-06 18:04:25] [INFO]   Domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:25] [INFO]   Token: AKCp8jQcoDy2hxS...usJpp
+[2025-10-06 18:04:25] [INFO] Verifying token for domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:25] [SUCCESS] Token ACTIVE for cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:25] [SUCCESS] Token AKCp8jQcoD...: ACTIVE (Risk: CRITICAL)
+[2025-10-06 18:04:25] [INFO] Processing Artifactory secret #3
+[2025-10-06 18:04:26] [INFO]   Domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:26] [INFO]   Token: AKCp8jQcoDy2hxS...usJpp
+[2025-10-06 18:04:26] [INFO] Verifying token for domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:26] [SUCCESS] Token ACTIVE for cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:26] [SUCCESS] Token AKCp8jQcoD...: ACTIVE (Risk: CRITICAL)
+[2025-10-06 18:04:26] [INFO] Processing Artifactory secret #4
+[2025-10-06 18:04:26] [INFO]   Domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:26] [INFO]   Token: AKCp8jQcoDy2hxS...usJpp
+[2025-10-06 18:04:26] [INFO] Verifying token for domain: cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:26] [SUCCESS] Token ACTIVE for cardinalcommerceprod.jfrog.io
+[2025-10-06 18:04:26] [SUCCESS] Token AKCp8jQcoD...: ACTIVE (Risk: CRITICAL)
+[2025-10-06 18:04:26] [SUCCESS] Analysis complete for braintree
+[2025-10-06 18:04:26] [INFO] Results saved to: /mnt/c/Projects/seraphix/analyzer/analyzed_results/Artifactory/braintree_analysis.json
+[2025-10-06 18:04:26] [INFO] Total secrets: 4
+[2025-10-06 18:04:26] [INFO] Active: 4 (\033[0;32m100%\033[0m)
+[2025-10-06 18:04:26] [INFO] Revoked: 0
+[2025-10-06 18:04:26] [SUCCESS] Completed: braintree
+[2025-10-06 18:04:26] [SUCCESS] Artifactory Analysis Complete!

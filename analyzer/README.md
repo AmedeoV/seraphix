@@ -12,14 +12,18 @@ analyzer/
 │   ├── alibaba_analyzer.sh    # Alibaba Cloud credentials
 │   ├── artifactory_analyzer.sh # JFrog Artifactory tokens
 │   ├── assemblyai_analyzer.sh  # AssemblyAI API keys
-│   └── aws_analyzer.sh         # AWS credentials
+│   ├── aws_analyzer.sh         # AWS credentials
+│   ├── azure_analyzer.sh       # Azure Storage account keys
+│   └── browserstack_analyzer.sh # BrowserStack testing credentials
 ├── analyzed_results/           # Output directory (organized by detector)
 │   ├── Alchemy/
 │   ├── algolia/
 │   ├── Alibaba/
 │   ├── Artifactory/
 │   ├── AssemblyAI/
-│   └── AWS/
+│   ├── AWS/
+│   ├── Azure/
+│   └── BrowserStack/
 ├── visualizations/             # Dashboard HTML files
 │   └── dashboard.html
 └── generate_dashboard.sh       # Generate interactive dashboards
@@ -38,6 +42,12 @@ bash analyzer/detectors/artifactory_analyzer.sh braintree
 
 # AWS
 bash analyzer/detectors/aws_analyzer.sh enajera
+
+# Azure
+bash analyzer/detectors/azure_analyzer.sh microsoft
+
+# BrowserStack
+bash analyzer/detectors/browserstack_analyzer.sh IronCoreLabs
 ```
 
 ### Analyze ALL Organizations
@@ -51,6 +61,12 @@ bash analyzer/detectors/artifactory_analyzer.sh --all
 
 # AWS - analyze all organizations with AWS credentials
 bash analyzer/detectors/aws_analyzer.sh --all
+
+# Azure - analyze all organizations with Azure Storage keys
+bash analyzer/detectors/azure_analyzer.sh --all
+
+# BrowserStack - analyze all organizations with BrowserStack credentials
+bash analyzer/detectors/browserstack_analyzer.sh --all
 
 # Alchemy - automatically processes all organizations (no flags needed)
 bash analyzer/detectors/alchemy_analyzer.sh
@@ -71,6 +87,10 @@ bash analyzer/generate_dashboard.sh all
 - `assemblyai_analyzer.sh` - AssemblyAI transcription API keys
 - `artifactory_analyzer.sh` - JFrog Artifactory access tokens
 - `aws_analyzer.sh` - AWS access keys and secret keys
+- `azure_analyzer.sh` - Azure Storage account keys
+- `browserstack_analyzer.sh` - BrowserStack testing credentials
+- `aws_analyzer.sh` - AWS access keys and secret keys
+- `azure_analyzer.sh` - Azure Storage account keys
 
 **🔄 Auto-processing analyzers** (automatically scan all organizations):
 - `alchemy_analyzer.sh` - Alchemy blockchain API keys
