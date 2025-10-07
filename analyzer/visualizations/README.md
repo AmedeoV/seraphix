@@ -106,7 +106,7 @@ Risk Breakdown:
 ```
 analyzer/
 ├── generate_dashboard.sh          # Dashboard generator
-├── detectors/
+├── analyzers/
 │   └── alchemy_analyzer.sh        # Analysis script
 ├── analyzed_results/
 │   └── alchemy/
@@ -123,7 +123,7 @@ analyzer/
 
 ```bash
 # Step 1: Run analyzer
-bash analyzer/detectors/alchemy_analyzer.sh
+bash analyzer/analyzers/alchemy_analyzer.sh
 
 # Step 2: Generate dashboard
 bash analyzer/generate_dashboard.sh
@@ -185,7 +185,7 @@ function exportToCSV() {
 
 ### Dashboard shows no data
 - Check that analysis files exist in `analyzer/analyzed_results/alchemy/`
-- Run `bash analyzer/detectors/alchemy_analyzer.sh` first
+- Run `bash analyzer/analyzers/alchemy_analyzer.sh` first
 
 ### Charts not rendering
 - Check browser console for JavaScript errors

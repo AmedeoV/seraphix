@@ -149,7 +149,7 @@ echo "   2. View results in: analyzer/visualizations/dashboard.html"hanging
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANALYZER_DIR="$SCRIPT_DIR"
-DETECTORS_DIR="$ANALYZER_DIR/detectors"
+ANALYZERS_DIR="$ANALYZER_DIR/analyzers"
 
 # Detect CPU cores for parallel processing
 if command -v nproc >/dev/null 2>&1; then
@@ -171,7 +171,7 @@ if [ "$1" = "--sequential" ]; then
     shift
 fi
 
-cd "$DETECTORS_DIR"
+cd "$ANALYZERS_DIR"
 
 # Pre-processing: Fix incomplete JSON files and deduplicate
 echo "🔧 Pre-processing: Fixing and deduplicating analysis results..."
@@ -294,7 +294,7 @@ def main():
     # Get the base project directory
     try:
         script_dir = Path.cwd()
-        if script_dir.name == 'detectors':
+        if script_dir.name == 'analyzers':
             base_dir = script_dir.parent.parent
         elif script_dir.name == 'analyzer':
             base_dir = script_dir.parent
@@ -492,7 +492,7 @@ run_analyzer() {
 
 export -f run_analyzer
 export ANALYZER_DIR
-export DETECTORS_DIR
+export ANALYZERS_DIR
 
 # Run analyzers based on mode
 if [ "$PARALLEL_MODE" = true ] && [ "$PARALLEL_JOBS" -gt 1 ]; then

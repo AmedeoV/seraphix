@@ -6,7 +6,7 @@ Analyze leaked secrets from scan results to determine active status, risk level,
 
 ```
 analyzer/
-├── detectors/                  # All analyzer scripts
+├── analyzers/                  # All analyzer scripts
 │   ├── alchemy_analyzer.sh    # Alchemy blockchain API keys
 │   ├── algolia_analyzer.sh    # Algolia search API keys
 │   ├── alibaba_analyzer.sh    # Alibaba Cloud credentials
@@ -35,47 +35,47 @@ analyzer/
 
 ```bash
 # AssemblyAI
-bash analyzer/detectors/assemblyai_analyzer.sh nwakaku
+bash analyzer/analyzers/assemblyai_analyzer.sh nwakaku
 
 # Artifactory
-bash analyzer/detectors/artifactory_analyzer.sh braintree
+bash analyzer/analyzers/artifactory_analyzer.sh braintree
 
 # AWS
-bash analyzer/detectors/aws_analyzer.sh enajera
+bash analyzer/analyzers/aws_analyzer.sh enajera
 
 # Azure
-bash analyzer/detectors/azure_analyzer.sh microsoft
+bash analyzer/analyzers/azure_analyzer.sh microsoft
 
 # BrowserStack
-bash analyzer/detectors/browserstack_analyzer.sh IronCoreLabs
+bash analyzer/analyzers/browserstack_analyzer.sh IronCoreLabs
 ```
 
 ### Analyze ALL Organizations
 
 ```bash
 # AssemblyAI - analyze all organizations with AssemblyAI secrets
-bash analyzer/detectors/assemblyai_analyzer.sh --all
+bash analyzer/analyzers/assemblyai_analyzer.sh --all
 
 # Artifactory - analyze all organizations with Artifactory tokens
-bash analyzer/detectors/artifactory_analyzer.sh --all
+bash analyzer/analyzers/artifactory_analyzer.sh --all
 
 # AWS - analyze all organizations with AWS credentials
-bash analyzer/detectors/aws_analyzer.sh --all
+bash analyzer/analyzers/aws_analyzer.sh --all
 
 # Azure - analyze all organizations with Azure Storage keys
-bash analyzer/detectors/azure_analyzer.sh --all
+bash analyzer/analyzers/azure_analyzer.sh --all
 
 # BrowserStack - analyze all organizations with BrowserStack credentials
-bash analyzer/detectors/browserstack_analyzer.sh --all
+bash analyzer/analyzers/browserstack_analyzer.sh --all
 
 # Alchemy - automatically processes all organizations (no flags needed)
-bash analyzer/detectors/alchemy_analyzer.sh
+bash analyzer/analyzers/alchemy_analyzer.sh
 
 # Algolia - automatically processes all organizations (no flags needed)
-bash analyzer/detectors/algolia_analyzer.sh
+bash analyzer/analyzers/algolia_analyzer.sh
 
 # Alibaba - automatically processes all organizations (no flags needed)
-bash analyzer/detectors/alibaba_analyzer.sh
+bash analyzer/analyzers/alibaba_analyzer.sh
 
 # Generate dashboard for all detectors
 bash analyzer/generate_dashboard.sh all
