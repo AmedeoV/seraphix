@@ -31,7 +31,21 @@ Seraphix is a **comprehensive secret scanning toolkit** designed for security re
 
 **📝 Repository & Commit Scanning** - Target specific repositories or individual commits for focused analysis. Ideal for investigating particular codebases or validating security fixes.
 
-## 💰 Proven Results
+## � Interactive Dashboard
+
+Seraphix includes a powerful **interactive dashboard** for visualizing and analyzing scan results. View secret statistics, risk assessments, verification status, and capabilities across all detected secrets.
+
+<p align="center">
+  <img src="seraphix-dashboard.png" alt="Seraphix Dashboard" width="800"/>
+</p>
+
+Generate the dashboard from your scan results:
+```bash
+cd analyzer/
+./generate_dashboard.sh
+```
+
+## �💰 Proven Results
 
 The force-push scanning technique was inspired by [Sharon Brizinov](https://github.com/SharonBrizinov)'s research. Read [Sharon's blog post](https://trufflesecurity.com/blog/guest-post-how-i-scanned-all-of-github-s-oops-commits-for-leaked-secrets) to learn how he made **$25k in bounties** using this innovative approach to discover leaked secrets!
 
