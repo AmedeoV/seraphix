@@ -573,6 +573,63 @@ generate_summary() {
     log_success "Results saved in: $(realpath "$OUTPUT_DIR")"
 }
 
+# Organize results: move files with secrets to org folder, remove empty files
+organize_results() {
+    log_progress "Organizing results..."
+    
+    local secrets_dir="$OUTPUT_DIR/${ORG}_secrets"
+    local files_with_secrets=0
+    local files_removed=0
+    
+    # Create directory for files with secrets
+    mkdir -p "$secrets_dir"
+    
+    for file in "$OUTPUT_DIR"/*.json; do
+        if [ ! -f "$file" ]; then
+            continue
+        fi
+        
+        # Skip if it's a summary file
+        if [[ "$(basename "$file")" == completion_summary_* ]]; then
+            continue
+        fi
+        
+        # Check if file contains secrets or errors
+        local count=0
+        local has_error=false
+        
+        # Try to parse and count secrets
+        if jq -e 'type == "array"' "$file" >/dev/null 2>&1; then
+            count=$(jq 'length' "$file" 2>/dev/null || echo "0")
+        elif jq -e '.error' "$file" >/dev/null 2>&1; then
+            has_error=true
+        fi
+        
+        if [ "$count" -gt 0 ]; then
+            # Move files with secrets to org folder
+            mv "$file" "$secrets_dir/"
+            ((files_with_secrets++))
+            log_debug "Moved $(basename "$file") with $count secret(s) to ${ORG}_secrets/"
+        else
+            # Remove empty files and error files
+            rm "$file"
+            ((files_removed++))
+            log_debug "Removed empty file: $(basename "$file")"
+        fi
+    done
+    
+    # Log summary
+    if [ "$files_with_secrets" -gt 0 ]; then
+        log_success "📁 Organized $files_with_secrets file(s) with secrets into: ${ORG}_secrets/"
+        log_success "🗑️  Removed $files_removed file(s) with no secrets"
+        log_info "Access secrets at: $(realpath "$secrets_dir")"
+    else
+        log_info "No secrets found, removed $files_removed empty file(s)"
+        # Remove the empty secrets directory if no files were moved
+        rmdir "$secrets_dir" 2>/dev/null || true
+    fi
+}
+
 # Send immediate notification for first secret found in a repository
 send_immediate_notification() {
     local repo_name="$1"
@@ -785,6 +842,7 @@ main() {
             if [ $repos_result -eq 0 ]; then
                 scan_all_repos
                 generate_summary
+                organize_results
             else
                 log_error "Failed to fetch repositories for $org, skipping..."
             fi
@@ -825,6 +883,7 @@ main() {
         get_org_repos "$ORG"
         scan_all_repos
         generate_summary
+        organize_results
     fi
 }
 
