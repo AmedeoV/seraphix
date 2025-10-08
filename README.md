@@ -64,7 +64,25 @@ The force-push scanning technique was inspired by [Sharon Brizinov](https://gith
 ./install_requirements.sh
 ```
 
-## 2: Choose Your Scanner
+## 2: Configure GitHub Token (Recommended)
+
+**⚠️ Important:** Before running any intensive scans, it's **highly recommended** to create a GitHub Personal Access Token and set it as an environment variable to avoid being rate-limited by the GitHub API.
+
+1. Create a token at [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
+2. No special scopes are required for public repository scanning
+3. Set the token as an environment variable:
+
+```bash
+# Linux/macOS/WSL
+export GITHUB_TOKEN="your_token_here"
+
+# PowerShell (Windows)
+$env:GITHUB_TOKEN="your_token_here"
+```
+
+Without authentication, GitHub's API limits you to 60 requests per hour. With a token, you get 5,000 requests per hour.
+
+## 3: Choose Your Scanner
 
 ### 🔥 [Force Push Scanner](force-push-scanner/README.md) 
 **⚠️ Requires SQLite database download** - See [setup instructions](force-push-scanner/README.md)
