@@ -41,10 +41,6 @@ NOTIFICATION_EMAIL=""  # Email address for notifications (empty = disabled)
 NOTIFICATION_TELEGRAM_CHAT_ID=""  # Telegram chat ID for notifications (empty = disabled)
 NOTIFICATION_SCRIPT="$SCRIPT_DIR/../send_notifications_enhanced.sh"  # Enhanced notification system
 
-# Scan state configuration
-SCAN_STATE_FILE="$SCRIPT_DIR/scan_state.json"
-RESUME_SCAN=false  # Resume from previous scan state
-
 # System resource detection for dynamic worker management
 detect_system_resources() {
     # Detect CPU cores (logical cores including hyperthreading)
@@ -113,97 +109,6 @@ log_error() { echo -e "${RED}❌ $1${NC}"; }
 log_progress() { echo -e "${CYAN}🔄 $1${NC}"; }
 log_debug() { [ "$DEBUG" = true ] && echo -e "${YELLOW}🐛 $1${NC}"; }
 
-# Scan state management functions
-initialize_scan_state() {
-    local org="$1"
-    
-    if [ ! -f "$SCAN_STATE_FILE" ] || [ "$RESUME_SCAN" = false ]; then
-        # Create new scan state
-        cat > "$SCAN_STATE_FILE" << EOF
-{
-  "organization": "$org",
-  "start_time": "$(date -u +"%Y-%m-%dT%H:%M:%S%z")",
-  "output_dir": "$OUTPUT_DIR",
-  "scanned_repos": [],
-  "total_repos": 0,
-  "repos_with_secrets": 0,
-  "total_secrets": 0
-}
-EOF
-        log_info "Initialized scan state: $SCAN_STATE_FILE"
-    else
-        log_info "Resuming from existing scan state: $SCAN_STATE_FILE"
-    fi
-}
-
-is_repo_scanned() {
-    local repo_name="$1"
-    
-    if [ ! -f "$SCAN_STATE_FILE" ]; then
-        return 1  # Not scanned (file doesn't exist)
-    fi
-    
-    # Check if repo is in scanned_repos array
-    if jq -e ".scanned_repos | index(\"$repo_name\")" "$SCAN_STATE_FILE" >/dev/null 2>&1; then
-        return 0  # Already scanned
-    else
-        return 1  # Not scanned
-    fi
-}
-
-add_scanned_repo() {
-    local repo_name="$1"
-    local secrets_count="${2:-0}"
-    
-    if [ ! -f "$SCAN_STATE_FILE" ]; then
-        log_warning "Scan state file not found, cannot update"
-        return
-    fi
-    
-    # Create a temporary file
-    local temp_file="$SCAN_STATE_FILE.tmp"
-    
-    # Add repo to scanned_repos array and update counters
-    jq --arg repo "$repo_name" --argjson secrets "$secrets_count" '
-        .scanned_repos += [$repo] |
-        if $secrets > 0 then
-            .repos_with_secrets += 1 |
-            .total_secrets += $secrets
-        else
-            .
-        end
-    ' "$SCAN_STATE_FILE" > "$temp_file"
-    
-    # Replace original file
-    mv "$temp_file" "$SCAN_STATE_FILE"
-    
-    log_debug "Added $repo_name to scan state (secrets: $secrets_count)"
-}
-
-update_scan_state_total() {
-    local total_repos="$1"
-    
-    if [ ! -f "$SCAN_STATE_FILE" ]; then
-        return
-    fi
-    
-    local temp_file="$SCAN_STATE_FILE.tmp"
-    jq --argjson total "$total_repos" '.total_repos = $total' "$SCAN_STATE_FILE" > "$temp_file"
-    mv "$temp_file" "$SCAN_STATE_FILE"
-}
-
-finalize_scan_state() {
-    if [ ! -f "$SCAN_STATE_FILE" ]; then
-        return
-    fi
-    
-    local temp_file="$SCAN_STATE_FILE.tmp"
-    jq --arg end_time "$(date -u +"%Y-%m-%dT%H:%M:%S%z")" '.end_time = $end_time' "$SCAN_STATE_FILE" > "$temp_file"
-    mv "$temp_file" "$SCAN_STATE_FILE"
-    
-    log_success "Scan state finalized: $SCAN_STATE_FILE"
-}
-
 # Adaptive timeout calculation based on repository characteristics
 calculate_adaptive_timeout() {
     local repo_size_mb="$1"
@@ -263,7 +168,6 @@ Options:
     --include-forks      Include forked repositories (default: excluded)
     --include-archived   Include archived repositories (default: excluded)
     --scan-all           Scan ALL repositories (includes forks and archived)
-    --resume             Resume from previous scan state (skip already scanned repos)
     --output-dir DIR     Custom output directory (default: leaked_secrets_results/TIMESTAMP/org_leaked_secrets/scan_ORG_TIMESTAMP)
     --email EMAIL        Email address for security notifications
     --telegram-chat-id ID Telegram chat ID for security notifications
@@ -276,10 +180,6 @@ Environment Variables:
 Repository Filtering:
     By default, archived and forked repositories are excluded to focus on active code.
     Use --include-forks, --include-archived, or --scan-all to customize filtering.
-
-Scan State:
-    The scanner tracks progress in scan_state.json. Use --resume to continue from
-    a previous interrupted scan, skipping repositories that were already scanned.
 
 Dynamic Configuration:
     The script automatically detects CPU cores, memory, and system load to determine
@@ -463,12 +363,6 @@ scan_repo() {
     local clone_url=$(echo "$repo_info" | jq -r '.clone_url')
     local size=$(echo "$repo_info" | jq -r '.size')
     
-    # Check if repo was already scanned (skip if resuming)
-    if is_repo_scanned "$repo_name"; then
-        log_info "[$worker_id] ⏭️  Skipping $repo_name (already scanned)"
-        return 0
-    fi
-    
     # If GITHUB_TOKEN is set, inject it into the clone URL for authentication
     if [ -n "$GITHUB_TOKEN" ]; then
         clone_url=$(echo "$clone_url" | sed "s|https://|https://${GITHUB_TOKEN}@|")
@@ -579,18 +473,12 @@ scan_repo() {
         log_debug "[$worker_id] No secrets in $repo_name"
     fi
     
-    # Record this repo as scanned in the scan state
-    add_scanned_repo "$repo_name" "$findings"
-    
     rm -rf "$worker_dir"
 }
 
 scan_all_repos() {
     local repos_file="$TEMP_DIR/filtered_repos.json"
     local total=$(jq length "$repos_file")
-    
-    # Update total repos in scan state
-    update_scan_state_total "$total"
     
     log_progress "Starting scan of $total repositories with $MAX_WORKERS workers"
     
@@ -719,9 +607,6 @@ generate_summary() {
     fi
     
     log_success "Results saved in: $(realpath "$OUTPUT_DIR")"
-    
-    # Finalize scan state
-    finalize_scan_state
 }
 
 # Organize results: move files with secrets to org folder, remove empty files
@@ -882,7 +767,6 @@ parse_args() {
             --include-forks) EXCLUDE_FORKS=false; shift ;;
             --include-archived) EXCLUDE_ARCHIVED=false; shift ;;
             --scan-all) EXCLUDE_FORKS=false; EXCLUDE_ARCHIVED=false; shift ;;
-            --resume) RESUME_SCAN=true; shift ;;
             --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
             --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
             --telegram-chat-id) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; shift 2 ;;
@@ -989,9 +873,6 @@ main() {
             # Reset worker state for this organization
             WORKER_PIDS=()
             
-            # Initialize scan state for this organization
-            initialize_scan_state "$ORG"
-            
             # Scan this organization (disable exit-on-error for individual org failures)
             set +e
             get_org_repos "$ORG"
@@ -1036,9 +917,6 @@ main() {
         log_info "Scanning organization: $ORG"
         log_info "Output directory: $(realpath "$OUTPUT_DIR")"
         log_info "Results will be saved in: leaked_secrets_results structure"
-        
-        # Initialize scan state
-        initialize_scan_state "$ORG"
         
         get_org_repos "$ORG"
         scan_all_repos
