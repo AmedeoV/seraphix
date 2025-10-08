@@ -208,49 +208,97 @@ cleanup_on_exit() {
 get_org_repos() {
     local org="$1"
     local repos_file="$TEMP_DIR/repos.json"
+    local all_repos_file="$TEMP_DIR/all_repos.json"
     
     log_progress "Fetching repositories for $org..."
     
-    # Try organization endpoint first
-    local api_url="https://api.github.com/orgs/$org/repos?per_page=100&type=all"
-    
-    # Perform curl with or without authentication
-    if [ -n "$GITHUB_TOKEN" ]; then
-        if ! curl -s -H "Authorization: token $GITHUB_TOKEN" "$api_url" > "$repos_file"; then
-            log_error "Failed to fetch repositories"
-            return 1
-        fi
-    else
-        if ! curl -s "$api_url" > "$repos_file"; then
-            log_error "Failed to fetch repositories"
-            return 1
-        fi
+    # Warn if no token is set
+    if [ -z "$GITHUB_TOKEN" ]; then
+        log_warning "GITHUB_TOKEN not set - only public repositories will be accessible"
+        log_info "For private organizations, set your token: export GITHUB_TOKEN='your_token'"
     fi
     
-    # Check if it's a "Not Found" error (might be a user, not an org)
-    if jq -e '.message == "Not Found"' "$repos_file" >/dev/null 2>&1; then
-        log_info "Not an organization. Trying user endpoint..."
-        api_url="https://api.github.com/users/$org/repos?per_page=100&type=all"
+    # Initialize empty array for collecting all repositories
+    echo "[]" > "$all_repos_file"
+    
+    # Try organization endpoint first
+    local base_url="https://api.github.com/orgs/$org/repos"
+    local page=1
+    local per_page=100
+    local is_user=false
+    
+    # Fetch all pages
+    while true; do
+        local api_url="${base_url}?per_page=${per_page}&page=${page}&type=all"
         
+        log_debug "Fetching page $page..."
+        
+        # Perform curl with or without authentication
         if [ -n "$GITHUB_TOKEN" ]; then
             if ! curl -s -H "Authorization: token $GITHUB_TOKEN" "$api_url" > "$repos_file"; then
-                log_error "Failed to fetch repositories"
+                log_error "Failed to fetch repositories (page $page)"
                 return 1
             fi
         else
             if ! curl -s "$api_url" > "$repos_file"; then
-                log_error "Failed to fetch repositories"
+                log_error "Failed to fetch repositories (page $page)"
                 return 1
             fi
         fi
-    fi
+        
+        # Check if it's a "Not Found" error on first page (might be a user, not an org)
+        if [ $page -eq 1 ] && jq -e '.message == "Not Found"' "$repos_file" >/dev/null 2>&1; then
+            log_info "Not an organization. Trying user endpoint..."
+            base_url="https://api.github.com/users/$org/repos"
+            is_user=true
+            api_url="${base_url}?per_page=${per_page}&page=${page}&type=all"
+            
+            if [ -n "$GITHUB_TOKEN" ]; then
+                if ! curl -s -H "Authorization: token $GITHUB_TOKEN" "$api_url" > "$repos_file"; then
+                    log_error "Failed to fetch repositories"
+                    return 1
+                fi
+            else
+                if ! curl -s "$api_url" > "$repos_file"; then
+                    log_error "Failed to fetch repositories"
+                    return 1
+                fi
+            fi
+        fi
+        
+        # Check for any other API errors
+        if jq -e '.message' "$repos_file" >/dev/null 2>&1; then
+            local error_msg=$(jq -r '.message' "$repos_file")
+            log_error "GitHub API error: $error_msg"
+            return 1
+        fi
+        
+        # Check if we got any repos on this page
+        local page_count=$(jq 'length' "$repos_file")
+        if [ "$page_count" -eq 0 ]; then
+            log_debug "No more repositories found (page $page)"
+            break
+        fi
+        
+        # Append this page's repos to the all_repos file
+        jq -s '.[0] + .[1]' "$all_repos_file" "$repos_file" > "$TEMP_DIR/merged.json"
+        mv "$TEMP_DIR/merged.json" "$all_repos_file"
+        
+        log_progress "Fetched $page_count repositories from page $page (total: $(jq 'length' "$all_repos_file"))"
+        
+        # If we got fewer than per_page results, we're done
+        if [ "$page_count" -lt "$per_page" ]; then
+            break
+        fi
+        
+        page=$((page + 1))
+    done
     
-    # Check for any other API errors
-    if jq -e '.message' "$repos_file" >/dev/null 2>&1; then
-        local error_msg=$(jq -r '.message' "$repos_file")
-        log_error "GitHub API error: $error_msg"
-        return 1
-    fi
+    # Use the combined results
+    mv "$all_repos_file" "$repos_file"
+    
+    local total_fetched=$(jq 'length' "$repos_file")
+    log_info "Total repositories fetched: $total_fetched"
     
     # Filter repositories
     local filter=".[] | select(.archived == false"
@@ -278,6 +326,11 @@ scan_repo() {
     local repo_name=$(echo "$repo_info" | jq -r '.full_name')
     local clone_url=$(echo "$repo_info" | jq -r '.clone_url')
     local size=$(echo "$repo_info" | jq -r '.size')
+    
+    # If GITHUB_TOKEN is set, inject it into the clone URL for authentication
+    if [ -n "$GITHUB_TOKEN" ]; then
+        clone_url=$(echo "$clone_url" | sed "s|https://|https://${GITHUB_TOKEN}@|")
+    fi
     
     log_progress "[$worker_id] Scanning: $repo_name (${size}KB)"
     
