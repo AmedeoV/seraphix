@@ -26,6 +26,7 @@ DEBUG=false
 LOG_DIR="$SCRIPT_DIR/scan_logs"  # Local debug logs directory
 GITHUB_TOKEN="${GITHUB_TOKEN:-""}"  # Use environment variable if set, empty otherwise
 EXCLUDE_FORKS=true
+EXCLUDE_ARCHIVED=true
 MAX_REPOS=0
 ORGS_FILE=""  # File containing list of organizations to scan
 
@@ -39,6 +40,10 @@ export GIT_OPERATION_TIMEOUT=300
 NOTIFICATION_EMAIL=""  # Email address for notifications (empty = disabled)
 NOTIFICATION_TELEGRAM_CHAT_ID=""  # Telegram chat ID for notifications (empty = disabled)
 NOTIFICATION_SCRIPT="$SCRIPT_DIR/../send_notifications_enhanced.sh"  # Enhanced notification system
+
+# Scan state configuration
+SCAN_STATE_FILE="$SCRIPT_DIR/scan_state.json"
+RESUME_SCAN=false  # Resume from previous scan state
 
 # System resource detection for dynamic worker management
 detect_system_resources() {
@@ -108,6 +113,97 @@ log_error() { echo -e "${RED}❌ $1${NC}"; }
 log_progress() { echo -e "${CYAN}🔄 $1${NC}"; }
 log_debug() { [ "$DEBUG" = true ] && echo -e "${YELLOW}🐛 $1${NC}"; }
 
+# Scan state management functions
+initialize_scan_state() {
+    local org="$1"
+    
+    if [ ! -f "$SCAN_STATE_FILE" ] || [ "$RESUME_SCAN" = false ]; then
+        # Create new scan state
+        cat > "$SCAN_STATE_FILE" << EOF
+{
+  "organization": "$org",
+  "start_time": "$(date -u +"%Y-%m-%dT%H:%M:%S%z")",
+  "output_dir": "$OUTPUT_DIR",
+  "scanned_repos": [],
+  "total_repos": 0,
+  "repos_with_secrets": 0,
+  "total_secrets": 0
+}
+EOF
+        log_info "Initialized scan state: $SCAN_STATE_FILE"
+    else
+        log_info "Resuming from existing scan state: $SCAN_STATE_FILE"
+    fi
+}
+
+is_repo_scanned() {
+    local repo_name="$1"
+    
+    if [ ! -f "$SCAN_STATE_FILE" ]; then
+        return 1  # Not scanned (file doesn't exist)
+    fi
+    
+    # Check if repo is in scanned_repos array
+    if jq -e ".scanned_repos | index(\"$repo_name\")" "$SCAN_STATE_FILE" >/dev/null 2>&1; then
+        return 0  # Already scanned
+    else
+        return 1  # Not scanned
+    fi
+}
+
+add_scanned_repo() {
+    local repo_name="$1"
+    local secrets_count="${2:-0}"
+    
+    if [ ! -f "$SCAN_STATE_FILE" ]; then
+        log_warning "Scan state file not found, cannot update"
+        return
+    fi
+    
+    # Create a temporary file
+    local temp_file="$SCAN_STATE_FILE.tmp"
+    
+    # Add repo to scanned_repos array and update counters
+    jq --arg repo "$repo_name" --argjson secrets "$secrets_count" '
+        .scanned_repos += [$repo] |
+        if $secrets > 0 then
+            .repos_with_secrets += 1 |
+            .total_secrets += $secrets
+        else
+            .
+        end
+    ' "$SCAN_STATE_FILE" > "$temp_file"
+    
+    # Replace original file
+    mv "$temp_file" "$SCAN_STATE_FILE"
+    
+    log_debug "Added $repo_name to scan state (secrets: $secrets_count)"
+}
+
+update_scan_state_total() {
+    local total_repos="$1"
+    
+    if [ ! -f "$SCAN_STATE_FILE" ]; then
+        return
+    fi
+    
+    local temp_file="$SCAN_STATE_FILE.tmp"
+    jq --argjson total "$total_repos" '.total_repos = $total' "$SCAN_STATE_FILE" > "$temp_file"
+    mv "$temp_file" "$SCAN_STATE_FILE"
+}
+
+finalize_scan_state() {
+    if [ ! -f "$SCAN_STATE_FILE" ]; then
+        return
+    fi
+    
+    local temp_file="$SCAN_STATE_FILE.tmp"
+    jq --arg end_time "$(date -u +"%Y-%m-%dT%H:%M:%S%z")" '.end_time = $end_time' "$SCAN_STATE_FILE" > "$temp_file"
+    mv "$temp_file" "$SCAN_STATE_FILE"
+    
+    log_success "Scan state finalized: $SCAN_STATE_FILE"
+}
+
 # Adaptive timeout calculation based on repository characteristics
 calculate_adaptive_timeout() {
     local repo_size_mb="$1"
@@ -158,12 +254,16 @@ Examples:
     $0 microsoft --email security@company.com --telegram-chat-id 123456789
     $0 microsoft --telegram-chat-id 123456789 --debug
     $0 --orgs-file bug_bounty_orgs.txt --telegram-chat-id 123456789
+    $0 microsoft --scan-all  # Scan ALL repos including archived and forks
 
 Options:
     --orgs-file FILE     File containing list of organizations (one per line)
     --max-repos N        Maximum repositories to scan (default: all)
     --github-token TOK   GitHub API token (overrides GITHUB_TOKEN env var)
-    --include-forks      Include forked repositories
+    --include-forks      Include forked repositories (default: excluded)
+    --include-archived   Include archived repositories (default: excluded)
+    --scan-all           Scan ALL repositories (includes forks and archived)
+    --resume             Resume from previous scan state (skip already scanned repos)
     --output-dir DIR     Custom output directory (default: leaked_secrets_results/TIMESTAMP/org_leaked_secrets/scan_ORG_TIMESTAMP)
     --email EMAIL        Email address for security notifications
     --telegram-chat-id ID Telegram chat ID for security notifications
@@ -172,6 +272,14 @@ Options:
 
 Environment Variables:
     GITHUB_TOKEN         GitHub API token (can be overridden with --github-token)
+
+Repository Filtering:
+    By default, archived and forked repositories are excluded to focus on active code.
+    Use --include-forks, --include-archived, or --scan-all to customize filtering.
+
+Scan State:
+    The scanner tracks progress in scan_state.json. Use --resume to continue from
+    a previous interrupted scan, skipping repositories that were already scanned.
 
 Dynamic Configuration:
     The script automatically detects CPU cores, memory, and system load to determine
@@ -300,14 +408,42 @@ get_org_repos() {
     local total_fetched=$(jq 'length' "$repos_file")
     log_info "Total repositories fetched: $total_fetched"
     
-    # Filter repositories
-    local filter=".[] | select(.archived == false"
-    if [ "$EXCLUDE_FORKS" = true ]; then
-        filter="$filter and .fork == false"
+    # Count archived and forked repos for reporting
+    local archived_count=$(jq '[.[] | select(.archived == true)] | length' "$repos_file")
+    local fork_count=$(jq '[.[] | select(.fork == true)] | length' "$repos_file")
+    
+    # Build filter based on flags
+    local filter=".[]"
+    local filters=()
+    
+    if [ "$EXCLUDE_ARCHIVED" = true ]; then
+        filters+=(".archived == false")
     fi
-    filter="$filter)"
+    
+    if [ "$EXCLUDE_FORKS" = true ]; then
+        filters+=(".fork == false")
+    fi
+    
+    # Apply filters if any
+    if [ ${#filters[@]} -gt 0 ]; then
+        local filter_expr=$(IFS=" and "; echo "${filters[*]}")
+        filter="$filter | select($filter_expr)"
+    fi
     
     jq "[$filter]" "$repos_file" > "$TEMP_DIR/filtered_repos.json"
+    
+    # Show filtering info
+    if [ "$EXCLUDE_ARCHIVED" = true ] && [ "$archived_count" -gt 0 ]; then
+        log_info "Excluding $archived_count archived repositories"
+    fi
+    if [ "$EXCLUDE_FORKS" = true ] && [ "$fork_count" -gt 0 ]; then
+        log_info "Excluding $fork_count forked repositories"
+    fi
+    
+    # Show if scanning ALL repos
+    if [ "$EXCLUDE_ARCHIVED" = false ] && [ "$EXCLUDE_FORKS" = false ]; then
+        log_info "Scanning ALL repositories (including archived and forks)"
+    fi
     
     # Limit repos if specified
     if [ "$MAX_REPOS" -gt 0 ]; then
@@ -326,6 +462,12 @@ scan_repo() {
     local repo_name=$(echo "$repo_info" | jq -r '.full_name')
     local clone_url=$(echo "$repo_info" | jq -r '.clone_url')
     local size=$(echo "$repo_info" | jq -r '.size')
+    
+    # Check if repo was already scanned (skip if resuming)
+    if is_repo_scanned "$repo_name"; then
+        log_info "[$worker_id] ⏭️  Skipping $repo_name (already scanned)"
+        return 0
+    fi
     
     # If GITHUB_TOKEN is set, inject it into the clone URL for authentication
     if [ -n "$GITHUB_TOKEN" ]; then
@@ -437,12 +579,18 @@ scan_repo() {
         log_debug "[$worker_id] No secrets in $repo_name"
     fi
     
+    # Record this repo as scanned in the scan state
+    add_scanned_repo "$repo_name" "$findings"
+    
     rm -rf "$worker_dir"
 }
 
 scan_all_repos() {
     local repos_file="$TEMP_DIR/filtered_repos.json"
     local total=$(jq length "$repos_file")
+    
+    # Update total repos in scan state
+    update_scan_state_total "$total"
     
     log_progress "Starting scan of $total repositories with $MAX_WORKERS workers"
     
@@ -571,6 +719,9 @@ generate_summary() {
     fi
     
     log_success "Results saved in: $(realpath "$OUTPUT_DIR")"
+    
+    # Finalize scan state
+    finalize_scan_state
 }
 
 # Organize results: move files with secrets to org folder, remove empty files
@@ -729,6 +880,9 @@ parse_args() {
             --max-repos) MAX_REPOS="$2"; shift 2 ;;
             --github-token) GITHUB_TOKEN="$2"; shift 2 ;;
             --include-forks) EXCLUDE_FORKS=false; shift ;;
+            --include-archived) EXCLUDE_ARCHIVED=false; shift ;;
+            --scan-all) EXCLUDE_FORKS=false; EXCLUDE_ARCHIVED=false; shift ;;
+            --resume) RESUME_SCAN=true; shift ;;
             --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
             --email) NOTIFICATION_EMAIL="$2"; shift 2 ;;
             --telegram-chat-id) NOTIFICATION_TELEGRAM_CHAT_ID="$2"; shift 2 ;;
@@ -835,6 +989,9 @@ main() {
             # Reset worker state for this organization
             WORKER_PIDS=()
             
+            # Initialize scan state for this organization
+            initialize_scan_state "$ORG"
+            
             # Scan this organization (disable exit-on-error for individual org failures)
             set +e
             get_org_repos "$ORG"
@@ -879,6 +1036,9 @@ main() {
         log_info "Scanning organization: $ORG"
         log_info "Output directory: $(realpath "$OUTPUT_DIR")"
         log_info "Results will be saved in: leaked_secrets_results structure"
+        
+        # Initialize scan state
+        initialize_scan_state "$ORG"
         
         get_org_repos "$ORG"
         scan_all_repos
