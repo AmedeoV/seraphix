@@ -20,6 +20,7 @@ NC='\033[0m'
 
 # Configuration
 CLEANUP=true
+ORGANIZED=false  # Track if results have been organized
 OUTPUT_DIR=""
 TEMP_DIR=""
 DEBUG=false
@@ -205,6 +206,14 @@ cleanup_on_exit() {
         for pid in ${WORKER_PIDS[@]:-}; do
             kill -KILL "$pid" 2>/dev/null || true
         done
+    fi
+    
+    # Organize results before cleaning up temp files (only if not already done)
+    # Disable interrupts during organization to ensure completion
+    if [ "$ORGANIZED" = false ] && [ -n "${OUTPUT_DIR:-}" ] && [ -d "$OUTPUT_DIR" ]; then
+        trap '' INT TERM  # Ignore interrupts during organization
+        organize_results
+        trap cleanup_on_exit EXIT INT TERM  # Re-enable trap
     fi
     
     if [ "$CLEANUP" = true ] && [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ]; then
@@ -664,6 +673,9 @@ organize_results() {
         # Remove the empty secrets directory if no files were moved
         rmdir "$secrets_dir" 2>/dev/null || true
     fi
+    
+    # Mark organization as complete
+    ORGANIZED=true
 }
 
 # Send immediate notification for first secret found in a repository
@@ -858,6 +870,9 @@ main() {
             ORG="$org"
             OUTPUT_DIR="$BATCH_OUTPUT_DIR/scan_${ORG}_${TIMESTAMP}"
             mkdir -p "$OUTPUT_DIR"
+            
+            # Reset organization flag for this org
+            ORGANIZED=false
             
             # Create debug log for this organization if debug mode is enabled
             if [ "$DEBUG" = true ]; then
