@@ -629,39 +629,56 @@ organize_results() {
     # Create directory for files with secrets
     mkdir -p "$secrets_dir"
     
-    for file in "$OUTPUT_DIR"/*.json; do
-        if [ ! -f "$file" ]; then
-            continue
-        fi
-        
-        # Skip if it's a summary file
-        if [[ "$(basename "$file")" == completion_summary_* ]]; then
-            continue
-        fi
-        
-        # Check if file contains secrets or errors
-        local count=0
-        local has_error=false
-        
-        # Try to parse and count secrets
-        if jq -e 'type == "array"' "$file" >/dev/null 2>&1; then
-            count=$(jq 'length' "$file" 2>/dev/null || echo "0")
-        elif jq -e '.error' "$file" >/dev/null 2>&1; then
-            has_error=true
-        fi
-        
-        if [ "$count" -gt 0 ]; then
-            # Move files with secrets to org folder
-            mv "$file" "$secrets_dir/"
-            ((files_with_secrets++))
-            log_debug "Moved $(basename "$file") with $count secret(s) to ${ORG}_secrets/"
-        else
-            # Remove empty files and error files
-            rm "$file"
-            ((files_removed++))
-            log_debug "Removed empty file: $(basename "$file")"
-        fi
-    done
+    # Temporarily disable pipefail for file processing
+    set +e
+    
+    # Use find with size filter for performance (files with secrets are > 100 bytes)
+    # Create temp file lists
+    local large_files_list="$OUTPUT_DIR/.large_files.tmp"
+    local small_files_list="$OUTPUT_DIR/.small_files.tmp"
+    
+    find "$OUTPUT_DIR" -maxdepth 1 -name "*.json" -type f -size +100c ! -name "completion_summary_*" > "$large_files_list" 2>/dev/null
+    find "$OUTPUT_DIR" -maxdepth 1 -name "*.json" -type f ! -size +100c ! -name "completion_summary_*" > "$small_files_list" 2>/dev/null
+    
+    # Process large files (potential secrets)
+    if [ -s "$large_files_list" ]; then
+        while IFS= read -r file; do
+            # Verify with jq that it actually has secrets
+            local count=0
+            count=$(jq 'if type == "array" then length else 0 end' "$file" 2>/dev/null || echo "0")
+            
+            if [ -z "$count" ] || [ "$count" = "null" ]; then
+                count=0
+            fi
+            
+            if [ "$count" -gt 0 ] 2>/dev/null; then
+                # Move files with secrets to org folder
+                mv "$file" "$secrets_dir/" 2>/dev/null
+                ((files_with_secrets++))
+                log_debug "Moved $(basename "$file") with $count secret(s) to ${ORG}_secrets/"
+            else
+                # False positive (large but empty), remove
+                rm "$file" 2>/dev/null
+                ((files_removed++))
+            fi
+        done < "$large_files_list"
+    fi
+    
+    # Remove small files (definitely empty - just "[]" or similar)
+    if [ -s "$small_files_list" ]; then
+        local small_files_count=$(wc -l < "$small_files_list")
+        while IFS= read -r file; do
+            rm "$file" 2>/dev/null
+        done < "$small_files_list"
+        files_removed=$((files_removed + small_files_count))
+        log_debug "Removed $small_files_count small/empty files"
+    fi
+    
+    # Clean up temp files
+    rm -f "$large_files_list" "$small_files_list"
+    
+    # Re-enable pipefail
+    set -e
     
     # Log summary
     if [ "$files_with_secrets" -gt 0 ]; then
