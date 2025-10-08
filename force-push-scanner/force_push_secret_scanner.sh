@@ -603,46 +603,53 @@ scan_organization() {
     python_args+=("--max-workers" "$WORKERS_PER_ORG")
     python_args+=("--results-dir" "$RESULTS_BASE_DIR")
     
+    # Always capture stderr to a temporary file for error reporting
+    local error_log="/tmp/scan_error_${org}_$$.log"
+    
     if [ "$DEBUG" = true ]; then
         LOG_FILE="$LOG_DIR/scan_${org}_$(date +%Y%m%d_%H%M%S).log"
         timeout 3600 python3 "$PYTHON_SCRIPT" "${python_args[@]}" 2>&1 | tee "$LOG_FILE"
+        local exit_code=$?
     else
-        timeout 3600 python3 "$PYTHON_SCRIPT" "${python_args[@]}"
+        # Capture stderr even when not in debug mode for error reporting
+        timeout 3600 python3 "$PYTHON_SCRIPT" "${python_args[@]}" 2> "$error_log"
+        local exit_code=$?
     fi
-    
-    local exit_code=$?
     
     # Check if timeout occurred
     if [ $exit_code -eq 124 ]; then
         echo "⏰ [$org_num/$total] $org timed out after 1 hour"
+        rm -f "$error_log"
         return 1
     fi
     
     # Handle results
     if [ $exit_code -eq 0 ]; then
-        # Check for secrets file
-        if [ -s "$RESULTS_BASE_DIR/verified_secrets_${org}.json" ]; then
-            # 🚨 IMMEDIATE NOTIFICATION - SECRETS FOUND! 🚨
-            echo "🚨 [$org_num/$total] SECURITY ALERT: Secrets found in $org!"
-            
-            # Count secrets immediately for notification
+        # Check for secrets file and verify it's not empty
+        if [ -f "$RESULTS_BASE_DIR/verified_secrets_${org}.json" ]; then
             local secrets_file="$RESULTS_BASE_DIR/verified_secrets_${org}.json"
-            local count
+            
+            # Count secrets to verify we have actual data
+            local count=0
             if command -v jq >/dev/null 2>&1; then
-                count=$(jq length "$secrets_file" 2>/dev/null || echo "unknown")
+                count=$(jq 'length' "$secrets_file" 2>/dev/null || echo "0")
             else
                 # Multiple fallback methods for counting JSON array elements
                 if command -v grep >/dev/null 2>&1; then
-                    count=$(grep -c '"DetectorName"' "$secrets_file" 2>/dev/null || echo "unknown")
+                    count=$(grep -c '"DetectorName"' "$secrets_file" 2>/dev/null || echo "0")
                 elif command -v powershell.exe >/dev/null 2>&1; then
-                    count=$(powershell.exe -c "try { (Get-Content '$secrets_file' | ConvertFrom-Json).Count } catch { 'unknown' }" 2>/dev/null || echo "unknown")
+                    count=$(powershell.exe -c "try { (Get-Content '$secrets_file' | ConvertFrom-Json).Count } catch { 0 }" 2>/dev/null || echo "0")
                 else
                     # Last resort: count opening braces that follow array pattern
-                    count=$(awk '/^\s*\{/ {count++} END {print count+0}' "$secrets_file" 2>/dev/null || echo "unknown")
+                    count=$(awk '/^\s*\{/ {count++} END {print count+0}' "$secrets_file" 2>/dev/null || echo "0")
                 fi
             fi
             
-            echo "🔑 [$org_num/$total] Found $count verified secrets in $org"
+            # Only process if we actually have secrets
+            if [ "$count" -gt 0 ]; then
+                # 🚨 IMMEDIATE NOTIFICATION - SECRETS FOUND! 🚨
+                echo "🚨 [$org_num/$total] SECURITY ALERT: Secrets found in $org!"
+                echo "🔑 [$org_num/$total] Found $count verified secrets in $org"
             
             # Organize the file first before sending notifications
             # Use current date for daily organization
@@ -703,20 +710,84 @@ scan_organization() {
             update_state_with_org "$STATE_FILE" "$org" "secrets_found"
             
             echo "✅ [$org_num/$total] $org completed - secrets found! First alert + final summary sent!"
+            rm -f "$error_log"
             return 2  # Success with findings
+            else
+                # Empty file or no secrets - clean up
+                echo "✅ [$org_num/$total] $org completed - no secrets (empty result file)"
+                rm -f "$secrets_file"
+                rm -f "$RESULTS_BASE_DIR/verified_secrets_${org}.json"
+                
+                # Only update state file after successful completion
+                update_state_with_org "$STATE_FILE" "$org" "completed"
+                rm -f "$error_log"
+                return 0  # Success no findings
+            fi
         else
+            # No secrets file created at all
+            echo "✅ [$org_num/$total] $org completed - no secrets"
+            
+            # Clean up any empty files that might have been created
             rm -f "$RESULTS_BASE_DIR/verified_secrets_${org}.json"
             
             # Only update state file after successful completion
             update_state_with_org "$STATE_FILE" "$org" "completed"
-            
-            echo "✅ [$org_num/$total] $org completed - no secrets"
+            rm -f "$error_log"
             return 0  # Success no findings
         fi
     else
         # Don't update state file for failed/interrupted scans
         # This allows them to be retried on the next run
         echo "❌ [$org_num/$total] $org failed (exit code: $exit_code) - will retry on next run"
+        
+        # Provide specific error message based on exit code
+        case $exit_code in
+            1)
+                echo "   └─ Error: General scan failure. Check logs for details."
+                ;;
+            2)
+                echo "   └─ Error: Python script error or missing dependencies"
+                ;;
+            126)
+                echo "   └─ Error: Python script not executable or not found"
+                ;;
+            127)
+                echo "   └─ Error: Python3 not found in PATH"
+                ;;
+            130)
+                echo "   └─ Error: Scan interrupted (Ctrl+C)"
+                ;;
+            137)
+                echo "   └─ Error: Process killed (out of memory?)"
+                ;;
+            *)
+                echo "   └─ Error: Unknown failure (exit code: $exit_code)"
+                ;;
+        esac
+        
+        # Display captured error/exception if available
+        if [ -f "$error_log" ] && [ -s "$error_log" ]; then
+            echo "   └─ Exception/Error Output:"
+            echo "   ┌─────────────────────────────────────────────────────────"
+            sed 's/^/   │ /' "$error_log" | head -50
+            if [ $(wc -l < "$error_log") -gt 50 ]; then
+                echo "   │ ... (truncated, see full log for details)"
+            fi
+            echo "   └─────────────────────────────────────────────────────────"
+            
+            # Save error log to permanent location for debugging
+            if [ "$DEBUG" = true ]; then
+                local error_archive="$LOG_DIR/error_${org}_$(date +%Y%m%d_%H%M%S).log"
+                cp "$error_log" "$error_archive"
+                echo "   └─ Full error saved to: $error_archive"
+            fi
+        fi
+        
+        if [ "$DEBUG" = true ] && [ -n "$LOG_FILE" ]; then
+            echo "   └─ Check log: $LOG_FILE"
+        fi
+        
+        rm -f "$error_log"
         return 1  # Failed
     fi
 }
@@ -1113,19 +1184,90 @@ echo "$ORGS" | nl -w1 -s: > /tmp/orgs_numbered.txt
 # Use GNU parallel or xargs for parallel execution
 if command -v parallel >/dev/null 2>&1; then
     echo "Using GNU parallel for organization processing"
-    parallel -j "$MAX_PARALLEL_ORGS" --colsep ':' --halt soon,fail=1 \
+    echo "Note: Individual organization failures will be logged but won't stop the scan"
+    # Remove --halt flag to continue on errors, just keep track of failures
+    parallel -j "$MAX_PARALLEL_ORGS" --colsep ':' \
         scan_organization {2} {1} "$TOTAL_ORGS" :::: /tmp/orgs_numbered.txt
+    # Capture exit code but don't fail if some orgs failed
+    PARALLEL_EXIT=$?
+    if [ $PARALLEL_EXIT -eq 0 ]; then
+        EXIT_CODE=0
+    else
+        # Set exit code to indicate some failures occurred, but we continued
+        EXIT_CODE=0  # Changed to 0 since we want to continue and show summary
+    fi
 else
     echo "Using xargs for parallel processing (install GNU parallel for better control)"
+    echo "Note: Individual organization failures will be logged but won't stop the scan"
     cat /tmp/orgs_numbered.txt | xargs -n 1 -P "$MAX_PARALLEL_ORGS" -I {} bash -c '
         IFS=: read num org <<< "{}"
-        scan_organization "$org" "$num" "'"$TOTAL_ORGS"'"
+        scan_organization "$org" "$num" "'"$TOTAL_ORGS"'" || true
     '
+    EXIT_CODE=0  # Always succeed for xargs, individual failures are logged
 fi
 
-# Check if we were interrupted
-if [ $? -ne 0 ]; then
+# Check if we were interrupted (only for Ctrl+C or system signals, not individual org failures)
+if [ $EXIT_CODE -ne 0 ]; then
     echo -e "\n${RED}[!] Processing was interrupted or failed${NC}"
+    echo -e "${YELLOW}Exit code: $EXIT_CODE${NC}"
+    
+    # Provide more specific error messages based on exit code
+    case $EXIT_CODE in
+        130)
+            echo -e "${YELLOW}Reason: Manual interruption (Ctrl+C)${NC}"
+            ;;
+        137)
+            echo -e "${YELLOW}Reason: Process killed (SIGKILL) - possibly out of memory${NC}"
+            ;;
+        143)
+            echo -e "${YELLOW}Reason: Process terminated (SIGTERM)${NC}"
+            ;;
+        124)
+            echo -e "${YELLOW}Reason: Timeout exceeded${NC}"
+            ;;
+        1)
+            echo -e "${YELLOW}Reason: General error - check recent logs in scan_logs/ directory${NC}"
+            echo -e "${YELLOW}Most recent logs:${NC}"
+            ls -lt "$LOG_DIR" 2>/dev/null | head -5 | tail -4 | awk '{print "  - " $9}'
+            ;;
+        2)
+            echo -e "${YELLOW}Reason: Organization scan failed - one or more scans encountered errors${NC}"
+            echo -e "${YELLOW}This usually means a specific organization failed, but others may have succeeded${NC}"
+            echo -e "${YELLOW}Most recent error logs:${NC}"
+            # Show recent error logs if they exist
+            if ls "$LOG_DIR"/error_*_*.log 2>/dev/null | head -3 >/dev/null 2>&1; then
+                ls -lt "$LOG_DIR"/error_*_*.log 2>/dev/null | head -3 | awk '{print "  - " $9}'
+            else
+                ls -lt "$LOG_DIR" 2>/dev/null | head -5 | tail -4 | awk '{print "  - " $9}'
+            fi
+            echo -e "${CYAN}Checking last error details...${NC}"
+            # Find and display the last error
+            LAST_ERROR_LOG=$(ls -t "$LOG_DIR"/error_*_*.log 2>/dev/null | head -1)
+            if [ -n "$LAST_ERROR_LOG" ] && [ -f "$LAST_ERROR_LOG" ]; then
+                echo -e "${YELLOW}Last error from: $(basename "$LAST_ERROR_LOG")${NC}"
+                echo "   ┌─────────────────────────────────────────────────────────"
+                sed 's/^/   │ /' "$LAST_ERROR_LOG" | head -30
+                if [ $(wc -l < "$LAST_ERROR_LOG") -gt 30 ]; then
+                    echo "   │ ... (truncated, check log file for full details)"
+                fi
+                echo "   └─────────────────────────────────────────────────────────"
+            fi
+            ;;
+        *)
+            echo -e "${YELLOW}Reason: Unknown error (exit code: $EXIT_CODE)${NC}"
+            echo -e "${YELLOW}Check recent scan logs in: $LOG_DIR${NC}"
+            # Still show recent logs for unknown errors
+            if [ -d "$LOG_DIR" ]; then
+                echo -e "${YELLOW}Most recent logs:${NC}"
+                ls -lt "$LOG_DIR" 2>/dev/null | head -5 | tail -4 | awk '{print "  - " $9}'
+            fi
+            ;;
+    esac
+    
+    # Show scan progress
+    SCANNED_COUNT=$(jq -r '.scanned_orgs | length' "$STATE_FILE" 2>/dev/null || echo "unknown")
+    echo -e "${CYAN}Progress: $SCANNED_COUNT organizations scanned${NC}"
+    echo -e "${CYAN}You can resume with: ./force_push_secret_scanner.sh --resume${NC}"
 fi
 
 # Wait for any remaining notification processes to complete
@@ -1139,6 +1281,19 @@ echo "Batch scan completed!"
 echo "Results saved to: $RESULTS_BASE_DIR"
 if [ "$DEBUG" = true ]; then
     echo "Debug logs saved to: $LOG_DIR"
+fi
+
+# Show failed organizations summary (if any)
+if [ -d "$LOG_DIR" ] && ls "$LOG_DIR"/error_*_*.log >/dev/null 2>&1; then
+    FAILED_COUNT=$(ls "$LOG_DIR"/error_*_*.log 2>/dev/null | wc -l)
+    if [ $FAILED_COUNT -gt 0 ]; then
+        echo ""
+        echo -e "${YELLOW}⚠️  Note: $FAILED_COUNT organization(s) encountered errors during scanning${NC}"
+        echo -e "${YELLOW}   Failed organizations were NOT added to state file and will be retried on next run${NC}"
+        if [ "$DEBUG" = true ]; then
+            echo -e "${YELLOW}   Error logs available in: $LOG_DIR/error_*_*.log${NC}"
+        fi
+    fi
 fi
 
 # Summary of organizations with secrets found
