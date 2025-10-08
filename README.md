@@ -119,6 +119,12 @@ cp config/mailgun_config.sh.example config/mailgun_config.sh
 # Edit and add your Mailgun credentials
 ```
 
+**Example notification when secrets are found:**
+
+<p align="center">
+  <img src="notification-example.png" alt="Notification Example" width="600"/>
+</p>
+
 📖 **[Full Configuration Guide](config/README.md)** - Complete setup instructions and troubleshooting
 
 ---
