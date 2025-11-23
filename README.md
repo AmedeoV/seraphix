@@ -31,6 +31,8 @@ Seraphix is a **comprehensive secret scanning toolkit** designed for security re
 
 **📝 Repository & Commit Scanning** - Target specific repositories or individual commits for focused analysis. Ideal for investigating particular codebases or validating security fixes.
 
+**🔷 Bitbucket Support** - Scan Bitbucket workspaces and repositories with the same powerful secret detection capabilities. Supports both public and private repositories with app password authentication.
+
 ## 📊 Interactive Dashboard
 
 Seraphix includes a powerful **interactive dashboard** for visualizing and analyzing scan results. View secret statistics, risk assessments, verification status, and capabilities across all detected secrets.
@@ -109,6 +111,19 @@ Scan individual repositories.
 ```bash
 cd repo-scanner/
 ./scan_repo_simple.sh owner/repository --telegram-chat-id 123456789
+```
+
+### 🔷 [Bitbucket Scanner](bitbucket-scanner/README.md)
+No database required - direct Bitbucket workspace and repository scanning.
+
+Scan Bitbucket workspaces or individual repositories.
+```bash
+cd bitbucket-scanner/
+# Scan a workspace
+./scan_workspace.sh myworkspace --telegram-chat-id 123456789
+
+# Scan a specific repository
+./scan_repo.sh workspace/repository --telegram-chat-id 123456789
 ```
 
 ---
