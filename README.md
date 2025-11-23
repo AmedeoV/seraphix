@@ -17,7 +17,7 @@
 
 # 🔍 What is Seraphix?
 
-Seraphix is a **comprehensive secret scanning toolkit** designed for security researchers and bug bounty hunters. It provides multiple scanning strategies to discover leaked credentials across GitHub:
+Seraphix is a **comprehensive secret scanning toolkit** designed for security researchers and bug bounty hunters. It provides multiple scanning strategies to discover leaked credentials across **GitHub** and **GitLab**:
 
 <p align="center">
   <img src="demo-force-push.gif" alt="Seraphix Scanner Demo" width="800"/>
@@ -27,9 +27,9 @@ Seraphix is a **comprehensive secret scanning toolkit** designed for security re
 
 **🔥 Force-Pushed Commits** - Hunt for secrets in dangling commits created by `git push --force` operations. When developers force push, they often overwrite history containing mistakes like hard-coded credentials. Seraphix uses [GHArchive](https://www.gharchive.org/) data to identify these hidden commits.
 
-**🏢 Organization-Wide Scanning** - Scan entire GitHub organizations without requiring a database. Perfect for comprehensive security audits and continuous monitoring of all repositories within an organization.
+**🏢 Organization-Wide Scanning** - Scan entire GitHub organizations or GitLab groups without requiring a database. Perfect for comprehensive security audits and continuous monitoring of all repositories within an organization.
 
-**📝 Repository & Commit Scanning** - Target specific repositories or individual commits for focused analysis. Ideal for investigating particular codebases or validating security fixes.
+**📝 Repository & Commit Scanning** - Target specific repositories or individual commits on GitHub or GitLab for focused analysis. Ideal for investigating particular codebases or validating security fixes.
 
 ## 📊 Interactive Dashboard
 
@@ -82,6 +82,22 @@ $env:GITHUB_TOKEN="your_token_here"
 
 Without authentication, GitHub's API limits you to 60 requests per hour. With a token, you get 5,000 requests per hour.
 
+## 2b: Configure GitLab Token (Optional)
+
+For scanning GitLab repositories and groups, create a GitLab Personal Access Token:
+
+1. Go to **User Settings > Access Tokens** on your GitLab instance
+2. Create a token with `read_api` and `read_repository` scopes
+3. Set it as an environment variable:
+
+```bash
+# Linux/macOS/WSL
+export GITLAB_TOKEN="glpat-your_token_here"
+
+# PowerShell (Windows)
+$env:GITLAB_TOKEN="glpat-your_token_here"
+```
+
 ## 3: Choose Your Scanner
 
 ### 🔥 [Force Push Scanner](force-push-scanner/README.md) 
@@ -93,7 +109,7 @@ cd force-push-scanner/
 ./force_push_secret_scanner.sh --order random --telegram-chat-id 123456789
 ```
 
-### 🏢 [Organization Scanner](org-scanner/README.md)
+### 🏢 [GitHub Organization Scanner](org-scanner/README.md)
 No database required - uses GitHub API directly.
 
 Scan all repositories in a GitHub organization.
@@ -102,13 +118,26 @@ cd org-scanner/
 ./scan_org.sh microsoft --max-repos 10 --telegram-chat-id 123456789
 ```
 
-### 📝 [Repository Scanner](repo-scanner/README.md)
+### 📝 [GitHub Repository Scanner](repo-scanner/README.md)
 No database required - direct repository scanning.
 
-Scan individual repositories.
+Scan individual GitHub repositories.
 ```bash
 cd repo-scanner/
 ./scan_repo_simple.sh owner/repository --telegram-chat-id 123456789
+```
+
+### 🦊 [GitLab Scanner](gitlab-scanner/README.md)
+Scan GitLab repositories and groups.
+
+Scan GitLab projects and groups (including self-hosted instances).
+```bash
+cd gitlab-scanner/
+# Scan a single project
+./scan_repo.sh gitlab-org/gitlab
+
+# Scan an entire group
+./scan_group.sh gitlab-org --max-repos 10 --telegram-chat-id 123456789
 ```
 
 ---

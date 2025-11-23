@@ -1,0 +1,7 @@
+# GitLab Groups to Scan
+# One group per line. Lines starting with # are ignored.
+
+# Example groups:
+# gitlab-org
+# gitlab-com
+# my-company-group
