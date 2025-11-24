@@ -329,13 +329,13 @@ process_results() {
     
     if [ ! -s "$raw_file" ]; then
         log_info "No results found"
-        echo "[]" > "$output_file"
         return 0
     fi
     
-    # Process results
+    # Process results in memory first
     local findings=0
-    echo "[" > "$output_file"
+    local temp_output=$(mktemp)
+    echo "[" > "$temp_output"
     local first_entry=true
     
     # Check if file contains JSON lines
@@ -352,7 +352,7 @@ process_results() {
                 
                 if [ "$is_verified" = true ]; then
                     if [ "$first_entry" = false ]; then
-                        echo "," >> "$output_file"
+                        echo "," >> "$temp_output"
                     fi
                     first_entry=false
                     
@@ -360,7 +360,7 @@ process_results() {
                     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
                     local metadata="{\"scan_timestamp\": \"$timestamp\", \"repository_name\": \"$repo_name\", \"source\": \"gitlab\"}"
                     
-                    echo "$line" | jq ". + $metadata" >> "$output_file"
+                    echo "$line" | jq ". + $metadata" >> "$temp_output"
                     ((findings++))
                 fi
             fi
@@ -369,18 +369,31 @@ process_results() {
         log_warning "TruffleHog produced text output instead of JSON"
         if grep -q "Found.*secret" "$raw_file" 2>/dev/null; then
             log_info "Text output detected potential secrets, but JSON processing not possible"
-            echo "Raw output saved for manual review:"
-            cp "$raw_file" "${output_file%.json}_raw.txt"
         fi
+        rm -f "$temp_output"
+        return 0
     fi
     
-    echo "]" >> "$output_file"
+    echo "]" >> "$temp_output"
     
-    log_success "Found $findings verified secret(s)"
-    
-    # Send notification if secrets were found
-    if [ "$findings" -gt 0 ] && ([ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ] || [ -f "$SCRIPT_DIR/../config/discord_config.sh" ]); then
-        send_immediate_notification "$repo_name" "$output_file"
+    # Only create output directory and save file if secrets were found
+    if [ "$findings" -gt 0 ]; then
+        log_success "Found $findings verified secret(s)"
+        
+        # Create the output directory now that we know we have secrets
+        local output_dir=$(dirname "$output_file")
+        mkdir -p "$output_dir"
+        
+        # Move temp file to final location
+        mv "$temp_output" "$output_file"
+        
+        # Send notification if secrets were found
+        if [ -n "$NOTIFICATION_EMAIL" ] || [ -n "$NOTIFICATION_TELEGRAM_CHAT_ID" ] || [ -f "$SCRIPT_DIR/../config/discord_config.sh" ]; then
+            send_immediate_notification "$repo_name" "$output_file"
+        fi
+    else
+        log_info "No verified secrets found"
+        rm -f "$temp_output"
     fi
 }
 
@@ -388,19 +401,23 @@ print_summary() {
     local output_file="$1"
     local repo_name="$2"
     
-    if [ ! -f "$output_file" ]; then
-        log_error "Output file not found: $output_file"
-        return 1
-    fi
-    
-    local findings_count
-    findings_count=$(jq length "$output_file" 2>/dev/null || echo "0")
-    
     echo ""
     echo "============================================================"
     echo "📊 SCAN SUMMARY"
     echo "============================================================"
     echo "Repository: $repo_name"
+    
+    if [ ! -f "$output_file" ]; then
+        echo "Verified secrets found: 0"
+        echo ""
+        log_info "No verified secrets found"
+        echo "============================================================"
+        return 0
+    fi
+    
+    local findings_count
+    findings_count=$(jq length "$output_file" 2>/dev/null || echo "0")
+    
     echo "Verified secrets found: $findings_count"
     echo ""
     
@@ -492,7 +509,7 @@ parse_arguments() {
         local timestamp=$(date +%Y%m%d_%H%M%S)
         
         local results_dir="$SCRIPT_DIR/leaked_secrets_results/${timestamp}"
-        mkdir -p "$results_dir"
+        # Don't create directory here - will be created only if secrets are found
         
         OUTPUT_FILE="${results_dir}/gitlab_scan_${clean_name}_${timestamp}.json"
     fi
@@ -546,7 +563,11 @@ main() {
     
     print_summary "$OUTPUT_FILE" "$REPO_NAME"
     
-    log_success "Results saved to: $(realpath "$OUTPUT_FILE")"
+    if [ -f "$OUTPUT_FILE" ]; then
+        log_success "Results saved to: $(realpath "$OUTPUT_FILE")"
+    else
+        log_info "No output file created (no secrets found)"
+    fi
     
     if [ "$CLEANUP" = false ]; then
         log_info "Temporary files preserved at: $TEMP_DIR"

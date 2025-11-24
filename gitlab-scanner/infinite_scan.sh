@@ -67,8 +67,20 @@ EOF
 load_state() {
     if [ -f "$STATE_FILE" ]; then
         log_info "Loading previous scan state..."
-        SCANNED_PROJECTS=($(jq -r '.scanned_projects[]' "$STATE_FILE" 2>/dev/null || echo ""))
-        SKIPPED_PROJECTS=($(jq -r '.skipped_projects[]' "$STATE_FILE" 2>/dev/null || echo ""))
+        
+        # Load arrays and filter out empty strings
+        local raw_scanned=($(jq -r '.scanned_projects[]' "$STATE_FILE" 2>/dev/null || echo ""))
+        SCANNED_PROJECTS=()
+        for proj in "${raw_scanned[@]}"; do
+            [[ -n "$proj" ]] && SCANNED_PROJECTS+=("$proj")
+        done
+        
+        local raw_skipped=($(jq -r '.skipped_projects[]' "$STATE_FILE" 2>/dev/null || echo ""))
+        SKIPPED_PROJECTS=()
+        for proj in "${raw_skipped[@]}"; do
+            [[ -n "$proj" ]] && SKIPPED_PROJECTS+=("$proj")
+        done
+        
         TOTAL_SECRETS=$(jq -r '.total_secrets_found' "$STATE_FILE" 2>/dev/null || echo "0")
         log_info "Resuming: ${#SCANNED_PROJECTS[@]} already scanned, ${#SKIPPED_PROJECTS[@]} skipped, $TOTAL_SECRETS secrets found"
     else
@@ -83,17 +95,39 @@ load_state() {
 save_state() {
     log_progress "Saving state..."
     
+    # Filter out empty strings from arrays
+    local filtered_scanned=()
+    for proj in "${SCANNED_PROJECTS[@]}"; do
+        [[ -n "$proj" ]] && filtered_scanned+=("$proj")
+    done
+    
+    local filtered_skipped=()
+    for proj in "${SKIPPED_PROJECTS[@]}"; do
+        [[ -n "$proj" ]] && filtered_skipped+=("$proj")
+    done
+    
+    # Build JSON arrays
+    local scanned_json=""
+    if [ ${#filtered_scanned[@]} -gt 0 ]; then
+        scanned_json=$(printf '    "%s",\n' "${filtered_scanned[@]}" | sed '$ s/,$//')
+    fi
+    
+    local skipped_json=""
+    if [ ${#filtered_skipped[@]} -gt 0 ]; then
+        skipped_json=$(printf '    "%s",\n' "${filtered_skipped[@]}" | sed '$ s/,$//')
+    fi
+    
     cat > "$STATE_FILE" << EOF
 {
   "last_updated": "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")",
-  "total_scanned": ${#SCANNED_PROJECTS[@]},
-  "total_skipped": ${#SKIPPED_PROJECTS[@]},
+  "total_scanned": ${#filtered_scanned[@]},
+  "total_skipped": ${#filtered_skipped[@]},
   "total_secrets_found": $TOTAL_SECRETS,
   "scanned_projects": [
-$(printf '    "%s",\n' "${SCANNED_PROJECTS[@]}" | sed '$ s/,$//')
+$scanned_json
   ],
   "skipped_projects": [
-$(printf '    "%s",\n' "${SKIPPED_PROJECTS[@]}" | sed '$ s/,$//')
+$skipped_json
   ]
 }
 EOF
@@ -147,8 +181,10 @@ scan_project() {
         SCANNED_PROJECTS+=("$project")
         log_success "Successfully scanned $project (Total: ${#SCANNED_PROJECTS[@]})"
         
-        # Count secrets found
-        local latest_result=$(find "$SCRIPT_DIR/leaked_secrets_results" -name "gitlab_scan_*.json" -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f2-)
+        # Count secrets found - look for JSON file specific to this project
+        # Convert project name to safe filename format: namespace/project -> namespace_project
+        local safe_project_name=$(echo "$project" | tr '/' '_')
+        local latest_result=$(find "$SCRIPT_DIR/leaked_secrets_results" -name "gitlab_scan_${safe_project_name}_*.json" -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f2-)
         if [ -n "$latest_result" ] && [ -f "$latest_result" ]; then
             local secrets_count=$(jq 'length' "$latest_result" 2>/dev/null || echo "0")
             if [ "$secrets_count" -gt 0 ]; then
@@ -193,13 +229,13 @@ scan_loop() {
             
             # Skip if already scanned
             if is_already_scanned "$project"; then
-                ((skipped_this_cycle++))
+                ((skipped_this_cycle++)) || true
                 continue
             fi
             
             # Skip if in skip list
             if is_skipped "$project"; then
-                ((skipped_this_cycle++))
+                ((skipped_this_cycle++)) || true
                 continue
             fi
             
@@ -210,7 +246,7 @@ scan_loop() {
                 save_state
             fi
             
-            ((scanned_this_cycle++))
+            ((scanned_this_cycle++)) || true
             
             # Progress update
             if [ $((scanned_this_cycle % 10)) -eq 0 ]; then
