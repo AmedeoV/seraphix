@@ -94,21 +94,20 @@ install_trufflehog() {
     log_progress "Checking TruffleHog installation..."
     
     if command_exists trufflehog; then
-        log_success "TruffleHog is already installed"
-        log_info "Version: $(trufflehog --version 2>/dev/null || echo 'Version check failed')"
-        return 0
+        log_info "Current version: $(trufflehog --version 2>/dev/null || echo 'Version check failed')"
+        log_progress "Updating TruffleHog to latest version..."
+    else
+        log_warning "TruffleHog not found. Installing latest version..."
     fi
-    
-    log_warning "TruffleHog not found. Installing..."
     
     local os=$(detect_os)
     local installed=false
     
-    # Try Go installation first (works on all platforms)
+    # Try Go installation first (works on all platforms and supports @latest updates)
     if command_exists go; then
-        log_progress "Installing TruffleHog via Go..."
+        log_progress "Installing/upgrading TruffleHog via Go..."
         if go install github.com/trufflesecurity/trufflehog/v3@latest; then
-            log_success "TruffleHog installed via Go"
+            log_success "TruffleHog installed/upgraded via Go"
             installed=true
         else
             log_warning "Go installation failed, trying other methods..."
@@ -127,9 +126,14 @@ install_trufflehog() {
                 ;;
             "macos")
                 if command_exists brew; then
-                    log_progress "Installing TruffleHog via Homebrew..."
-                    if brew install trufflehog; then
-                        log_success "TruffleHog installed via Homebrew"
+                    if brew list trufflehog >/dev/null 2>&1; then
+                        log_progress "Upgrading TruffleHog via Homebrew..."
+                        brew upgrade trufflehog >/dev/null 2>&1 || true
+                    else
+                        log_progress "Installing TruffleHog via Homebrew..."
+                    fi
+                    if brew install trufflehog >/dev/null 2>&1 || brew upgrade trufflehog >/dev/null 2>&1; then
+                        log_success "TruffleHog installed/upgraded via Homebrew"
                         installed=true
                     fi
                 else
