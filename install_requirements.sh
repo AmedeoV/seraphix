@@ -48,6 +48,13 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Compare semantic versions: returns 0 if $1 >= $2
+version_gte() {
+    local v1="${1#v}"
+    local v2="${2#v}"
+    [ "$(printf '%s\n' "$v2" "$v1" | sort -V | head -n1)" = "$v2" ]
+}
+
 # Function to detect OS
 detect_os() {
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -92,9 +99,16 @@ install_python_deps() {
 # Function to install TruffleHog
 install_trufflehog() {
     log_progress "Checking TruffleHog installation..."
+    local minimum_version="3.95.5"
+    local current_version=""
+    local version_raw=""
+    local install_attempted=false
+    local install_target=""
     
     if command_exists trufflehog; then
-        log_info "Current version: $(trufflehog --version 2>/dev/null || echo 'Version check failed')"
+        version_raw="$(trufflehog --version 2>/dev/null || echo 'Version check failed')"
+        current_version="$(echo "$version_raw" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1 || true)"
+        log_info "Current version: $version_raw"
         log_progress "Updating TruffleHog to latest version..."
     else
         log_warning "TruffleHog not found. Installing latest version..."
@@ -109,8 +123,10 @@ install_trufflehog() {
         if go install github.com/trufflesecurity/trufflehog/v3@latest; then
             log_success "TruffleHog installed/upgraded via Go"
             installed=true
+            install_attempted=true
         else
             log_warning "Go installation failed, trying other methods..."
+            install_attempted=true
         fi
     fi
     
@@ -118,10 +134,21 @@ install_trufflehog() {
     if [ "$installed" = false ]; then
         case $os in
             "linux")
-                log_progress "Installing TruffleHog via curl (Linux)..."
-                if curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin; then
+                if [ -w /usr/local/bin ]; then
+                    install_target="/usr/local/bin"
+                else
+                    install_target="$HOME/.local/bin"
+                    mkdir -p "$install_target"
+                    log_warning "/usr/local/bin is not writable; using $install_target instead"
+                fi
+
+                log_progress "Installing TruffleHog via curl (Linux) to $install_target..."
+                install_attempted=true
+                if curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b "$install_target"; then
                     log_success "TruffleHog installed via curl"
                     installed=true
+                else
+                    log_warning "Curl install failed for target: $install_target"
                 fi
                 ;;
             "macos")
@@ -136,8 +163,10 @@ install_trufflehog() {
                         log_success "TruffleHog installed/upgraded via Homebrew"
                         installed=true
                     fi
+                    install_attempted=true
                 else
                     log_progress "Installing TruffleHog via curl (macOS)..."
+                    install_attempted=true
                     if curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin; then
                         log_success "TruffleHog installed via curl"
                         installed=true
@@ -160,8 +189,28 @@ install_trufflehog() {
     
     # Verify installation
     if command_exists trufflehog; then
+        version_raw="$(trufflehog --version 2>/dev/null || echo 'Version check failed')"
+        current_version="$(echo "$version_raw" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1 || true)"
         log_success "TruffleHog installation verified"
-        log_info "Version: $(trufflehog --version 2>/dev/null || echo 'Version check failed')"
+
+        if [ -n "$current_version" ]; then
+            log_info "Version: $version_raw"
+            if ! version_gte "$current_version" "$minimum_version"; then
+                if [ "$install_attempted" = true ]; then
+                    log_error "TruffleHog version $current_version is older than required minimum $minimum_version"
+                    log_info "Detected binary: $(command -v trufflehog)"
+                    if [ "$os" = "linux" ]; then
+                        log_info "If multiple binaries exist, run: which -a trufflehog"
+                        log_info "Ensure your PATH prefers newer install locations (e.g., $HOME/.local/bin)."
+                    fi
+                    exit 1
+                else
+                    log_warning "TruffleHog is installed but below minimum suggested version: $minimum_version"
+                fi
+            fi
+        else
+            log_warning "Could not parse TruffleHog version from output: $version_raw"
+        fi
     elif [ "$os" != "windows" ]; then
         log_error "TruffleHog installation failed. Please install manually."
         log_info "Visit: https://github.com/trufflesecurity/trufflehog#installation"
