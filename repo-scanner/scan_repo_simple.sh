@@ -189,6 +189,29 @@ validate_repo_name() {
     return 0
 }
 
+build_file_uri() {
+    local path="$1"
+
+    # On Windows-style paths, Git handles file://C:/... more reliably with TruffleHog
+    if [[ "$path" =~ ^[a-zA-Z]:[\\/].* ]]; then
+        local normalized="${path//\\//}"
+        printf "file://%s" "$normalized"
+        return 0
+    fi
+
+    # In Git Bash/MSYS, convert /c/... paths to C:/... when possible
+    if command -v cygpath >/dev/null 2>&1; then
+        local windows_path
+        windows_path="$(cygpath -m "$path" 2>/dev/null || true)"
+        if [[ "$windows_path" =~ ^[a-zA-Z]:/.* ]]; then
+            printf "file://%s" "$windows_path"
+            return 0
+        fi
+    fi
+
+    printf "file://%s" "$path"
+}
+
 clone_repository() {
     local repo_name="$1"
     local repo_path="$2"
@@ -244,12 +267,30 @@ scan_with_trufflehog() {
     log_debug "Using adaptive timeout: ${adaptive_timeout}s for $repo_name"
     
     cd "$repo_path"
+
+    local scan_target
+    scan_target="$(pwd)"
+    if command -v cygpath >/dev/null 2>&1; then
+        local win_scan_target
+        win_scan_target="$(cygpath -m "$scan_target" 2>/dev/null || true)"
+        if [[ "$win_scan_target" =~ ^[a-zA-Z]:/.* ]]; then
+            scan_target="$win_scan_target"
+        fi
+    fi
+
+    local repo_uri
+    repo_uri="$(build_file_uri "$scan_target")"
+    log_debug "Resolved local scan target for TruffleHog: $scan_target"
+    log_debug "Resolved repo URI for TruffleHog: $repo_uri"
     
     # Try different TruffleHog command variations in order of preference
     local commands=(
-        "trufflehog git --json --only-verified --no-update file://$(pwd)"
-        "trufflehog git --json --no-update file://$(pwd)"
-        "trufflehog git --no-update file://$(pwd)"
+        "trufflehog git --json --only-verified --no-update \"$scan_target\""
+        "trufflehog git --json --no-update \"$scan_target\""
+        "trufflehog git --json --only-verified --no-update \"$repo_uri\""
+        "trufflehog git --json --no-update \"$repo_uri\""
+        "trufflehog git --no-update \"$scan_target\""
+        "trufflehog git --no-update \"$repo_uri\""
     )
     
     local temp_results="$TEMP_DIR/trufflehog_raw.json"
