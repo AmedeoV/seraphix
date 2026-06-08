@@ -26,6 +26,7 @@ TEMP_DIR=""
 DEBUG=false
 LOG_DIR="$SCRIPT_DIR/scan_logs"  # Local debug logs directory
 GITHUB_TOKEN="${GITHUB_TOKEN:-""}"  # Use environment variable if set, empty otherwise
+USE_GH_API=false
 EXCLUDE_FORKS=true
 EXCLUDE_ARCHIVED=true
 MAX_REPOS=0
@@ -109,6 +110,74 @@ log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 log_error() { echo -e "${RED}❌ $1${NC}"; }
 log_progress() { echo -e "${CYAN}🔄 $1${NC}"; }
 log_debug() { [ "$DEBUG" = true ] && echo -e "${YELLOW}🐛 $1${NC}"; }
+
+github_api_get() {
+    local api_url="$1"
+    local output_file="$2"
+    local curl_error_file="$TEMP_DIR/curl_error.log"
+
+    if [ "$USE_GH_API" = true ] && command -v gh >/dev/null 2>&1; then
+        local endpoint="$api_url"
+        endpoint="${endpoint#https://api.github.com/}"
+        gh api "$endpoint" > "$output_file" 2>"$curl_error_file"
+        return $?
+    fi
+
+    # Force HTTP/1.1 to avoid intermittent HTTP/2 stream errors in some WSL setups.
+    if [ -n "$GITHUB_TOKEN" ]; then
+        curl --http1.1 -sS -H "Authorization: token $GITHUB_TOKEN" "$api_url" > "$output_file" 2>"$curl_error_file"
+    else
+        curl --http1.1 -sS "$api_url" > "$output_file" 2>"$curl_error_file"
+    fi
+}
+
+init_github_auth() {
+    # Respect explicitly provided token via env or --github-token
+    if [ -n "$GITHUB_TOKEN" ]; then
+        return 0
+    fi
+
+    # Try GitHub CLI auth as an automatic fallback
+    if command -v gh >/dev/null 2>&1; then
+        if gh auth status >/dev/null 2>&1; then
+            local gh_token
+            gh_token="$(gh auth token 2>/dev/null || true)"
+            if [[ "$gh_token" =~ ^gh[pousr]_[A-Za-z0-9_]+$ ]] || [[ "$gh_token" =~ ^github_pat_[A-Za-z0-9_]+$ ]]; then
+                GITHUB_TOKEN="$gh_token"
+                log_info "Using authenticated GitHub CLI session for API access"
+                return 0
+            fi
+
+            # Older gh versions may not support `gh auth token`; use gh api directly in that case.
+            USE_GH_API=true
+            log_info "Using authenticated GitHub CLI session via gh api"
+            return 0
+        fi
+    fi
+}
+
+build_file_uri() {
+    local path="$1"
+
+    # On Windows-style paths, Git handles file://C:/... reliably with TruffleHog
+    if [[ "$path" =~ ^[a-zA-Z]:[\\/].* ]]; then
+        local normalized="${path//\\//}"
+        printf "file://%s" "$normalized"
+        return 0
+    fi
+
+    # In Git Bash/MSYS, convert /c/... paths to C:/... when possible
+    if command -v cygpath >/dev/null 2>&1; then
+        local windows_path
+        windows_path="$(cygpath -m "$path" 2>/dev/null || true)"
+        if [[ "$windows_path" =~ ^[a-zA-Z]:/.* ]]; then
+            printf "file://%s" "$windows_path"
+            return 0
+        fi
+    fi
+
+    printf "file://%s" "$path"
+}
 
 # Adaptive timeout calculation based on repository characteristics
 calculate_adaptive_timeout() {
@@ -230,7 +299,7 @@ get_org_repos() {
     log_progress "Fetching repositories for $org..."
     
     # Warn if no token is set
-    if [ -z "$GITHUB_TOKEN" ]; then
+    if [ -z "$GITHUB_TOKEN" ] && [ "$USE_GH_API" != true ]; then
         log_warning "GITHUB_TOKEN not set - only public repositories will be accessible"
         log_info "For private organizations, set your token: export GITHUB_TOKEN='your_token'"
     fi
@@ -250,17 +319,12 @@ get_org_repos() {
         
         log_debug "Fetching page $page..."
         
-        # Perform curl with or without authentication
-        if [ -n "$GITHUB_TOKEN" ]; then
-            if ! curl -s -H "Authorization: token $GITHUB_TOKEN" "$api_url" > "$repos_file"; then
-                log_error "Failed to fetch repositories (page $page)"
-                return 1
+        if ! github_api_get "$api_url" "$repos_file"; then
+            log_error "Failed to fetch repositories (page $page)"
+            if [ -f "$TEMP_DIR/curl_error.log" ] && [ -s "$TEMP_DIR/curl_error.log" ]; then
+                log_error "curl details: $(tr '\n' ' ' < "$TEMP_DIR/curl_error.log")"
             fi
-        else
-            if ! curl -s "$api_url" > "$repos_file"; then
-                log_error "Failed to fetch repositories (page $page)"
-                return 1
-            fi
+            return 1
         fi
         
         # Check if it's a "Not Found" error on first page (might be a user, not an org)
@@ -270,16 +334,12 @@ get_org_repos() {
             is_user=true
             api_url="${base_url}?per_page=${per_page}&page=${page}&type=all"
             
-            if [ -n "$GITHUB_TOKEN" ]; then
-                if ! curl -s -H "Authorization: token $GITHUB_TOKEN" "$api_url" > "$repos_file"; then
-                    log_error "Failed to fetch repositories"
-                    return 1
+            if ! github_api_get "$api_url" "$repos_file"; then
+                log_error "Failed to fetch repositories"
+                if [ -f "$TEMP_DIR/curl_error.log" ] && [ -s "$TEMP_DIR/curl_error.log" ]; then
+                    log_error "curl details: $(tr '\n' ' ' < "$TEMP_DIR/curl_error.log")"
                 fi
-            else
-                if ! curl -s "$api_url" > "$repos_file"; then
-                    log_error "Failed to fetch repositories"
-                    return 1
-                fi
+                return 1
             fi
         fi
         
@@ -323,19 +383,22 @@ get_org_repos() {
     
     # Build filter based on flags
     local filter=".[]"
-    local filters=()
-    
+    local filter_expr=""
+
     if [ "$EXCLUDE_ARCHIVED" = true ]; then
-        filters+=(".archived == false")
+        filter_expr=".archived == false"
     fi
-    
+
     if [ "$EXCLUDE_FORKS" = true ]; then
-        filters+=(".fork == false")
+        if [ -n "$filter_expr" ]; then
+            filter_expr="$filter_expr and .fork == false"
+        else
+            filter_expr=".fork == false"
+        fi
     fi
-    
+
     # Apply filters if any
-    if [ ${#filters[@]} -gt 0 ]; then
-        local filter_expr=$(IFS=" and "; echo "${filters[*]}")
+    if [ -n "$filter_expr" ]; then
         filter="$filter | select($filter_expr)"
     fi
     
@@ -408,35 +471,60 @@ scan_repo() {
         log_error "[$worker_id] Failed to change to repo directory: $repo_name"
         return 1
     fi
+
+    local scan_target
+    scan_target="$(pwd)"
+    if command -v cygpath >/dev/null 2>&1; then
+        local win_scan_target
+        win_scan_target="$(cygpath -m "$scan_target" 2>/dev/null || true)"
+        if [[ "$win_scan_target" =~ ^[a-zA-Z]:/.* ]]; then
+            scan_target="$win_scan_target"
+        fi
+    fi
+
+    local repo_uri
+    repo_uri="$(build_file_uri "$scan_target")"
+    log_debug "[$worker_id] Resolved local scan target: $scan_target"
+    log_debug "[$worker_id] Resolved repo URI: $repo_uri"
+
     local scan_output="$worker_dir/scan.json"
     local max_retries=${TRUFFLEHOG_MAX_RETRIES:-2}
     local scan_success=false
+    local commands=(
+        "trufflehog git --json --only-verified --no-update \"$scan_target\""
+        "trufflehog git --json --no-update \"$scan_target\""
+        "trufflehog git --json --only-verified --no-update \"$repo_uri\""
+        "trufflehog git --json --no-update \"$repo_uri\""
+        "trufflehog git --no-update \"$scan_target\""
+        "trufflehog git --no-update \"$repo_uri\""
+    )
     
-    for attempt in $(seq 1 $((max_retries + 1))); do
-        local current_timeout=$adaptive_timeout
-        if [ $attempt -gt 1 ]; then
-            # Increase timeout for retry attempts
-            current_timeout=$((adaptive_timeout * attempt))
-            log_debug "[$worker_id] Retry attempt $attempt/$((max_retries + 1)) with timeout: ${current_timeout}s"
-        fi
-        
-        if timeout "$current_timeout" trufflehog git --json --only-verified --no-update "file://$(pwd)" > "$scan_output" 2>"$worker_dir/scan.log"; then
-            log_debug "[$worker_id] Scan completed: $repo_name (attempt $attempt)"
-            scan_success=true
-            break
-        else
-            local exit_code=$?
-            if [ $exit_code -eq 124 ]; then
-                log_warning "[$worker_id] Scan timeout ($current_timeout s) for $repo_name (attempt $attempt)"
+    for cmd in "${commands[@]}"; do
+        log_debug "[$worker_id] Trying command: $cmd"
+
+        for attempt in $(seq 1 $((max_retries + 1))); do
+            local current_timeout=$adaptive_timeout
+            if [ $attempt -gt 1 ]; then
+                # Increase timeout for retry attempts
+                current_timeout=$((adaptive_timeout * attempt))
+                log_debug "[$worker_id] Retry attempt $attempt/$((max_retries + 1)) with timeout: ${current_timeout}s"
+            fi
+
+            if timeout "$current_timeout" bash -c "$cmd" > "$scan_output" 2>"$worker_dir/scan.log"; then
+                log_debug "[$worker_id] Scan completed: $repo_name (attempt $attempt)"
+                scan_success=true
+                break 2
             else
-                log_warning "[$worker_id] Scan failed with exit code $exit_code for $repo_name (attempt $attempt)"
+                local exit_code=$?
+                if [ $exit_code -eq 124 ]; then
+                    log_warning "[$worker_id] Scan timeout ($current_timeout s) for $repo_name (attempt $attempt)"
+                else
+                    log_warning "[$worker_id] Scan command failed with exit code $exit_code for $repo_name (attempt $attempt)"
+                    # For non-timeout errors, try next command variation
+                    break
+                fi
             fi
-            
-            # If this was the last attempt, break
-            if [ $attempt -eq $((max_retries + 1)) ]; then
-                break
-            fi
-        fi
+        done
     done
     
     if [ "$scan_success" = false ]; then
@@ -534,6 +622,23 @@ worker_process() {
         fi
         
         local job_index=""
+
+        # In single-worker mode, no lock is needed.
+        if [ "${MAX_WORKERS:-1}" -le 1 ]; then
+            if [ ! -f "$job_file" ]; then
+                break
+            fi
+
+            job_index=$(head -n1 "$job_file" 2>/dev/null)
+            if [ -n "$job_index" ]; then
+                tail -n +2 "$job_file" > "$job_file.tmp" 2>/dev/null
+                mv "$job_file.tmp" "$job_file" 2>/dev/null
+            fi
+
+            if [ -z "$job_index" ]; then
+                break
+            fi
+        else
         
         # Use flock for atomic file operations
         # Read and delete in one atomic operation using a temp file
@@ -554,9 +659,10 @@ worker_process() {
                 mv "$job_file.tmp" "$job_file" 2>/dev/null
             fi
         } 200>"$lock_file" 2>/dev/null || return 0
-        
-        if [ -z "$job_index" ]; then
-            break
+
+            if [ -z "$job_index" ]; then
+                break
+            fi
         fi
         
         local repo_info
@@ -843,6 +949,8 @@ parse_args() {
 
 main() {
     parse_args "$@"
+
+    init_github_auth
     
     # Apply dynamic worker detection (always auto-detect)
     MAX_WORKERS="$AUTO_DETECTED_WORKERS"
@@ -857,6 +965,18 @@ main() {
             exit 1
         fi
     done
+
+    # Git Bash environments often lack reliable flock support.
+    if [ "$MAX_WORKERS" -gt 1 ] && ! command -v flock >/dev/null 2>&1; then
+        log_warning "'flock' not found; falling back to single-worker mode"
+        MAX_WORKERS=1
+    fi
+
+    # On MSYS/Cygwin (Git Bash), file locking for parallel workers is often unreliable.
+    if [ "$MAX_WORKERS" -gt 1 ] && ([[ "$OSTYPE" == "msys"* ]] || [[ "$OSTYPE" == "cygwin"* ]]); then
+        log_warning "Git Bash detected; using single-worker mode for reliable job scheduling"
+        MAX_WORKERS=1
+    fi
     
     trap cleanup_on_exit EXIT INT TERM
     
