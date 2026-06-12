@@ -447,11 +447,28 @@ scan_repo() {
     
     local repo_dir="$worker_dir/repo"
     local output_file="$OUTPUT_DIR/${repo_name//\//_}.json"
+
+    # Ensure stale repo dirs from previous failures do not break subsequent clones.
+    rm -rf "$repo_dir"
     
-    # Clone
-    if ! git clone "$clone_url" "$repo_dir" 2>"$worker_dir/clone.log"; then
-        echo '{"error": "clone_failed"}' > "$output_file"
-        log_warning "[$worker_id] Clone failed: $repo_name"
+    # Clone with retry for transient network/auth hiccups.
+    local clone_success=false
+    local clone_attempt
+    for clone_attempt in 1 2; do
+        rm -rf "$repo_dir"
+        if git clone "$clone_url" "$repo_dir" 2>"$worker_dir/clone.log"; then
+            clone_success=true
+            break
+        fi
+        log_warning "[$worker_id] Clone failed: $repo_name (attempt $clone_attempt)"
+    done
+
+    if [ "$clone_success" = false ]; then
+        echo '{"error": "clone_failed", "attempts": 2}' > "$output_file"
+        if [ -s "$worker_dir/clone.log" ]; then
+            log_warning "[$worker_id] Clone error details: $(tail -n 3 "$worker_dir/clone.log" | tr '\n' ' ')"
+        fi
+        rm -rf "$repo_dir"
         return 1
     fi
     
@@ -530,6 +547,9 @@ scan_repo() {
     if [ "$scan_success" = false ]; then
         echo '{"error": "scan_failed", "attempts": '$((max_retries + 1))'}' > "$output_file"
         log_error "[$worker_id] All scan attempts failed for $repo_name"
+        if [ -s "$worker_dir/scan.log" ]; then
+            log_error "[$worker_id] Scan error details: $(tail -n 8 "$worker_dir/scan.log" | tr '\n' ' ')"
+        fi
         cd - > /dev/null || true
         return 1
     fi
@@ -683,6 +703,7 @@ generate_summary() {
     local total_files=$(find "$OUTPUT_DIR" -name "*.json" | wc -l)
     local total_secrets=0
     local repos_with_secrets=0
+    local failed_scans=0
     
     log_progress "Generating summary..."
     
@@ -698,12 +719,26 @@ generate_summary() {
             continue
         fi
         
-        local count
-        count=$(jq length "$file" 2>/dev/null || echo "0")
+        local repo_name
+        repo_name=$(basename "$file" .json | tr '_' '/')
         
-        if [ "$count" -gt 0 ]; then
-            local repo_name
-            repo_name=$(basename "$file" .json | tr '_' '/')
+        # Detect scan-failure markers (error object, not an array of findings)
+        if jq -e 'type == "object" and has("error")' "$file" >/dev/null 2>&1; then
+            local err_msg
+            err_msg=$(jq -r '.error // "unknown"' "$file" 2>/dev/null || echo "unknown")
+            echo "⚠️  $repo_name: scan failed ($err_msg)"
+            ((failed_scans++))
+            continue
+        fi
+        
+        local count
+        count=$(jq 'if type == "array" then length else 0 end' "$file" 2>/dev/null || echo "0")
+
+        if [ -z "$count" ] || [ "$count" = "null" ]; then
+            count=0
+        fi
+
+        if [ "$count" -gt 0 ] 2>/dev/null; then
             echo "🔑 $repo_name: $count secret(s)"
             ((total_secrets += count))
             ((repos_with_secrets++))
@@ -713,6 +748,9 @@ generate_summary() {
     echo ""
     echo "Total secrets found: $total_secrets"
     echo "Repositories with secrets: $repos_with_secrets"
+    if [ "$failed_scans" -gt 0 ]; then
+        echo "Repositories that failed to scan: $failed_scans"
+    fi
     echo "============================================================"
     
     # Send completion notification if notifications are enabled and secrets were found
